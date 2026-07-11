@@ -1,4 +1,3 @@
-
 #include "..\..\testcommon.bff"
 
 // Settings & default ToolChain
@@ -33,7 +32,6 @@ ForEach( .SubDir in .SubDirs )
         .PCHOptions                 + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/"'
     }
 }
-
 
 Alias( 'PCHTest-CacheUniqueness2' )
 {

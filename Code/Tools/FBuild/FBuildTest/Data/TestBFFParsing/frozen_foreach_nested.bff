@@ -1,4 +1,3 @@
-
 // loop variables are frozen and should prevent modification
 
 .a = { '', 'X' }

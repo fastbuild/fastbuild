@@ -69,9 +69,22 @@ Settings
 
     .BuildConfigName                = 'Release'
 ]
+#if __WINDOWS__
+    .ASanDLLs                       = {}
+    .ASan_Config_MSVC =
+    [
+        .CompilerOptions                = ' -DRELEASE -D__ASAN__'
+                                        + ' /fsanitize=address'
+        .CompilerOptionsC               = .CompilerOptions
+        .LinkerOptions                  = ' libvcasan.lib'
+                                        + ' legacy_stdio_wide_specifiers.lib'
+        .ASanDLLs                       = { '$VS_ToolchainPath$/bin/Hostx64/x64/clang_rt.asan_dynamic-x86_64.dll' }
+        .BuildConfigName                = 'ASan'
+    ]
+#endif
 .ASan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__ASAN__'
                                     + ' -fsanitize=address -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
@@ -80,7 +93,7 @@ Settings
 ]
 .MSan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__MSAN__'
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
@@ -89,7 +102,7 @@ Settings
 ]
 .TSan_Config =
 [
-    .CompilerOptions                = ' -DRELEASE'
+    .CompilerOptions                = ' -DRELEASE -D__TSAN__'
                                     + ' -fsanitize=thread'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
@@ -99,13 +112,7 @@ Settings
 ]
 .Fuzzer_Config =
 [
-    #if !USING_CLANG_3
-        // These options are valid for Clang >= 6.0.0:
-        .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
-    #else
-        // These options are valid for Clang < 6.0.0:
-        .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard,trace-cmp'
-    #endif
+    .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
     .CompilerOptionsC               = .CompilerOptions
 ]
 
@@ -115,7 +122,7 @@ Settings
 #if __WINDOWS__
     .Debug_Optimizations_MSVC =
     [
-        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+        .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy-'
         .CompilerOptionsC               = .CompilerOptions
     ]
     .Analyze_Optimizations_MSVC =
@@ -126,7 +133,7 @@ Settings
     ]
     .Profile_Optimizations_MSVC =
     [
-        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
+        .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /Zo'
         .CompilerOptionsC               = .CompilerOptions
         .LinkerOptions                  = ' /OPT:REF,ICF'
     ]
@@ -189,7 +196,7 @@ Settings
                                 + .Profile_Config
                                 + .Profile_Optimizations_MSVC
     .X64ASanConfig              = .X64BaseConfig
-                                + .ASan_Config
+                                + .ASan_Config_MSVC
                                 + .Release_Optimizations_MSVC
     .X64TSanConfig              = .X64BaseConfig
                                 + .TSan_Config
@@ -219,6 +226,22 @@ Settings
     .X64ClangTSanConfig         = .X64ClangBaseConfig
                                 + .TSan_Config
                                 + .Release_Optimizations
+#endif
+
+// ARM64
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+    .ARM64BaseConfig            = .ToolChain_VS_Windows_ARM64
+                                + .Windows10_SDK_ARM64
+    .ARM64DebugConfig           = .ARM64BaseConfig
+                                + .Debug_Config
+                                + .Debug_Optimizations
+    .ARM64ReleaseConfig         = .ARM64BaseConfig
+                                + .Release_Config
+                                + .Release_Optimizations
+    .ARM64ProfileConfig         = .ARM64BaseConfig
+                                + .Profile_Config
+                                + .Profile_Optimizations
 #endif
 
 // Linux
@@ -316,8 +339,9 @@ Settings
 #if __WINDOWS__
     .ProjectCommon =
     [
-        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
-        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
+        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
+        .CompileFileCommand         = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild -vs ^$(ProjectName)-^$(Configuration) -sourcefile ^$(ProjectDir)^$(SelectedFiles)'
         .OutputDirectory            = '^$(SolutionDir)\Temp'
         .IntermediateDirectory      = '^$(SolutionDir)\Temp'
         .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
@@ -337,6 +361,9 @@ Settings
     .Project_x64Clang_Release = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'Release' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_ASan    = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'ASan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
     .Project_x64Clang_TSan    = [ Using( .ProjectCommon ) .SolutionPlatform = 'x64Clang'    .SolutionConfig = 'TSan'    .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_ARM64_Debug      = [ Using( .ProjectCommon ) .SolutionPlatform = 'ARM64'       .SolutionConfig = 'Debug'   .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_ARM64_Profile    = [ Using( .ProjectCommon ) .SolutionPlatform = 'ARM64'       .SolutionConfig = 'Profile' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
+    .Project_ARM64_Release    = [ Using( .ProjectCommon ) .SolutionPlatform = 'ARM64'       .SolutionConfig = 'Release' .Config = '$SolutionPlatform$-$SolutionConfig$' ]
 #endif
 
 // Configurations
@@ -345,7 +372,8 @@ Settings
     .BuildConfigs               = { .X64DebugConfig, .X64AnalyzeConfig, .X64ProfileConfig, .X64ReleaseConfig
                                     .X64ASanConfig, .X64TSanConfig
                                     .X64ClangDebugConfig, .X64ClangAnalyzeConfig .X64ClangProfileConfig, .X64ClangReleaseConfig
-                                    .X64ClangASanConfig, .X64ClangTSanConfig }
+                                    .X64ClangASanConfig, .X64ClangTSanConfig
+                                    .ARM64DebugConfig, .ARM64ProfileConfig, .ARM64ReleaseConfig }
 #endif
 #if __LINUX__
     .BuildConfigs               = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
@@ -373,6 +401,10 @@ Settings
 .Targets_x64Clang_ASan = {}
 .Targets_x64Clang_TSan = {}
 
+.Targets_ARM64_Debug = {}
+.Targets_ARM64_Profile = {}
+.Targets_ARM64_Release = {}
+
 .Targets_x64Linux_Debug = {}
 .Targets_x64Linux_Profile = {}
 .Targets_x64Linux_Release = {}
@@ -388,12 +420,19 @@ Settings
 .Targets_x64OSX_Debug = {}
 .Targets_x64OSX_Profile = {}
 .Targets_x64OSX_Release = {}
-.Targets_ARMOSX_Debug = {}
-.Targets_ARMOSX_Profile = {}
-.Targets_ARMOSX_Release = {}
+#if CLANG_SUPPORTS_ARMOSX
+    .Targets_ARMOSX_Debug = {}
+    .Targets_ARMOSX_Profile = {}
+    .Targets_ARMOSX_Release = {}
+    .Targets_OSX_Debug = {}
+    .Targets_OSX_Profile = {}
+    .Targets_OSX_Release = {}
+#endif
 
 // External
 #include "..\External\LZ4\LZ4.bff"
+#include "../External/xxHash/xxHash.bff"
+#include "../External/Zstd/Zstd.bff"
 
 // Test Framework
 #include "TestFramework\TestFramework.bff"
@@ -404,6 +443,7 @@ Settings
 
 // OSUI
 #include "OSUI/OSUI.bff"
+#include "OSUI/OSUITest/OSUITest.bff"
 
 // FBuild
 #include "Tools\FBuild\FBuildCore\FBuildCore.bff"
@@ -419,6 +459,14 @@ ForEach( .BuildConfig in .BuildConfigs )
     Using( .BuildConfig )
 
     Alias( 'All-$Platform$-$BuildConfigName$' ) { .Targets = .'Targets_$Platform$_$BuildConfigName$' }
+
+    // Create additional Universal targets
+    #if CLANG_SUPPORTS_ARMOSX
+        If( .Platform == 'ARMOSX' )
+        {
+            Alias( 'All-OSX-$BuildConfigName$' ) { .Targets = .'Targets_OSX_$BuildConfigName$' }
+        }
+    #endif
 }
 
 // Exes
@@ -431,16 +479,29 @@ Alias( 'Exes' )
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
-.Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX', 'ARMOSX' }
+.Platforms =
+{
+    'ARM64',
+    'x64',
+    'x64Clang',
+    'x64Linux',
+    'x64ClangLinux',
+    'x64OSX'
+    #if CLANG_SUPPORTS_ARMOSX
+        'ARMOSX'
+        'OSX'
+    #endif
+}
+.PlatformConfigs_ARM64         = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Analyze', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
-.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
-#if !USING_CLANG_3
-                               + { 'ASan', 'MSan', 'TSan' }
-#endif
+.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan', 'MSan', 'TSan' }
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
-.PlatformConfigs_ARMOSX        = { 'Debug', 'Profile', 'Release' }
+#if CLANG_SUPPORTS_ARMOSX
+    .PlatformConfigs_ARMOSX         = { 'Debug', 'Profile', 'Release' }
+    .PlatformConfigs_OSX            = { 'Debug', 'Profile', 'Release' }
+#endif
 ForEach( .Platform in .Platforms )
 {
     Alias( 'All-$Platform$' )
@@ -472,16 +533,18 @@ ForEach( .Platform in .Platforms )
     Alias( 'All' )
     {
         .Targets        = { 'All-x64Clang',
-                            'All-x64'
+                            'All-x64',
+                            'All-ARM64',
                           }
     }
 #endif
 #if __OSX__
     Alias( 'All' )
     {
-        .Targets        = { 'All-x64OSX' }
-        #if CLANG_SUPPORTS_OSXARM
-                        + { 'All-ARMOSX' }
+        #if CLANG_SUPPORTS_ARMOSX
+            .Targets        = { 'All-OSX' }     // X64, ARM & Universal
+        #else
+            .Targets        = { 'All-x64OSX' }  // X64 only
         #endif
     }
 #endif
@@ -501,6 +564,8 @@ ForEach( .Platform in .Platforms )
     {
         .Targets        = { 'CoreTest-RunTest-x64-Debug',
                             'CoreTest-RunTest-x64-Release',
+                            'OSUITest-RunTest-x64-Debug',
+                            'OSUITest-RunTest-x64-Release',
                             'FBuildTest-RunTest-x64-Debug'
                           }
     }
@@ -511,11 +576,15 @@ ForEach( .Platform in .Platforms )
         #if __ARM64__
             .Targets        = { 'CoreTest-RunTest-ARMOSX-Debug',
                                 'CoreTest-RunTest-ARMOSX-Release',
+                                'OSUITest-RunTest-ARMOSX-Debug',
+                                'OSUITest-RunTest-ARMOSX-Release',
                                 'FBuildTest-RunTest-ARMOSX-Debug'
                               }
         #else
             .Targets        = { 'CoreTest-RunTest-x64OSX-Debug',
                                 'CoreTest-RunTest-x64OSX-Release',
+                                'OSUITest-RunTest-x64OSX-Release',
+                                'OSUITest-RunTest-x64OSX-Release',
                                 'FBuildTest-RunTest-x64OSX-Debug'
                               }
         #endif
@@ -567,6 +636,19 @@ Alias( 'All+Tests' )
         CreateVCXProject_Lib( 'SDKs', '../External/SDK/', .ProjectConfigs, .ExtraOptions )
     }
 
+    // 'Scripts' - Helper scripts
+    {
+        .ExtraOptions   = [ .ProjectAllowedFileExtensions = '*.py' ]
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in .BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
+        CreateVCXProject_Lib( 'Scripts', '../Scripts/', .ProjectConfigs, .ExtraOptions )
+    }
+
     // 'UpdateSolution' - Regenerate projects/solutions
     {
         .ExtraOptions   = [ .ProjectInputPaths = {} ]
@@ -574,10 +656,10 @@ Alias( 'All+Tests' )
         ForEach( .BuildConfig in .BuildConfigs )
         {
             Using( .BuildConfig )
-            .ProjectConfig          = [ 
+            .ProjectConfig          = [
                                         Using( .'Project_$Platform$_$BuildConfigName$' )
-                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+                                        .ProjectBuildCommand    = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild solution -vs'
+                                        .ProjectRebuildCommand  = 'cd ^$(SolutionDir)\..\..\Code\ & fbuild solution -vs -clean'
                                       ]
             ^ProjectConfigs         + .ProjectConfig
         }
@@ -612,7 +694,7 @@ Alias( 'All+Tests' )
 
         // Work around for Visual Studio F5 behaviour up-to-date check
         .Deps               = [
-                                .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuild-proj', 'FBuildWorker-proj' }
+                                .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuild-proj', 'FBuildWorker-proj', 'OSUITest-proj' }
                                 .Dependencies = { 'All-proj' }
                               ]
         .SolutionDependencies = { .Deps }
@@ -628,12 +710,17 @@ Alias( 'All+Tests' )
         .Folder_External =
         [
             .Path           = 'External'
-            .Projects       = { 'LZ4-proj', 'SDKs-proj' }
+            .Projects       = { 'LZ4-proj', 'SDKs-proj', 'xxHash-proj', 'Zstd-proj' }
+        ]
+        .Folder_Scripts =
+        [
+            .Path           = 'Scripts'
+            .Projects       = { 'Scripts-proj' }
         ]
         .Folder_Test =
         [
             .Path           = 'Test'
-            .Projects       = { 'CoreTest-proj', 'FBuildTest-proj', 'TestFramework-proj' }
+            .Projects       = { 'CoreTest-proj', 'FBuildTest-proj', 'OSUITest-proj', 'TestFramework-proj' }
         ]
         .Folder_Libs =
         [
@@ -645,7 +732,7 @@ Alias( 'All+Tests' )
             .Path           = 'Apps'
             .Projects       = { 'FBuild-proj', 'FBuildWorker-proj' }
         ]
-        .SolutionFolders    = { .Folder_Config, .Folder_External, .Folder_Test, .Folder_Libs, .Folder_Apps }
+        .SolutionFolders    = { .Folder_Config, .Folder_External, .Folder_Scripts, .Folder_Test, .Folder_Libs, .Folder_Apps }
     }
 #endif
 
@@ -668,7 +755,11 @@ Alias( 'All+Tests' )
                                         'FBuildWorker-xcodeproj'
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
-                                        'TestFramework-xcodeproj' }
+                                        'OSUITest-xcodeproj'
+                                        'Scripts-xcodeproj'
+                                        'TestFramework-xcodeproj'
+                                        'xxHash-xcodeproj'
+                                        'Zstd-xcodeproj' }
         .ProjectConfigs = {}
         ForEach( .BuildConfig in .BuildConfigs )
         {

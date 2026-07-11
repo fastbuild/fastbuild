@@ -7,7 +7,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ExeNode, LinkerNode, MetaNone() )
+REFLECT_NODE_BEGIN( ExeNode, LinkerNode )
 REFLECT_END( ExeNode )
 
 // CONSTRUCTOR

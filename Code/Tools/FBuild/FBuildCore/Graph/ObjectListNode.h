@@ -15,6 +15,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
+class CompilerInfoNode;
 class CompilerNode;
 class Function;
 class NodeGraph;
@@ -29,31 +30,47 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~ObjectListNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
+    static Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 
     virtual bool IsAFile() const override;
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
 
     const char * GetObjExtension() const;
 
-    void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const;
-    void GetInputFiles( Array< AString > & files ) const;
+    void GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const;
+    void GetInputFiles( Array<AString> & files ) const;
 
-    inline const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
-    inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
-    inline const AString & GetCompiler() const { return m_Compiler; }
+    const AString & GetCompilerOutputPath() const { return m_CompilerOutputPath; }
+    const AString & GetCompilerOptions() const { return m_CompilerOptions; }
+    const AString & GetCompilerOptionsDeoptimized() const { return m_CompilerOptionsDeoptimized; }
+    const AString & GetCompilerOptionsPCH() const { return m_PCHOptions; }
+    const AString & GetPreprocessorOptions() const { return m_PreprocessorOptions; }
+    const Array<AString> & GetCompilerForceUsing() const { return m_CompilerForceUsing; }
+    CompilerNode * GetCompiler() const { return m_CompilerNode; }
+    CompilerNode * GetPreprocessor() const { return m_PreprocessorNode; }
+    bool GetDeoptimizeWritableFiles() const { return m_DeoptimizeWritableFiles; }
+    bool GetDeoptimizeWritableFilesWithToken() const { return m_DeoptimizeWritableFilesWithToken; }
+    const AString & GetPrecompiledHeaderName() const { return m_PrecompiledHeaderName; }
+    const AString & GetPCHObjectFileName() const { return m_PCHObjectFileName; }
+
+    [[nodiscard]] bool IsCachingAllowed() const { return m_AllowCaching; }
+    [[nodiscard]] bool IsDistributionAllowed() const { return m_AllowDistribution; }
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
-    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
+    [[nodiscard]] const CompilerInfoNode * GetCompilerInfo() const { return m_CompilerInfoNode; }
+
+    void EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 protected:
     friend class FunctionObjectList;
 
-    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph );
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // internal helpers
+    void CalculateOwnerObjectListHash();
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph,
                                   const AString & inputFileName,
                                   const AString & baseDir,
@@ -64,57 +81,64 @@ protected:
                                    const Function * function,
                                    const ObjectNode::CompilerFlags flags,
                                    const ObjectNode::CompilerFlags preprocessorFlags,
-                                   const AString & compilerOptions,
-                                   const AString & compilerOptionsDeoptimized,
-                                   const AString & preprocessor,
-                                   const AString & preprocessorOptions,
                                    const AString & objectName,
-                                   const AString & objectInput,
-                                   const AString & pchObjectName );
+                                   const AString & objectInput );
+    [[nodiscard]] bool CheckLightCacheArgs( NodeGraph & nodeGraph,
+                                            const BFFToken * iter,
+                                            const Function * function,
+                                            bool compilingFiles,
+                                            CompilerInfoNode *& outCompilerInfoDependency ) const;
 
     // Exposed Properties
-    AString             m_Compiler;
-    AString             m_CompilerOptions;
-    AString             m_CompilerOptionsDeoptimized;
-    AString             m_CompilerOutputPath;
-    AString             m_CompilerOutputPrefix;
-    AString             m_CompilerOutputExtension;
-    Array< AString >    m_CompilerInputPath;
-    Array< AString >    m_CompilerInputPattern;
-    Array< AString >    m_CompilerInputExcludePath;
-    Array< AString >    m_CompilerInputExcludedFiles;
-    Array< AString >    m_CompilerInputExcludePattern;
-    Array< AString >    m_CompilerInputFiles;
-    Array< AString >    m_CompilerInputUnity;
-    AString             m_CompilerInputFilesRoot;
-    Array< AString >    m_CompilerInputObjectLists;
-    Array< AString >    m_CompilerForceUsing;
-    bool                m_CompilerInputAllowNoFiles         = false;
-    bool                m_CompilerInputPathRecurse          = true;
-    bool                m_CompilerOutputKeepBaseExtension   = false;
-    bool                m_DeoptimizeWritableFiles           = false;
-    bool                m_DeoptimizeWritableFilesWithToken  = false;
-    bool                m_AllowDistribution                 = true;
-    bool                m_AllowCaching                      = true;
-    AString             m_PCHInputFile;
-    AString             m_PCHOutputFile;
-    AString             m_PCHOptions;
-    AString             m_Preprocessor;
-    AString             m_PreprocessorOptions;
-    Array< AString >    m_PreBuildDependencyNames;
+    AString m_Compiler;
+    AString m_CompilerOptions;
+    AString m_CompilerOptionsDeoptimized;
+    AString m_CompilerOutputPath;
+    AString m_CompilerOutputPrefix;
+    AString m_CompilerOutputExtension;
+    Array<AString> m_CompilerInputPath;
+    Array<AString> m_CompilerInputPattern;
+    Array<AString> m_CompilerInputExcludePath;
+    Array<AString> m_CompilerInputExcludedFiles;
+    Array<AString> m_CompilerInputExcludePattern;
+    Array<AString> m_CompilerInputFiles;
+    Array<AString> m_CompilerInputUnity;
+    AString m_CompilerInputFilesRoot;
+    Array<AString> m_CompilerInputObjectLists;
+    Array<AString> m_CompilerForceUsing;
+    bool m_CompilerInputAllowNoFiles = false;
+    bool m_CompilerInputPathRecurse = true;
+    bool m_CompilerOutputKeepBaseExtension = false;
+    bool m_DeoptimizeWritableFiles = false;
+    bool m_DeoptimizeWritableFilesWithToken = false;
+    bool m_AllowDistribution = true;
+    bool m_AllowCaching = true;
+    uint8_t m_ConcurrencyGroupIndex = 0; // Internal; placed here to use padding
+    AString m_PCHInputFile;
+    AString m_PCHOutputFile;
+    AString m_PCHOptions;
+    AString m_Preprocessor;
+    AString m_PreprocessorOptions;
+    Array<Node *> m_PreBuildDependencyNames;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    AString             m_PrecompiledHeaderName;
-    #if defined( __WINDOWS__ )
-        AString             m_PrecompiledHeaderCPPFile;
-    #endif
-    AString             m_ExtraPDBPath;
-    AString             m_ExtraASMPath;
-    AString             m_ExtraSourceDependenciesPath;
-    uint32_t            m_ObjectListInputStartIndex         = 0;
-    uint32_t            m_ObjectListInputEndIndex           = 0;
-    ObjectNode::CompilerFlags   m_CompilerFlags;
-    ObjectNode::CompilerFlags   m_PreprocessorFlags;
+    CompilerNode * m_CompilerNode = nullptr;
+    CompilerNode * m_PreprocessorNode = nullptr;
+    CompilerInfoNode * m_CompilerInfoNode = nullptr;
+    AString m_PrecompiledHeaderName;
+#if defined( __WINDOWS__ )
+    AString m_PrecompiledHeaderCPPFile;
+#endif
+    AString m_PCHObjectFileName;
+    AString m_ExtraPDBPath;
+    AString m_ExtraASMPath;
+    AString m_ExtraSourceDependenciesPath;
+    uint32_t m_ObjectListInputStartIndex = 0;
+    uint32_t m_ObjectListInputEndIndex = 0;
+    uint32_t m_OwnerObjectListHash = 0;
+    ObjectNode::CompilerFlags m_CompilerFlags;
+    ObjectNode::CompilerFlags m_PreprocessorFlags;
 };
 
 //------------------------------------------------------------------------------

@@ -12,53 +12,27 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
-// TestCachePlugin
 //------------------------------------------------------------------------------
-class TestCachePlugin : public FBuildTest
+TEST_GROUP( TestCachePlugin, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void BuildPlugin() const;
-    void UsePlugin() const;
-    void PluginOptionsSavedToDB() const;
-
-    // Ensure old plugins with only mangled names on Windows continue to work)
-    void BuildPlugin_Old() const;
-    void UsePlugin_Old() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCachePlugin )
-    REGISTER_TEST( BuildPlugin )
-    REGISTER_TEST( UsePlugin )
-    REGISTER_TEST( PluginOptionsSavedToDB )
-
-    // Ensure old plugins with only mangled names on Windows continue to work)
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( BuildPlugin_Old )
-        REGISTER_TEST( UsePlugin_Old )
-    #endif
-REGISTER_TESTS_END
-
-// BuildPlugin
-//------------------------------------------------------------------------------
-void TestCachePlugin::BuildPlugin() const
+TEST_CASE( TestCachePlugin, BuildPlugin )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/Interface/buildplugin.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
 }
 
-// UsePlugin
 //------------------------------------------------------------------------------
-void TestCachePlugin::UsePlugin() const
+TEST_CASE( TestCachePlugin, UsePlugin )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -68,7 +42,7 @@ void TestCachePlugin::UsePlugin() const
 
     // Write
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( GetRecordedOutput().Find( "Missing CachePluginDLL function" ) == nullptr );
@@ -88,7 +62,7 @@ void TestCachePlugin::UsePlugin() const
     {
         options.m_UseCacheWrite = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "TestFiles-Lib" ) );
@@ -100,7 +74,7 @@ void TestCachePlugin::UsePlugin() const
 
     // OutputInfo
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheOutputInfo() );
 
@@ -109,7 +83,7 @@ void TestCachePlugin::UsePlugin() const
 
     // Trim
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheTrim() );
 
@@ -117,22 +91,21 @@ void TestCachePlugin::UsePlugin() const
     }
 }
 
-// PluginOptionsSavedToDB
 //------------------------------------------------------------------------------
-void TestCachePlugin::PluginOptionsSavedToDB() const
+TEST_CASE( TestCachePlugin, PluginOptionsSavedToDB )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/OldInterface/useplugin.bff";
 
-    AStackString<> cachePath;
-    AStackString<> cachePluginDLL;
+    AStackString cachePath;
+    AStackString cachePluginDLL;
 
     {
         // Init the DB from the BFF
-        FBuild f( options );
+        FBuildForTest f( options );
         TEST_ASSERT( f.Initialize() );
 
-        // sotre a copy of the cache params
+        // store a copy of the cache params
         cachePath = f.GetSettings()->GetCachePath();
         cachePluginDLL = f.GetSettings()->GetCachePluginDLL();
         TEST_ASSERT( !cachePath.IsEmpty() );
@@ -144,7 +117,7 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
 
     {
         // reload from the db
-        FBuild f( options );
+        FBuildForTest f( options );
         TEST_ASSERT( f.Initialize( "../tmp/Test/CachePlugin/CachePlugin.fdb" ) );
 
         // check that the cache params were persisted
@@ -153,23 +126,24 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
     }
 }
 
-// BuildPlugin_Old
 //------------------------------------------------------------------------------
-void TestCachePlugin::BuildPlugin_Old() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCachePlugin, BuildPlugin_Old )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/OldInterface/buildplugin.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
 }
+#endif
 
-// UsePlugin_Old
 //------------------------------------------------------------------------------
-void TestCachePlugin::UsePlugin_Old() const
+#if defined( __WINDOWS__ )
+TEST_CASE( TestCachePlugin, UsePlugin_Old )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -179,7 +153,7 @@ void TestCachePlugin::UsePlugin_Old() const
 
     // Read
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( GetRecordedOutput().Find( "Missing CachePluginDLL function" ) == nullptr );
 
@@ -192,7 +166,7 @@ void TestCachePlugin::UsePlugin_Old() const
     {
         options.m_UseCacheWrite = false;
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "TestFiles-Lib" ) );
@@ -202,17 +176,18 @@ void TestCachePlugin::UsePlugin_Old() const
 
     // OutputInfo
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheOutputInfo() );
     }
 
     // Trim
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.CacheTrim() );
     }
 }
+#endif
 
 //------------------------------------------------------------------------------

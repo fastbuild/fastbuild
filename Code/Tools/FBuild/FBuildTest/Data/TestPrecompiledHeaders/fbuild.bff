@@ -1,4 +1,3 @@
-
 #include "..\testcommon.bff"
 
 // Settings & default ToolChain
@@ -61,26 +60,39 @@ Executable( "PCHTest" )
 // Clang for Windows
 //
 #if __WINDOWS__
-    ObjectList( "PCHTestClang-Windows" )
+    ObjectList( 'PCHTestClang-lib' )
     {
         Using( .ToolChain_Clang_Windows )
-        
+
         .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
         .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
-            
+
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
                             + ' -Wno-unused-macros'
-                            #if USING_CLANG_10 || USING_CLANG_11 || USING_CLANG_14 || USING_CLANG_15
+                            #if USING_CLANG_10 || USING_CLANG_11 || USING_CLANG_14 || USING_CLANG_15 || USING_CLANG_17
                                 + ' -Wno-anon-enum-enum-conversion'
                             #endif
         .PCHOptions         + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
                             + ' -Wno-unused-macros'
-                            #if USING_CLANG_10 || USING_CLANG_11 || USING_CLANG_14 || USING_CLANG_15
+                            #if USING_CLANG_10 || USING_CLANG_11 || USING_CLANG_14 || USING_CLANG_15 || USING_CLANG_17
                                 + ' -Wno-anon-enum-enum-conversion'
                             #endif
 
         .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders\PCHUser.cpp"
         .CompilerOutputPath = "$Out$\Test\PrecompiledHeaders\Clang-Windows\"
+    }
+
+    //
+    // Link objects to ensure no debug info related mismatches
+    //
+    Executable( "PCHTestClang-Windows" )
+    {
+        #if __WINDOWS__
+            .LinkerOptions      + ' /ENTRY:main'
+        #endif
+
+        .LinkerOutput       = '$Out$/Test/PrecompiledHeaders/Clang-Windows/PCHTest.exe'
+        .Libraries          = { 'PCHTestClang-lib' }
     }
 #endif

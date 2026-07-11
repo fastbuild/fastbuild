@@ -8,40 +8,22 @@
 #include "Core/Containers/UnorderedMap.h"
 #include "Core/Strings/AString.h"
 
-// TestUnorderedMap
 //------------------------------------------------------------------------------
-class TestUnorderedMap : public TestGroup
+TEST_GROUP( TestUnorderedMap, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void ConstructEmpty() const;
-    void Destruct() const;
-    void Insert() const;
-    void Find() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestUnorderedMap )
-    REGISTER_TEST( ConstructEmpty )
-    REGISTER_TEST( Insert )
-    REGISTER_TEST( Find )
-    REGISTER_TEST( Destruct )
-REGISTER_TESTS_END
-
-// ConstructEmpty
-//------------------------------------------------------------------------------
-void TestUnorderedMap::ConstructEmpty() const
+TEST_CASE( TestUnorderedMap, ConstructEmpty )
 {
     UnorderedMap<AString, AString> map;
     TEST_ASSERT( map.IsEmpty() );
     TEST_ASSERT( map.GetSize() == 0 );
 }
 
-// Insert
 //------------------------------------------------------------------------------
-void TestUnorderedMap::Insert() const
+TEST_CASE( TestUnorderedMap, Insert )
 {
     UnorderedMap<AString, AString> map;
     map.Insert( AString( "Hello" ), AString( "there" ) );
@@ -52,9 +34,8 @@ void TestUnorderedMap::Insert() const
     TEST_ASSERT( map.GetSize() == 2 );
 }
 
-// Find
 //------------------------------------------------------------------------------
-void TestUnorderedMap::Find() const
+TEST_CASE( TestUnorderedMap, Find )
 {
     // empty
     {
@@ -69,7 +50,7 @@ void TestUnorderedMap::Find() const
 
         // found
         {
-            const auto* pair = map.Find( AString( "Hello" ) );
+            const auto * pair = map.Find( AString( "Hello" ) );
             TEST_ASSERT( pair );
             TEST_ASSERT( pair->m_Key == "Hello" );
             TEST_ASSERT( pair->m_Value == "there" );
@@ -77,15 +58,14 @@ void TestUnorderedMap::Find() const
 
         // not found
         {
-            const auto* pair = map.Find( AString( "Thing" ) );
+            const auto * pair = map.Find( AString( "Thing" ) );
             TEST_ASSERT( pair == nullptr );
         }
     }
 }
 
-// Destruct
 //------------------------------------------------------------------------------
-void TestUnorderedMap::Destruct() const
+TEST_CASE( TestUnorderedMap, Destruct )
 {
     // empty
     {

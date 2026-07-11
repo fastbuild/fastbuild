@@ -182,13 +182,13 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
     // Add args for source mapping
     if ( ( m_SourceMapping.IsEmpty() == false ) && isLocal )
     {
-        const AString& workingDir = FBuild::Get().GetOptions().GetWorkingDir();
-        AStackString<> tmp;
+        const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
+        AStackString tmp;
         // Using -ffile-prefix-map would be better since that would change not only the file paths in
         // the DWARF debugging information but also in the __FILE__ and related predefined macros, but
         // -ffile-prefix-map is only supported starting with GCC 8 and Clang 10. The -fdebug-prefix-map
         // option is available starting with Clang 3.8 and all modern GCC versions.
-        tmp.Format(" \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get());
+        tmp.Format( " \"-fdebug-prefix-map=%s=%s\"", workingDir.Get(), m_SourceMapping.Get() );
         outFullArgs += tmp;
     }
 }
@@ -234,9 +234,9 @@ bool CompilerDriver_GCCClang::ProcessArg_XLanguageOption( const AString & token,
         return false;
     }
 
-    // To avoid preprocesing code a second time we need to update
+    // To avoid preprocessing code a second time we need to update
     // arguments of -x option to use the "cpp-output" variant.
-    // We must do this inplace because the argument order matters in this case.
+    // We must do this in-place because the argument order matters in this case.
     if ( ( token == "-x" ) && ( nextToken.IsEmpty() == false ) )
     {
         // Save the "-x" token
@@ -277,8 +277,8 @@ bool CompilerDriver_GCCClang::ProcessArg_DependencyOption( const AString & token
     // style dependency output. This is fine to generate locally as part of
     // preprocessing, but must be removed when compiling preprocessed output.
     // This prevents two type of failures:
-    // a) If the -x langauge arg is used, and we update it to reflect that we're
-    //    compiling already pre-processed outptu, options will be reported as unused
+    // a) If the -x language arg is used, and we update it to reflect that we're
+    //    compiling already pre-processed output, options will be reported as unused
     //    [-Wunused-command-line-argument]
     // b) When compiling remotely, the directories specified may not exist (and we
     //    wouldn't return the output anyway)

@@ -12,34 +12,25 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( AliasNode, Node, MetaNone() )
-    REFLECT_ARRAY( m_Targets,   "Targets",          MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_Hidden,          "Hidden",           MetaOptional() )
+REFLECT_NODE_BEGIN( AliasNode, Node )
+    REFLECT( m_Targets, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_Hidden )
 REFLECT_END( AliasNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AliasNode::AliasNode()
-    : Node( AString::GetEmpty(), Node::ALIAS_NODE, Node::FLAG_ALWAYS_BUILD )
+    : Node( Node::ALIAS_NODE )
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 1; // almost no work is done for this node
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
+/*virtual*/ bool AliasNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
-    Dependencies targets( 32 );
-    const bool allowCopyDirNodes = true;
-    const bool allowUnityNodes = true;
-    const bool allowRemoveDirNodes = true;
-    const bool allowCompilerNodes = true;
-    if ( !Function::GetNodeList( nodeGraph, iter, function, ".Targets", m_Targets, targets, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
-    {
-        return false; // GetNodeList will have emitted an error
-    }
-
-    m_StaticDependencies = targets;
+    m_StaticDependencies.Add( m_Targets );
 
     return true;
 }
@@ -63,11 +54,11 @@ AliasNode::~AliasNode() = default;
             {
                 // ... the build should fail
                 FLOG_ERROR( "Alias: %s\nFailed due to missing file: %s\n", GetName().Get(), n->GetName().Get() );
-                return Node::NODE_RESULT_FAILED;
+                return BuildResult::eFailed;
             }
         }
     }
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 //------------------------------------------------------------------------------

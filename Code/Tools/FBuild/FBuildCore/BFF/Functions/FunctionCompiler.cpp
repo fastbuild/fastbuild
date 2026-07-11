@@ -4,11 +4,13 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionCompiler.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // Core
 #include "Core/FileIO/PathUtils.h"
@@ -17,7 +19,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCompiler::FunctionCompiler()
-: Function( "Compiler" )
+    : Function( "Compiler" )
 {
 }
 

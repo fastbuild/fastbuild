@@ -19,6 +19,7 @@
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
             .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
+            .UnityInputExcludePath      = '$ProjectPath$/OSUITest/' // Exclude Tests
         }
 
         // Objective C++
@@ -35,7 +36,6 @@
                 .CompilerInputUnity     = '$ProjectName$-UnityObjCPP-$Platform$-$BuildConfigName$'
                 .CompilerOutputExtension= '.mm.o'
                 .CompilerOptions        + ' -fobjc-arc'
-                                        + ' -x objective-c'
                 .CompilerOutputPath     = '$OutputBase$/$ProjectName$/'
             }
         #endif

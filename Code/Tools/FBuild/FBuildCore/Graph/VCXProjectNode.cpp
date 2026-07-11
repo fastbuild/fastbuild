@@ -5,12 +5,13 @@
 //------------------------------------------------------------------------------
 #include "VCXProjectNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -28,94 +29,106 @@
 
 // Globals
 //------------------------------------------------------------------------------
-static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" );
 
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
-    REFLECT(        m_ProjectBuildCommand,          "ProjectBuildCommand",          MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_ProjectRebuildCommand,        "ProjectRebuildCommand",        MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_ProjectCleanCommand,          "ProjectCleanCommand",          MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_Output,                       "Output",                       MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_PreprocessorDefinitions,      "PreprocessorDefinitions",      MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_IncludeSearchPath,            "IncludeSearchPath",            MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_ForcedIncludes,               "ForcedIncludes",               MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_AssemblySearchPath,           "AssemblySearchPath",           MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_ForcedUsingAssemblies,        "ForcedUsingAssemblies",        MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_AdditionalOptions,            "AdditionalOptions",            MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_OutputDirectory,              "OutputDirectory",              MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_IntermediateDirectory,        "IntermediateDirectory",        MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_BuildLogFile,                 "BuildLogFile",                 MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LayoutDir,                    "LayoutDir",                    MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LayoutExtensionFilter,        "LayoutExtensionFilter",        MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_Xbox360DebuggerCommand,       "Xbox360DebuggerCommand",       MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_DebuggerFlavor,               "DebuggerFlavor",               MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_AumidOverride,                "AumidOverride",                MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_PlatformToolset,              "PlatformToolset",              MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_DeploymentType,               "DeploymentType",               MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_DeploymentFiles,              "DeploymentFiles",              MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LocalDebuggerCommandArguments,"LocalDebuggerCommandArguments",MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LocalDebuggerWorkingDirectory,"LocalDebuggerWorkingDirectory",MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LocalDebuggerCommand,         "LocalDebuggerCommand",         MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LocalDebuggerEnvironment,     "LocalDebuggerEnvironment",     MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_RemoteDebuggerCommand,            "RemoteDebuggerCommand",            MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_RemoteDebuggerCommandArguments,   "RemoteDebuggerCommandArguments",   MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_RemoteDebuggerWorkingDirectory,   "RemoteDebuggerWorkingDirectory",   MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_Keyword,                      "Keyword",                      MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_RootNamespace,                "RootNamespace",                MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_ApplicationType,              "ApplicationType",              MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_ApplicationTypeRevision,      "ApplicationTypeRevision",      MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_TargetLinuxPlatform,          "TargetLinuxPlatform",          MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_LinuxProjectType,             "LinuxProjectType",             MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_PackagePath,                  "PackagePath",                  MetaInheritFromOwner() + MetaOptional() )
-    REFLECT(        m_AdditionalSymbolSearchPaths,  "AdditionalSymbolSearchPaths",  MetaInheritFromOwner() + MetaOptional() )
+    REFLECT( m_ProjectBuildCommand, MetaInheritFromOwner() )
+    REFLECT( m_ProjectRebuildCommand, MetaInheritFromOwner() )
+    REFLECT( m_ProjectCleanCommand, MetaInheritFromOwner() )
+    REFLECT( m_CompileFileCommand, MetaInheritFromOwner() )
+    REFLECT( m_Output, MetaInheritFromOwner() )
+    REFLECT( m_PreprocessorDefinitions, MetaInheritFromOwner() )
+    REFLECT( m_IncludeSearchPath, MetaInheritFromOwner() )
+    REFLECT( m_ForcedIncludes, MetaInheritFromOwner() )
+    REFLECT( m_AssemblySearchPath, MetaInheritFromOwner() )
+    REFLECT( m_ForcedUsingAssemblies, MetaInheritFromOwner() )
+    REFLECT( m_AdditionalOptions, MetaInheritFromOwner() )
+    REFLECT( m_OutputDirectory, MetaInheritFromOwner() )
+    REFLECT( m_IntermediateDirectory, MetaInheritFromOwner() )
+    REFLECT( m_BuildLogFile, MetaInheritFromOwner() )
+    REFLECT( m_LayoutDir, MetaInheritFromOwner() )
+    REFLECT( m_LayoutExtensionFilter, MetaInheritFromOwner() )
+    REFLECT( m_Xbox360DebuggerCommand, MetaInheritFromOwner() )
+    REFLECT( m_DebuggerFlavor, MetaInheritFromOwner() )
+    REFLECT( m_AumidOverride, MetaInheritFromOwner() )
+    REFLECT( m_PlatformToolset, MetaInheritFromOwner() )
+    REFLECT( m_DeploymentType, MetaInheritFromOwner() )
+    REFLECT( m_DeploymentFiles, MetaInheritFromOwner() )
+    REFLECT( m_LocalDebuggerCommandArguments, MetaInheritFromOwner() )
+    REFLECT( m_LocalDebuggerWorkingDirectory, MetaInheritFromOwner() )
+    REFLECT( m_LocalDebuggerCommand, MetaInheritFromOwner() )
+    REFLECT( m_LocalDebuggerEnvironment, MetaInheritFromOwner() )
+    REFLECT( m_RemoteDebuggerCommand, MetaInheritFromOwner() )
+    REFLECT( m_RemoteDebuggerCommandArguments, MetaInheritFromOwner() )
+    REFLECT( m_RemoteDebuggerWorkingDirectory, MetaInheritFromOwner() )
+    REFLECT( m_Keyword, MetaInheritFromOwner() )
+    REFLECT( m_RootNamespace,  MetaInheritFromOwner() )
+    REFLECT( m_ApplicationType,  MetaInheritFromOwner() )
+    REFLECT( m_ApplicationTypeRevision,  MetaInheritFromOwner() )
+    REFLECT( m_TargetLinuxPlatform, MetaInheritFromOwner() )
+    REFLECT( m_LinuxProjectType, MetaInheritFromOwner() )
+    REFLECT( m_PackagePath, MetaInheritFromOwner() )
+    REFLECT( m_AdditionalSymbolSearchPaths, MetaInheritFromOwner() )
+    REFLECT( m_AndroidApkLocation, MetaInheritFromOwner() )
+    REFLECT( m_AndroidDebugComponent, MetaInheritFromOwner() )
+    REFLECT( m_AndroidDebugTarget, MetaInheritFromOwner() )
+    REFLECT( m_AndroidJdb, MetaInheritFromOwner() )
+    REFLECT( m_AndroidLldbPostAttachCommands, MetaInheritFromOwner() )
+    REFLECT( m_AndroidLldbStartupCommands, MetaInheritFromOwner() )
+    REFLECT( m_AndroidPostApkInstallCommands, MetaInheritFromOwner() )
+    REFLECT( m_AndroidPreApkInstallCommands, MetaInheritFromOwner() )
+    REFLECT( m_AndroidSymbolDirectories, MetaInheritFromOwner() )
+    REFLECT( m_AndroidWaitForDebugger, MetaInheritFromOwner() )
+    REFLECT( m_LaunchFlags, MetaInheritFromOwner() )
 REFLECT_END( VSProjectConfigBase )
 
-REFLECT_STRUCT_BEGIN( VSProjectConfig, VSProjectConfigBase, MetaNone() )
-    REFLECT(        m_Platform,                     "Platform",                     MetaNone() )
-    REFLECT(        m_Config,                       "Config",                       MetaNone() )
-    REFLECT(        m_Target,                       "Target",                       MetaOptional() )
+REFLECT_STRUCT_BEGIN( VSProjectConfig, VSProjectConfigBase )
+    REFLECT( m_Platform, MetaRequired() )
+    REFLECT( m_Config, MetaRequired() )
+    REFLECT( m_Target )
 REFLECT_END( VSProjectConfig )
 
 REFLECT_STRUCT_BEGIN_BASE( VSProjectFileType )
-    REFLECT(        m_FileType,                     "FileType",                     MetaNone() )
-    REFLECT(        m_Pattern,                      "Pattern",                      MetaNone() )
+    REFLECT( m_FileType, MetaRequired() )
+    REFLECT( m_Pattern, MetaRequired() )
 REFLECT_END( VSProjectFileType )
 
 REFLECT_STRUCT_BEGIN_BASE( VSProjectImport )
-    REFLECT(        m_Condition,                    "Condition",                    MetaNone() )
-    REFLECT(        m_Project,                      "Project",                      MetaNone() )
+    REFLECT( m_Condition, MetaRequired() )
+    REFLECT( m_Project, MetaRequired() )
 REFLECT_END( VSProjectImport )
 
 REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput" ) + MetaFile() )
-    REFLECT_ARRAY(  m_ProjectInputPaths,            "ProjectInputPaths",            MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_ProjectInputPathsExclude,     "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
-    REFLECT(        m_ProjectInputPathsRecurse,     "ProjectInputPathsRecurse",     MetaOptional() )
-    REFLECT_ARRAY(  m_ProjectFiles,                 "ProjectFiles",                 MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_ProjectFilesToExclude,        "ProjectFilesToExclude",        MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_ProjectPatternToExclude,      "ProjectPatternToExclude",      MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_ProjectBasePaths,             "ProjectBasePath",              MetaOptional() + MetaPath() ) // NOTE: Exposed as "ProjectBasePath" for backwards compat
-    REFLECT_ARRAY(  m_ProjectAllowedFileExtensions, "ProjectAllowedFileExtensions", MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT(    m_ProjectConfigs,   "ProjectConfigs",               VSProjectConfig,    MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT(    m_ProjectFileTypes, "ProjectFileTypes",             VSProjectFileType,  MetaOptional() )
+    REFLECT( m_ProjectInputPaths, MetaPath() )
+    REFLECT( m_ProjectInputPathsExclude, MetaPath() )
+    REFLECT( m_ProjectInputPathsRecurse )
+    REFLECT( m_ProjectFiles, MetaFile() )
+    REFLECT( m_ProjectFilesToExclude, MetaFile() )
+    REFLECT( m_ProjectPatternToExclude, MetaFile() )
+    REFLECT_RENAME( m_ProjectBasePaths, "ProjectBasePath", MetaPath() ) // NOTE: Exposed as "ProjectBasePath" for backwards compat
+    REFLECT( m_ProjectAllowedFileExtensions )
+    REFLECT( m_ProjectConfigs )
+    REFLECT( m_ProjectFileTypes )
 
-    REFLECT(        m_DefaultLanguage,              "DefaultLanguage",              MetaOptional() )
-    REFLECT(        m_ApplicationEnvironment,       "ApplicationEnvironment",       MetaOptional() )
-    REFLECT(        m_ProjectSccEntrySAK,           "ProjectSccEntrySAK",           MetaOptional() )
+    REFLECT( m_DefaultLanguage )
+    REFLECT( m_ApplicationEnvironment )
+    REFLECT( m_ProjectSccEntrySAK )
 
-    REFLECT_ARRAY(  m_ProjectReferences,            "ProjectReferences",            MetaOptional() )
-    REFLECT_ARRAY(  m_ProjectProjectReferences,     "ProjectProjectReferences",     MetaOptional() )
+    REFLECT( m_ProjectReferences )
+    REFLECT( m_ProjectProjectReferences )
 
-    REFLECT_ARRAY_OF_STRUCT(  m_ProjectProjectImports,  "ProjectProjectImports",    VSProjectImport,    MetaOptional() )
+    REFLECT( m_ProjectProjectImports )
 
     // Base Project Config settings
-    REFLECT_STRUCT( m_BaseProjectConfig,            "BaseProjectConfig",            VSProjectConfigBase,    MetaEmbedMembers() )
+    REFLECT( m_BaseProjectConfig, MetaEmbedMembers() )
 REFLECT_END( VCXProjectNode )
 
 // VSProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
 /*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
-                                                 Array< VSProjectConfig > & configs,
+                                                 Array<VSProjectConfig> & configs,
                                                  const BFFToken * iter,
                                                  const Function * function )
 {
@@ -187,6 +200,7 @@ VCXProjectNode::VCXProjectNode()
                                               m_ProjectPatternToExclude,
                                               m_ProjectInputPathsRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_ProjectAllowedFileExtensions,
                                               "ProjectInputPaths",
                                               dirNodes ) )
@@ -197,7 +211,7 @@ VCXProjectNode::VCXProjectNode()
     // generate GUID if not specified
     if ( m_ProjectGuid.IsEmpty() )
     {
-        AStackString<> relativePath;
+        AStackString relativePath;
         if ( m_Name.BeginsWith( FBuild::Get().GetWorkingDir() ) )
         {
             relativePath = m_Name.Get() + FBuild::Get().GetWorkingDir().GetLength() + 1;
@@ -219,14 +233,14 @@ VCXProjectNode::VCXProjectNode()
 
         // make the configs
         m_ProjectConfigs.SetCapacity( 4 );
-        config.m_Platform   = "Win32";
-        config.m_Config     = "Debug";
+        config.m_Platform = "Win32";
+        config.m_Config = "Debug";
         m_ProjectConfigs.Append( config );
-        config.m_Config     = "Release";
+        config.m_Config = "Release";
         m_ProjectConfigs.Append( config );
-        config.m_Platform   = "x64";
+        config.m_Platform = "x64";
         m_ProjectConfigs.Append( config );
-        config.m_Config     = "Debug";
+        config.m_Config = "Debug";
         m_ProjectConfigs.Append( config );
     }
 
@@ -241,7 +255,7 @@ VCXProjectNode::VCXProjectNode()
     {
         VSProjectPlatformConfigTuple platCfgTuple;
         m_ProjectPlatformConfigTuples.SetCapacity( m_ProjectConfigs.GetSize() );
-        for ( const VSProjectConfig& config : m_ProjectConfigs )
+        for ( const VSProjectConfig & config : m_ProjectConfigs )
         {
             platCfgTuple.m_Config = config.m_Config;
             platCfgTuple.m_Platform = config.m_Platform;
@@ -281,7 +295,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     // files from directory listings
     for ( const Dependency & staticDep : m_StaticDependencies )
     {
-        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo< DirectoryListNode >();
+        const DirectoryListNode * dirNode = staticDep.GetNode()->CastTo<DirectoryListNode>();
         for ( const FileIO::FileInfo & fileInfo : dirNode->GetFiles() )
         {
             pg.AddFile( fileInfo.m_Name );
@@ -296,96 +310,24 @@ VCXProjectNode::~VCXProjectNode() = default;
 
     // .vcxproj
     const AString & project = pg.GenerateVCXProj( m_Name, m_ProjectConfigs, m_ProjectFileTypes, m_ProjectProjectImports );
-    if ( Save( project, m_Name ) == false )
+    if ( ProjectGeneratorBase::WriteIfDifferent( "VCXProject", project, m_Name ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // .vcxproj.filters
     const AString & filters = pg.GenerateVCXProjFilters( m_Name );
-    AStackString<> filterFile( m_Name );
+    AStackString filterFile( m_Name );
     filterFile += ".filters";
-    if ( Save( filters, filterFile ) == false )
+    if ( ProjectGeneratorBase::WriteIfDifferent( "VCXProject", filters, filterFile ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // Record stamp representing the contents of the files
-    m_Stamp = xxHash::Calc64( project ) + xxHash::Calc64( filters );
+    m_Stamp = xxHash3::Calc64Big( project ) + xxHash3::Calc64Big( filters );
 
-    return NODE_RESULT_OK;
-}
-
-// Save
-//------------------------------------------------------------------------------
-bool VCXProjectNode::Save( const AString & content, const AString & fileName ) const
-{
-    bool needToWrite = false;
-
-    FileStream old;
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
-    {
-        needToWrite = true;
-    }
-    else if ( old.Open( fileName.Get(), FileStream::READ_ONLY ) == false )
-    {
-        needToWrite = true;
-    }
-    else
-    {
-        // files differ in size?
-        const size_t oldFileSize = (size_t)old.GetFileSize();
-        if ( oldFileSize != content.GetLength() )
-        {
-            needToWrite = true;
-        }
-        else
-        {
-            // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
-            if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
-            {
-                FLOG_ERROR( "VCXProject - Failed to read '%s'", fileName.Get() );
-                return false;
-            }
-
-            // compare content
-            if ( memcmp( mem.Get(), content.Get(), oldFileSize ) != 0 )
-            {
-                needToWrite = true;
-            }
-        }
-
-        // ensure we are closed, so we can open again for write if needed
-        old.Close();
-    }
-
-    // only save if missing or new
-    if ( needToWrite == false )
-    {
-        return true; // nothing to do.
-    }
-
-    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
-    {
-        FLOG_OUTPUT( "VCXProj: %s\n", fileName.Get() );
-    }
-
-    // actually write
-    FileStream f;
-    if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-    {
-        FLOG_ERROR( "VCXProject - Failed to open file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
-    {
-        FLOG_ERROR( "VCXProject - Error writing file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    f.Close();
-
-    return true;
+    return BuildResult::eOk;
 }
 
 // PostLoad

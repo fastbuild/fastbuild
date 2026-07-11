@@ -9,8 +9,8 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
@@ -27,12 +27,92 @@
 #include <stdarg.h> // for va_args
 #include <string.h> // for memcmp
 
+//------------------------------------------------------------------------------
+namespace
+{
+    class ProjectGeneratorBaseConstants
+    {
+    public:
+        ProjectGeneratorBaseConstants()
+        {
+            // IncludePrefixes
+            //  - Different options add paths to the different groups which are
+            //    then searched in the order of their priority.
+            //    We need to do multiple passes over arguments to get a list of
+            //    paths in the correct order.
+            m_IncludePrefixes.SetCapacity( 6 );
+            {
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "/I" );
+                options.EmplaceBack( "-I" );
+            }
+            {
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
+                options.EmplaceBack( "-isystem" );
+            }
+            {
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "/imsvc" );
+                options.EmplaceBack( "-imsvc" );
+            }
+            {
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
+                options.EmplaceBack( "-idirafter" );
+            }
+            {
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
+                options.EmplaceBack( "-iquote" );
+            }
+            {
+                Array<AString> & options = m_IncludePrefixes.EmplaceBack();
+                options.SetCapacity( 2 );
+                options.EmplaceBack( "/external:I" );
+                options.EmplaceBack( "-external:I" );
+            }
+
+            // ForceIncludePrefixes
+            {
+                m_ForceIncludePrefixes.SetCapacity( 2 );
+                m_ForceIncludePrefixes.EmplaceBack( "/FI" );
+                m_ForceIncludePrefixes.EmplaceBack( "-FI" );
+            }
+
+            // DefinePrefixes
+            {
+                m_DefinePrefixes.SetCapacity( 2 );
+                m_DefinePrefixes.EmplaceBack( "/D" );
+                m_DefinePrefixes.EmplaceBack( "-D" );
+            }
+
+            // AdditionalOptionPrefixes
+            {
+                m_AdditionalOptionPrefixes.SetCapacity( 4 );
+                m_AdditionalOptionPrefixes.EmplaceBack( "-std" );
+                m_AdditionalOptionPrefixes.EmplaceBack( "/std" );
+                m_AdditionalOptionPrefixes.EmplaceBack( "-wd" );
+                m_AdditionalOptionPrefixes.EmplaceBack( "/wd" );
+            }
+        }
+
+        Array<Array<AString>> m_IncludePrefixes;
+        Array<AString> m_ForceIncludePrefixes;
+        Array<AString> m_DefinePrefixes;
+        Array<AString> m_AdditionalOptionPrefixes;
+    };
+
+    static const ProjectGeneratorBaseConstants g_ProjectGeneratorBaseConstants;
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::ProjectGeneratorBase()
-    : m_Folders( 128, true )
-    , m_Files( 4096, true )
 {
+    m_Folders.SetCapacity( 128 );
+    m_Files.SetCapacity( 4096 );
     m_RootFolder = FNEW( Folder );
     m_Folders.Append( m_RootFolder );
 }
@@ -83,7 +163,7 @@ void ProjectGeneratorBase::GetProjectRelativePath_Deprecated( const AString & fi
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString & path )
 {
-    // Get the path exluding the file file or dir
+    // Get the path excluding the file file or dir
     const char * lastSlash = path.FindLast( NATIVE_SLASH );
     if ( ( lastSlash == nullptr ) || ( lastSlash == path.Get() ) )
     {
@@ -91,7 +171,7 @@ ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString
     }
 
     // Search for existing folder
-    AStackString<> folderPath( path.Get(), lastSlash );
+    AStackString folderPath( path.Get(), lastSlash );
     for ( Folder * folder : m_Folders )
     {
         if ( folder->m_Path == folderPath )
@@ -116,7 +196,7 @@ ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString
 
 // SortFilesAndFolders
 //------------------------------------------------------------------------------
-void  ProjectGeneratorBase::SortFilesAndFolders()
+void ProjectGeneratorBase::SortFilesAndFolders()
 {
     // Sort files and bake final indices
     m_Files.SortDeref();
@@ -144,7 +224,7 @@ void  ProjectGeneratorBase::SortFilesAndFolders()
 void ProjectGeneratorBase::AddFile( const AString & fileName )
 {
     // Handle BasePath
-    AStackString<> relativePath;
+    AStackString relativePath;
     GetProjectRelativePath_Deprecated( fileName, relativePath );
 
     // Find existing folder
@@ -170,10 +250,10 @@ void ProjectGeneratorBase::AddFile( const AString & fileName )
 //------------------------------------------------------------------------------
 void ProjectGeneratorBase::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
-    va_start(args, fmtString);
+    va_start( args, fmtString );
     tmp.VFormat( fmtString, args );
     va_end( args );
 
@@ -219,7 +299,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         else
         {
             // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
+            UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( oldFileSize ) );
             if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
             {
                 FLOG_ERROR( "%s - Failed to read '%s'", generatorId, fileName.Get() );
@@ -295,16 +375,35 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
 // GetDefaultAllowedFileExtensions
 //------------------------------------------------------------------------------
-/*static*/ void ProjectGeneratorBase::GetDefaultAllowedFileExtensions( Array< AString > & extensions )
+/*static*/ void ProjectGeneratorBase::GetDefaultAllowedFileExtensions( Array<AString> & extensions )
 {
+    // clang-format off
     static const char * const defaultExtensions[] =
     {
-        "*.cpp", "*.hpp", "*.cxx", "*.hxx", "*.c",   "*.h",  "*.cc",   "*.hh",
-        "*.cp",  "*.hp",  "*.cs",  "*.inl", "*.bff", "*.rc", "*.resx", "*.m",  "*.mm",
+        "*.cpp",
+        "*.hpp",
+        "*.cxx",
+        "*.hxx",
+        "*.c",
+        "*.h",
+        "*.cc",
+        "*.hh",
+        "*.cp",
+        "*.hp",
+        "*.cs",
+        "*.inl",
+        "*.bff",
+        "*.rc",
+        "*.resx",
+        "*.m",
+        "*.mm",
         "*.cu",
-        "*.asm", "*.s",
-        "*.natvis", "*.editorconfig"
+        "*.asm",
+        "*.s",
+        "*.natvis",
+        "*.editorconfig",
     };
+    // clang-format on
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( const char * const ext : defaultExtensions )
     {
@@ -314,7 +413,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
 // FixupAllowedFileExtensions
 //------------------------------------------------------------------------------
-/*static*/ void ProjectGeneratorBase::FixupAllowedFileExtensions( Array< AString > & extensions )
+/*static*/ void ProjectGeneratorBase::FixupAllowedFileExtensions( Array<AString> & extensions )
 {
     // For backwards compatibility, we support explicit extensions ".ext" and wildcards "*.ext"
     // To normalize run-time behaviour, we convert everything to wildcard format
@@ -322,13 +421,13 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     // convert any that are not wildcards patterns
     for ( AString & ext : extensions )
     {
-        if ( ext.Find('*') || ext.Find('?') )
+        if ( ext.Find( '*' ) || ext.Find( '?' ) )
         {
             continue; // already a pattern, leave as is
         }
 
         // convert ".ext" to "*.ext"
-        AStackString<> tmp;
+        AStackString tmp;
         tmp.Format( "*%s", ext.Get() );
         ext = tmp;
     }
@@ -342,8 +441,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     {
         switch ( node->GetType() )
         {
-            case Node::OBJECT_LIST_NODE: return node->CastTo< ObjectListNode >();
-            case Node::LIBRARY_NODE: return node->CastTo< LibraryNode >();
+            case Node::OBJECT_LIST_NODE: return node->CastTo<ObjectListNode>();
+            case Node::LIBRARY_NODE: return node->CastTo<LibraryNode>();
             case Node::EXE_NODE:
             {
                 // For Exe use first library
@@ -367,7 +466,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             case Node::TEST_NODE:
             {
                 // For test search in executable
-                const Node * testExe = node->CastTo< TestNode >()->GetTestExecutable();
+                const Node * testExe = node->CastTo<TestNode>()->GetTestExecutable();
                 if ( testExe )
                 {
                     return FindTargetForIntellisenseInfo( testExe );
@@ -376,7 +475,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             }
             case Node::ALIAS_NODE:
             {
-                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->CastTo<AliasNode>()->GetAliasedNodes() );
                 if ( n )
                 {
                     return n;
@@ -385,7 +484,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             }
             case Node::COPY_FILE_NODE:
             {
-                return FindTargetForIntellisenseInfo( node->CastTo< CopyFileNode >()->GetSourceNode() );
+                return FindTargetForIntellisenseInfo( node->CastTo<CopyFileNode>()->GetSourceNode() );
             }
             default: break; // Unsupported type - ignore
         }
@@ -411,26 +510,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 // ExtractIncludePaths
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIncludePaths( const AString & compilerArgs,
-                                                           Array< AString > & outIncludes,
-                                                           Array< AString > & outForceIncludes,
+                                                           Array<AString> & outIncludes,
+                                                           Array<AString> & outForceIncludes,
                                                            bool escapeQuotes )
 {
-    // Different options add paths to the different groups which are then searched in the order of their priority.
-    // So we need to do multiple passes over arguments to get a list of paths in the correct order.
-    StackArray< StackArray< AString, 2 >, 6 > prefixes;
-    prefixes.SetSize( 6 );
-    prefixes[ 0 ].EmplaceBack( "/I" );
-    prefixes[ 0 ].EmplaceBack( "-I" );
-    prefixes[ 1 ].EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
-    prefixes[ 1 ].EmplaceBack( "-isystem" );
-    prefixes[ 2 ].EmplaceBack( "/imsvc" );
-    prefixes[ 2 ].EmplaceBack( "-imsvc" );
-    prefixes[ 3 ].EmplaceBack( "-idirafter" );
-    prefixes[ 4 ].EmplaceBack( "-iquote" );
-    prefixes[ 5 ].EmplaceBack( "/external:I" );
-    prefixes[ 5 ].EmplaceBack( "-external:I" );
-
-    for ( const StackArray<AString, 2> & group : prefixes )
+    for ( const Array<AString> & group : g_ProjectGeneratorBaseConstants.m_IncludePrefixes )
     {
         const bool keepFullOption = false;
         ExtractIntellisenseOptions( compilerArgs, group, outIncludes, escapeQuotes, keepFullOption );
@@ -438,70 +522,66 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
     // Check for forced includes
     {
-        StackArray< AString, 2 > forceIncludeOptions;
-        forceIncludeOptions.EmplaceBack( "/FI" );
-        forceIncludeOptions.EmplaceBack( "-FI" );
         const bool keepFullOption = false;
-        ExtractIntellisenseOptions( compilerArgs, forceIncludeOptions, outForceIncludes, escapeQuotes, keepFullOption );
+        ExtractIntellisenseOptions( compilerArgs,
+                                    g_ProjectGeneratorBaseConstants.m_ForceIncludePrefixes,
+                                    outForceIncludes,
+                                    escapeQuotes,
+                                    keepFullOption );
     }
 }
 
 // ExtractDefines
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractDefines( const AString & compilerArgs,
-                                                      Array< AString > & outDefines,
+                                                      Array<AString> & outDefines,
                                                       bool escapeQuotes )
 {
-    StackArray< AString, 2 > prefixes;
-    prefixes.EmplaceBack( "/D" );
-    prefixes.EmplaceBack( "-D" );
-
     // Extract various kinds of includes
     const bool keepFullOption = false;
-    ExtractIntellisenseOptions( compilerArgs, prefixes, outDefines, escapeQuotes, keepFullOption );
+    ExtractIntellisenseOptions( compilerArgs,
+                                g_ProjectGeneratorBaseConstants.m_DefinePrefixes,
+                                outDefines,
+                                escapeQuotes,
+                                keepFullOption );
 }
 
 // ExtractAdditionalOptions
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractAdditionalOptions( const AString & compilerArgs,
-                                                                Array< AString > & outOptions )
+                                                                Array<AString> & outOptions )
 {
-    StackArray< AString, 4 > prefixes;
-    prefixes.EmplaceBack( "-std" );
-    prefixes.EmplaceBack( "/std" );
-    prefixes.EmplaceBack( "-wd" );
-    prefixes.EmplaceBack( "/wd" );
-
     // Extract the options
     const bool escapeQuotes = false;
     const bool keepFullOption = true;
-    ExtractIntellisenseOptions( compilerArgs, prefixes, outOptions, escapeQuotes, keepFullOption );
+    ExtractIntellisenseOptions( compilerArgs,
+                                g_ProjectGeneratorBaseConstants.m_AdditionalOptionPrefixes,
+                                outOptions,
+                                escapeQuotes,
+                                keepFullOption );
 }
 
 // ExtractIntellisenseOptions
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIntellisenseOptions( const AString & compilerArgs,
-                                                                  const Array< AString > & prefixes,
-                                                                  Array< AString > & outOptions,
+                                                                  const Array<AString> & prefixes,
+                                                                  Array<AString> & outOptions,
                                                                   bool escapeQuotes,
                                                                   bool keepFullOption )
 {
     ASSERT( prefixes.IsEmpty() == false );
 
-    Array< AString > tokens;
-    compilerArgs.Tokenize( tokens );
+    StackArray<AString::TokenRange, 128> tokenRanges;
+    compilerArgs.Tokenize( tokenRanges );
+    const size_t numTokens = tokenRanges.GetSize();
 
-    for ( size_t i=0; i<tokens.GetSize(); ++i )
+    for ( size_t i = 0; i < numTokens; ++i )
     {
-        AString & token = tokens[ i ];
+        AStackString token( ( compilerArgs.Get() + tokenRanges[ i ].m_StartIndex ),
+                            ( compilerArgs.Get() + tokenRanges[ i ].m_EndIndex ) );
+        token.RemoveQuotes();
 
-        // strip quotes around token, e.g:    "-IFolder/Folder"
-        if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) )
-        {
-            token.Assign( token.Get() + 1, token.GetEnd() - 1 );
-        }
-
-        AStackString<> optionBody;
+        AStackString optionBody;
 
         // Handle space between option and payload
         for ( const AString & prefix : prefixes )
@@ -509,13 +589,15 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             if ( token == prefix )
             {
                 // Handle an incomplete token at the end of list
-                if ( i == (tokens.GetSize() - 1) )
+                if ( i == ( numTokens - 1 ) )
                 {
                     return;
                 }
 
                 // Use next token
-                optionBody = tokens[ i + 1 ];
+                optionBody.Assign( ( compilerArgs.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                   ( compilerArgs.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
+                optionBody.RemoveQuotes();
                 break;
             }
         }
@@ -560,10 +642,10 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 
 // ConcatIntellisenseOptions
 //------------------------------------------------------------------------------
-/*static*/ void ProjectGeneratorBase::ConcatIntellisenseOptions( const Array< AString > & tokens,
+/*static*/ void ProjectGeneratorBase::ConcatIntellisenseOptions( const Array<AString> & tokens,
                                                                  AString & outTokenString,
-                                                                 const char* preToken,
-                                                                 const char* postToken )
+                                                                 const char * preToken,
+                                                                 const char * postToken )
 {
     for ( const AString & token : tokens )
     {
@@ -588,8 +670,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     {
         switch ( node->GetType() )
         {
-            case Node::EXE_NODE: return node->CastTo< ExeNode >();
-            case Node::DLL_NODE: return node->CastTo< DLLNode >();
+            case Node::EXE_NODE: return node->CastTo<ExeNode>();
+            case Node::DLL_NODE: return node->CastTo<DLLNode>();
             case Node::COPY_FILE_NODE:
             {
                 // When copying, we want to debug the copy as that usually means a staging dir
@@ -599,11 +681,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             case Node::TEST_NODE:
             {
                 // Get executable backing test
-                return (FileNode *)node->CastTo< TestNode >()->GetTestExecutable();
+                return (FileNode *)node->CastTo<TestNode>()->GetTestExecutable();
             }
             case Node::ALIAS_NODE:
             {
-                const FileNode * n = FindExecutableDebugTarget( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                const FileNode * n = FindExecutableDebugTarget( node->CastTo<AliasNode>()->GetAliasedNodes() );
                 if ( n )
                 {
                     return n;
@@ -613,7 +695,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
             default: break; // Unsupported type - ignore
         }
     }
-    
+
     return nullptr;
 }
 
@@ -638,16 +720,16 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                        const AString & fileName,
                                                        AString & outRelativeFileName )
 {
-    AStackString<> cleanFileName;
-    #if !defined( __WINDOWS__ )
-        // Normally we keep all paths with native slashes, but in this case we
-        // have windows slashes, so convert to native for the relative check
-        AStackString<> pathCopy( fileName );
-        pathCopy.Replace( '\\', '/' );
-        NodeGraph::CleanPath( pathCopy, cleanFileName );
-    #else
-        NodeGraph::CleanPath( fileName, cleanFileName );
-    #endif
+    AStackString cleanFileName;
+#if !defined( __WINDOWS__ )
+    // Normally we keep all paths with native slashes, but in this case we
+    // have windows slashes, so convert to native for the relative check
+    AStackString pathCopy( fileName );
+    pathCopy.Replace( '\\', '/' );
+    NodeGraph::CleanPath( pathCopy, cleanFileName );
+#else
+    NodeGraph::CleanPath( fileName, cleanFileName );
+#endif
 
     PathUtils::GetRelativePath( basePath, cleanFileName, outRelativeFileName );
 }

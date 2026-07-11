@@ -13,46 +13,38 @@
 // System
 #include <stdlib.h>
 
-// TestMemPoolBlock
-//------------------------------------------------------------------------------
-class TestMemPoolBlock : public TestGroup
+// Handle GCC -ffreestanding environment
+#if defined( __STDC_HOSTED__ ) && ( __STDC_HOSTED__ == 0 )
+extern "C"
 {
-private:
-    DECLARE_TESTS
+void * malloc( size_t size );
+void free( void * ptr );
+}
+#endif
 
-    void TestUnused() const;
-    void TestAllocs() const;
-    void TestAllocsMultiplePages() const;
-    void TestSpeed();
+//------------------------------------------------------------------------------
+TEST_GROUP( TestMemPoolBlock, TestGroupTest )
+{
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestMemPoolBlock )
-    REGISTER_TEST( TestUnused )
-    REGISTER_TEST( TestAllocs )
-    REGISTER_TEST( TestAllocsMultiplePages )
-    REGISTER_TEST( TestSpeed )
-REGISTER_TESTS_END
-
-// TestUnused
-//------------------------------------------------------------------------------
-void TestMemPoolBlock::TestUnused() const
+TEST_CASE( TestMemPoolBlock, TestUnused )
 {
     // Create a MemPoolBlock but don't do anything with it
     MemPoolBlock block( 32, 4 );
 }
 
-// TestAllocs
 //------------------------------------------------------------------------------
-void TestMemPoolBlock::TestAllocs() const
+TEST_CASE( TestMemPoolBlock, TestAllocs )
 {
     const size_t blockSize( 32 );
     const size_t blockAlignment( 4 );
     MemPoolBlock block( blockSize, blockAlignment );
 
     // allocate every size upto the block size
-    Array< void * > allocs( blockSize + 1, false );
+    Array<void *> allocs;
+    allocs.SetCapacity( blockSize + 1 );
     for ( size_t i = 0; i <= blockSize; ++i )
     {
         void * mem = block.Alloc();
@@ -68,9 +60,8 @@ void TestMemPoolBlock::TestAllocs() const
     }
 }
 
-// TestAllocsMultiplePages
 //------------------------------------------------------------------------------
-void TestMemPoolBlock::TestAllocsMultiplePages() const
+TEST_CASE( TestMemPoolBlock, TestAllocsMultiplePages )
 {
     const size_t blockSize( 32 * 1024 );
     const size_t blockAlignment( 4 );
@@ -84,15 +75,14 @@ void TestMemPoolBlock::TestAllocsMultiplePages() const
     block.Free( c );
 }
 
-// TestSpeed
 //------------------------------------------------------------------------------
-void TestMemPoolBlock::TestSpeed()
+TEST_CASE( TestMemPoolBlock, TestSpeed )
 {
-    #if defined( DEBUG )
-        const uint32_t numAllocs( 100 * 1000 );
-    #else
-        const uint32_t numAllocs( 1000 * 1000 );
-    #endif
+#if defined( DEBUG )
+    const uint32_t numAllocs( 100 * 1000 );
+#else
+    const uint32_t numAllocs( 1000 * 1000 );
+#endif
     const uint32_t allocSize( 24 );
 
     float time1( 0.0f );
@@ -101,12 +91,13 @@ void TestMemPoolBlock::TestSpeed()
 
     // System Allocator
     {
-        Array< void * > allocs( numAllocs, false );
+        Array<void *> allocs;
+        allocs.SetCapacity( numAllocs );
         const Timer t1;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
-                PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call malloc
+                PRAGMA_DISABLE_PUSH_MSVC( 26408 ) // Memory subsystem is allowed to call malloc
                 uint32_t * const mem = (uint32_t *)malloc( allocSize );
                 PRAGMA_DISABLE_POP_MSVC
                 allocs.Append( mem );
@@ -114,7 +105,7 @@ void TestMemPoolBlock::TestSpeed()
             for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 void * mem = allocs[ i ];
-                PRAGMA_DISABLE_PUSH_MSVC(26408) // Memory subsystem is allowed to call free
+                PRAGMA_DISABLE_PUSH_MSVC( 26408 ) // Memory subsystem is allowed to call free
                 free( mem );
                 PRAGMA_DISABLE_POP_MSVC
             }
@@ -124,7 +115,8 @@ void TestMemPoolBlock::TestSpeed()
 
     // Alloc
     {
-        Array< void * > allocs( numAllocs, false );
+        Array<void *> allocs;
+        allocs.SetCapacity( numAllocs );
         const Timer t2;
         {
             for ( uint32_t i = 0; i < numAllocs; ++i )
@@ -143,7 +135,8 @@ void TestMemPoolBlock::TestSpeed()
 
     // MemPoolBlock
     {
-        Array< void * > allocs( numAllocs, false );
+        Array<void *> allocs;
+        allocs.SetCapacity( numAllocs );
         const Timer t3;
         {
             MemPoolBlock block( allocSize, 4 );

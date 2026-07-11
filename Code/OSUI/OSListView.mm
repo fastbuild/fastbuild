@@ -60,7 +60,7 @@
     }
     
     // Size of first column controls table size
-    return m_Columns[ 0 ]->m_Data.GetSize();
+    return static_cast<NSInteger>( m_Columns[ 0 ]->m_Data.GetSize() );
 }
 
 // objectValueForTableColumn
@@ -77,7 +77,7 @@
     {
         return @"";
     }
-    return [NSString stringWithUTF8String:column->m_Data[ rowIndex ].Get()];
+    return [NSString stringWithUTF8String:column->m_Data[ static_cast<size_t>( rowIndex ) ].Get()];
 }
 @end
 

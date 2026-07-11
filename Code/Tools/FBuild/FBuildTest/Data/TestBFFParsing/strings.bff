@@ -1,4 +1,3 @@
-
 ; double quoted
 .Var = "string"
 

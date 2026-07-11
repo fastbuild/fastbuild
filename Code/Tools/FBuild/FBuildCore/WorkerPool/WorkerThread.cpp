@@ -17,7 +17,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Atomic.h"
-#include "Core/Process/Thread.h"
+#include "Core/Process/ThreadPool.h"
 #include "Core/Profile/Profile.h"
 
 // Static
@@ -28,26 +28,19 @@ AStackString<> WorkerThread::s_TmpRoot;
 
 //------------------------------------------------------------------------------
 WorkerThread::WorkerThread( uint16_t threadIndex )
-: m_ShouldExit( false )
-, m_Exited( false )
-, m_ThreadIndex( threadIndex )
+    : m_ShouldExit( false )
+    , m_Exited( false )
+    , m_ThreadIndex( threadIndex )
 {
 }
 
 // Init
 //------------------------------------------------------------------------------
-void WorkerThread::Init()
+void WorkerThread::Init( ThreadPool * pool )
 {
     PROFILE_FUNCTION;
 
-    // Start thread
-    Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapperFunc,
-                                                   "WorkerThread",
-                                                   MEGABYTE,
-                                                   this );
-    ASSERT( h != nullptr );
-    Thread::DetachThread( h );
-    Thread::CloseHandle( h ); // we don't want to keep this, so free it now
+    pool->EnqueueJob( ThreadWrapperFunc, this );
 }
 
 //------------------------------------------------------------------------------
@@ -62,13 +55,13 @@ WorkerThread::~WorkerThread()
 {
     PROFILE_FUNCTION;
 
-    AStackString<> tmpDirPath;
+    AStackString tmpDirPath;
     VERIFY( FBuild::GetTempDir( tmpDirPath ) );
-    #if defined( __WINDOWS__ )
-        tmpDirPath += ".fbuild.tmp\\";
-    #else
-        tmpDirPath += "_fbuild.tmp/";
-    #endif
+#if defined( __WINDOWS__ )
+    tmpDirPath += ".fbuild.tmp\\";
+#else
+    tmpDirPath += "_fbuild.tmp/";
+#endif
 
     // use the working dir hash to uniquify the path
     const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
@@ -77,7 +70,7 @@ WorkerThread::~WorkerThread()
 
     VERIFY( FileIO::EnsurePathExists( tmpDirPath ) );
 
-    MutexHolder lock( s_TmpRootMutex );
+    const MutexHolder lock( s_TmpRootMutex );
     s_TmpRoot = tmpDirPath;
 }
 
@@ -112,19 +105,12 @@ void WorkerThread::WaitForStop()
 
 // MainWrapper
 //------------------------------------------------------------------------------
-/*static*/ uint32_t WorkerThread::ThreadWrapperFunc( void * param )
+/*static*/ void WorkerThread::ThreadWrapperFunc( void * param )
 {
-    WorkerThread * wt = static_cast< WorkerThread * >( param );
+    WorkerThread * wt = static_cast<WorkerThread *>( param );
     s_WorkerThreadThreadIndex = wt->m_ThreadIndex;
 
-    #if defined( PROFILING_ENABLED )
-        AStackString<> threadName;
-        threadName.Format( "%s_%02u", s_WorkerThreadThreadIndex > 1000 ? "RemoteWorkerThread" : "WorkerThread", s_WorkerThreadThreadIndex );
-        PROFILE_SET_THREAD_NAME( threadName.Get() );
-    #endif
-
     wt->Main();
-    return 0;
 }
 
 // Main
@@ -135,7 +121,7 @@ void WorkerThread::WaitForStop()
 
     CreateThreadLocalTmpDir();
 
-    for (;;)
+    for ( ;; )
     {
         // Wait for work to become available (or quit signal)
         JobQueue::Get().WorkerThreadWait( 500 );
@@ -173,19 +159,19 @@ void WorkerThread::WaitForStop()
         // process the work
         const Node::BuildResult result = JobQueue::DoBuild( job );
 
-        if ( result == Node::NODE_RESULT_FAILED )
+        if ( result == Node::BuildResult::eFailed )
         {
             FBuild::OnBuildError();
         }
 
-        if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
+        if ( result == Node::BuildResult::eNeedSecondPass )
         {
             // Only distributable jobs have two passes, and the 2nd pass is always distributable
             JobQueue::Get().QueueDistributableJob( job );
         }
         else
         {
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), false );
+            JobQueue::Get().FinishedProcessingJob( job, result, false );
         }
 
         return true; // did some work
@@ -194,18 +180,19 @@ void WorkerThread::WaitForStop()
     // no local job, see if we can do one from the remote queue
     if ( FBuild::Get().GetOptions().m_NoLocalConsumptionOfRemoteJobs == false )
     {
-        job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToProcess( false ) : nullptr;
+        job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToProcess( false, Protocol::kVersionMinor )
+                                  : nullptr;
         if ( job != nullptr )
         {
             // process the work
             const Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
 
-            if ( result == Node::NODE_RESULT_FAILED )
+            if ( result == Node::BuildResult::eFailed )
             {
                 FBuild::OnBuildError();
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
+            JobQueue::Get().FinishedProcessingJob( job, result, true ); // returning a remote job
 
             return true; // did some work
         }
@@ -220,7 +207,7 @@ void WorkerThread::WaitForStop()
             // process the work
             const Node::BuildResult result = JobQueueRemote::DoBuild( job, true );
 
-            if ( result == Node::NODE_RESULT_FAILED )
+            if ( result == Node::BuildResult::eFailed )
             {
                 // Ignore error if cancelling due to a remote race win
                 if ( job->GetDistributionState() != Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
@@ -229,7 +216,7 @@ void WorkerThread::WaitForStop()
                 }
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
+            JobQueue::Get().FinishedProcessingJob( job, result, true ); // returning a remote job
 
             return true; // did some work
         }
@@ -237,7 +224,6 @@ void WorkerThread::WaitForStop()
 
     return false; // no work to do
 }
-
 
 // GetTempFileDirectory
 //------------------------------------------------------------------------------
@@ -266,11 +252,16 @@ void WorkerThread::WaitForStop()
 // CreateTempFile
 //------------------------------------------------------------------------------
 /*static*/ bool WorkerThread::CreateTempFile( const AString & tmpFileName,
-                                        FileStream & file )
+                                              FileStream & file )
 {
     ASSERT( tmpFileName.IsEmpty() == false );
     ASSERT( PathUtils::IsFullPath( tmpFileName ) );
-    return file.Open( tmpFileName.Get(), FileStream::WRITE_ONLY );
+
+    // On Windows, work around issues caused by security software locking files
+    // by having an extended retry period
+    const uint32_t retryTimeMS = 15'000;
+
+    return file.Open( tmpFileName.Get(), FileStream::WRITE_ONLY, retryTimeMS );
 }
 
 // CreateThreadLocalTmpDir
@@ -280,7 +271,7 @@ void WorkerThread::WaitForStop()
     PROFILE_FUNCTION;
 
     // create isolated subdir
-    AStackString<> tmpFileName;
+    AStackString tmpFileName;
     CreateTempFilePath( ".tmp", tmpFileName );
     const char * lastSlash = tmpFileName.FindLast( NATIVE_SLASH );
     tmpFileName.SetLength( (uint32_t)( lastSlash - tmpFileName.Get() ) );

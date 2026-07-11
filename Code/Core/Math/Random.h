@@ -17,7 +17,10 @@ public:
     Random();
 
     // seed with a specific value
-    explicit inline Random( uint32_t seed ) : m_Seed( seed ) {}
+    explicit Random( uint32_t seed )
+        : m_Seed( seed )
+    {
+    }
 
     // random number from 0 to RAND_MAX
     uint32_t GetRand();
@@ -35,8 +38,8 @@ public:
     }
 
     // access the seed value
-    inline void     SetSeed( uint32_t seed ) { m_Seed = seed; }
-    inline uint32_t GetSeed() const { return m_Seed; }
+    void SetSeed( uint32_t seed ) { m_Seed = seed; }
+    uint32_t GetSeed() const { return m_Seed; }
 
 private:
     uint32_t m_Seed;

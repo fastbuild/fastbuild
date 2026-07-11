@@ -1,6 +1,5 @@
-
 #include "a.h"
 ClassA::ClassA()
-: m_Int( 0 )
+    : m_Int( 0 )
 {
 }

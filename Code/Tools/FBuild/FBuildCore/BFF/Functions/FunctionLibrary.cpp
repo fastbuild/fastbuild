@@ -4,13 +4,15 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionLibrary.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionLibrary::FunctionLibrary()
-: FunctionObjectList()
+    : FunctionObjectList()
 {
     m_Name = "Library";
 }

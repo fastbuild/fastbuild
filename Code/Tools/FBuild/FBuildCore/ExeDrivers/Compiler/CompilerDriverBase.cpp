@@ -28,7 +28,7 @@ CompilerDriverBase::~CompilerDriverBase() = default;
 void CompilerDriverBase::Init( const ObjectNode * objectNode,
                                const AString & remoteSourceRoot )
 {
-    m_ObjectNode= objectNode;
+    m_ObjectNode = objectNode;
     m_RemoteSourceRoot = remoteSourceRoot;
 }
 
@@ -72,12 +72,12 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
         const char * const found = token.Find( "%1" );
         if ( found )
         {
-            outFullArgs += AStackString<>( token.Get(), found );
+            outFullArgs += AStackString( token.Get(), found );
             if ( m_OverrideSourceFile.IsEmpty() )
             {
                 if ( m_RelativeBasePath.IsEmpty() == false )
                 {
-                    AStackString<> relativeFileName;
+                    AStackString relativeFileName;
                     PathUtils::GetRelativePath( m_RelativeBasePath, m_ObjectNode->GetSourceFile()->GetName(), relativeFileName );
                     outFullArgs += relativeFileName;
                 }
@@ -90,7 +90,7 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
             {
                 outFullArgs += m_OverrideSourceFile;
             }
-            outFullArgs += AStackString<>( found + 2, token.GetEnd() );
+            outFullArgs += AStackString( found + 2, token.GetEnd() );
             outFullArgs.AddDelimiter();
             return true;
         }
@@ -101,10 +101,10 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
         const char * const found = token.Find( "%2" );
         if ( found )
         {
-            outFullArgs += AStackString<>( token.Get(), found );
+            outFullArgs += AStackString( token.Get(), found );
             if ( m_RelativeBasePath.IsEmpty() == false )
             {
-                AStackString<> relativeFileName;
+                AStackString relativeFileName;
                 PathUtils::GetRelativePath( m_RelativeBasePath, m_ObjectNode->GetName(), relativeFileName );
                 outFullArgs += relativeFileName;
             }
@@ -112,7 +112,7 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
             {
                 outFullArgs += m_ObjectNode->GetName();
             }
-            outFullArgs += AStackString<>( found + 2, token.GetEnd() );
+            outFullArgs += AStackString( found + 2, token.GetEnd() );
             outFullArgs.AddDelimiter();
             return true;
         }
@@ -150,7 +150,7 @@ void CompilerDriverBase::Init( const ObjectNode * objectNode,
     }
     if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) && ( token.GetLength() > 2 ) )
     {
-        const AStackString<> unquoted( ( token.Get() + 1 ), ( token.GetEnd() - 1 ) );
+        const AStackString unquoted( ( token.Get() + 1 ), ( token.GetEnd() - 1 ) );
         return StripTokenWithArg( tokenToCheckFor, unquoted, index );
     }
     return false; // not found

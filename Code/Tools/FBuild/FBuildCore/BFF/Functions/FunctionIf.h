@@ -11,8 +11,8 @@
 class FunctionIf : public Function
 {
 public:
-    explicit        FunctionIf();
-    inline virtual ~FunctionIf() override = default;
+    explicit FunctionIf();
+    virtual ~FunctionIf() override = default;
 
     virtual bool AcceptsHeader() const override;
     virtual bool NeedsHeader() const override;
@@ -21,7 +21,6 @@ public:
                                 const BFFToken * functionNameStart,
                                 const BFFTokenRange & headerRange,
                                 const BFFTokenRange & bodyRange ) const override;
-
 };
 
 //------------------------------------------------------------------------------

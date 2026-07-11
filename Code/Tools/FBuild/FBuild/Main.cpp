@@ -26,16 +26,16 @@
 //------------------------------------------------------------------------------
 enum ReturnCodes
 {
-    FBUILD_OK                               = 0,
-    FBUILD_BUILD_FAILED                     = -1,
-    FBUILD_ERROR_LOADING_BFF                = -2,
-    FBUILD_BAD_ARGS                         = -3,
-    FBUILD_ALREADY_RUNNING                  = -4,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER          = -5,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6,
-    FBUILD_WRAPPER_CRASHED                  = -7,
-    FBUILD_FAILED_TO_WSL_WRAPPER            = -8,
-    FBUILD_FAILED_TO_WRITE_PROFILE_JSON     = -9,
+    FBUILD_OK = 0,
+    FBUILD_BUILD_FAILED = -1,
+    FBUILD_ERROR_LOADING_BFF = -2,
+    FBUILD_BAD_ARGS = -3,
+    FBUILD_ALREADY_RUNNING = -4,
+    FBUILD_FAILED_TO_SPAWN_WRAPPER = -5,
+    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL = -6,
+    FBUILD_WRAPPER_CRASHED = -7,
+    FBUILD_FAILED_TO_WSL_WRAPPER = -8,
+    FBUILD_FAILED_TO_WRITE_PROFILE_JSON = -9,
 };
 
 // Headers
@@ -50,8 +50,8 @@ int Main( int argc, char * argv[] );
 // data passed between processes in "wrapper" mode
 struct SharedData
 {
-    bool    Started;
-    int     ReturnCode;
+    bool Started;
+    int ReturnCode;
 };
 
 // Global
@@ -64,7 +64,7 @@ int main( int argc, char * argv[] )
 {
     // This wrapper is purely for profiling scope
     const int result = Main( argc, argv );
-    PROFILE_SYNCHRONIZE // make sure no tags are active and do one final sync
+    PROFILE_SYNCHRONIZE; // make sure no tags are active and do one final sync
     return result;
 }
 
@@ -85,9 +85,9 @@ int Main( int argc, char * argv[] )
     options.m_ShowProgress = true; // Override default
     switch ( options.ProcessCommandLine( argc, argv ) )
     {
-        case FBuildOptions::OPTIONS_OK:             break;
-        case FBuildOptions::OPTIONS_OK_AND_QUIT:    return FBUILD_OK;
-        case FBuildOptions::OPTIONS_ERROR:          return FBUILD_BAD_ARGS;
+        case FBuildOptions::OPTIONS_OK: break;
+        case FBuildOptions::OPTIONS_OK_AND_QUIT: return FBUILD_OK;
+        case FBuildOptions::OPTIONS_ERROR: return FBUILD_BAD_ARGS;
     }
 
     const FBuildOptions::WrapperMode wrapperMode = options.m_WrapperMode;
@@ -99,12 +99,6 @@ int Main( int argc, char * argv[] )
     {
         return WrapperModeForWSL( options );
     }
-
-    #if defined( __WINDOWS__ )
-        // TODO:MAC Implement SetPriorityClass
-        // TODO:LINUX Implement SetPriorityClass
-        VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
-    #endif
 
     // don't buffer output
     VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
@@ -130,7 +124,7 @@ int Main( int argc, char * argv[] )
             }
 
             OUTPUT( "FBuild: Waiting for another FASTBuild to terminate due to -wait option.\n" );
-            while( mainProcess.TryLock() == false )
+            while ( mainProcess.TryLock() == false )
             {
                 Thread::Sleep( 1000 );
                 if ( FBuild::GetStopBuild() )
@@ -175,64 +169,83 @@ int Main( int argc, char * argv[] )
         sharedData->Started = true;
     }
 
-    FBuild fBuild( options );
-
-    // load the dependency graph if available
-    if ( !fBuild.Initialize() )
+    // Scope around main logic so that timings include cleanup
+    bool problemSavingBuildProfileJSON = false;
+    bool result = false;
     {
-        if ( sharedData )
+        FBuild fBuild( options );
+
+        // load the dependency graph if available
+        if ( !fBuild.Initialize() )
         {
-            sharedData->ReturnCode = FBUILD_ERROR_LOADING_BFF;
+            if ( sharedData )
+            {
+                sharedData->ReturnCode = FBUILD_ERROR_LOADING_BFF;
+            }
+            ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
+            return FBUILD_ERROR_LOADING_BFF;
+        }
+
+        if ( options.m_DisplayTargetList )
+        {
+            fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
+            result = true; // DisplayTargetList cannot fail
+        }
+        else if ( options.m_DisplayDependencyDB )
+        {
+            result = fBuild.DisplayDependencyDB( options.m_Targets );
+        }
+        else if ( options.m_GenerateDotGraph )
+        {
+            result = fBuild.GenerateDotGraph( options.m_Targets, options.m_GenerateDotGraphFull );
+        }
+        else if ( options.m_GenerateCompilationDatabase )
+        {
+            result = fBuild.GenerateCompilationDatabase( options.m_Targets );
+        }
+        else if ( options.m_CacheInfo )
+        {
+            result = fBuild.CacheOutputInfo();
+        }
+        else if ( options.m_CacheTrim )
+        {
+            result = fBuild.CacheTrim();
+        }
+        else
+        {
+            result = fBuild.Build( options.m_Targets, options.m_SourceFiles );
+        }
+
+        // Capture data from FBuild for profiling if active
+        if ( options.m_Profile )
+        {
+            BuildProfiler::Get().Capture( fBuild );
         }
         ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
-        return FBUILD_ERROR_LOADING_BFF;
+
+        // FBuild is destroyed here (along with FBuildProfiler)
     }
 
-    bool result = false;
-    if ( options.m_DisplayTargetList )
-    {
-        fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
-        result = true; // DisplayTargetList cannot fail
-    }
-    else if ( options.m_DisplayDependencyDB )
-    {
-        result = fBuild.DisplayDependencyDB( options.m_Targets );
-    }
-    else if ( options.m_GenerateDotGraph )
-    {
-        result = fBuild.GenerateDotGraph( options.m_Targets, options.m_GenerateDotGraphFull );
-    }
-    else if ( options.m_GenerateCompilationDatabase )
-    {
-        result = fBuild.GenerateCompilationDatabase( options.m_Targets );
-    }
-    else if ( options.m_CacheInfo )
-    {
-        result = fBuild.CacheOutputInfo();
-    }
-    else if ( options.m_CacheTrim )
-    {
-        result = fBuild.CacheTrim();
-    }
-    else
-    {
-        result = fBuild.Build( options.m_Targets );
-    }
-
-
-    // Build Profiling enabled?
-    bool problemSavingBuildProfileJSON = false;
+    // Save profiling data to disk if enabled
     if ( options.m_Profile )
     {
-        if ( BuildProfiler::Get().SaveJSON( options, "fbuild_profile.json" ) == false )
+        if ( BuildProfiler::SaveJSON( "fbuild_profile.json" ) == false )
         {
             problemSavingBuildProfileJSON = true;
         }
     }
 
+    // Determine the final exit code
+    ReturnCodes retCode = ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+    if ( ( retCode == FBUILD_OK ) && problemSavingBuildProfileJSON )
+    {
+        retCode = FBUILD_FAILED_TO_WRITE_PROFILE_JSON;
+    }
+
+    // Store final return code in SharedData if running under a wrapper
     if ( sharedData )
     {
-        sharedData->ReturnCode = ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+        sharedData->ReturnCode = retCode;
     }
 
     // final line of output - status of build
@@ -251,13 +264,7 @@ int Main( int argc, char * argv[] )
         }
     }
 
-    ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
-
-    if ( problemSavingBuildProfileJSON )
-    {
-        return FBUILD_FAILED_TO_WRITE_PROFILE_JSON;
-    }    
-    return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
+    return retCode;
 }
 
 // WrapperMainProcess
@@ -272,7 +279,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     sd->ReturnCode = FBUILD_WRAPPER_CRASHED;
 
     // launch intermediate process
-    AStackString<> argsCopy( args );
+    AStackString argsCopy( args );
     argsCopy += " -wrapperintermediate";
 
     Process p;
@@ -319,7 +326,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 int WrapperIntermediateProcess( const FBuildOptions & options )
 {
     // launch final process
-    AStackString<> argsCopy( options.m_Args );
+    AStackString argsCopy( options.m_Args );
     argsCopy += " -wrapperfinal";
 
     Process p;

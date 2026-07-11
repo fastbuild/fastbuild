@@ -14,7 +14,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCopyDir::FunctionCopyDir()
-: Function( "CopyDir" )
+    : Function( "CopyDir" )
 {
 }
 

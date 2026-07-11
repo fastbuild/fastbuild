@@ -4,15 +4,16 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionUsing.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionUsing::FunctionUsing()
-: Function( "Using" )
+    : Function( "Using" )
 {
 }
 
@@ -62,7 +63,7 @@ FunctionUsing::FunctionUsing()
     ASSERT( frame );
 
     // find variable name
-    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+    AStackString<BFFParser::kMaxVariableNameLength> varName;
     bool parentScope = false;
     if ( BFFParser::ParseVariableName( varToken, varName, parentScope ) == false )
     {
@@ -72,8 +73,8 @@ FunctionUsing::FunctionUsing()
     // find variable
     const BFFVariable * v = nullptr;
     const BFFStackFrame * const varFrame = ( parentScope )
-        ? BFFStackFrame::GetParentDeclaration( varName, frame, v )
-        : nullptr;
+                                               ? BFFStackFrame::GetParentDeclaration( varName, frame, v )
+                                               : nullptr;
 
     if ( false == parentScope )
     {
@@ -88,19 +89,16 @@ FunctionUsing::FunctionUsing()
 
     if ( v->IsStruct() == false )
     {
-        Error::Error_1008_VariableOfWrongType( varToken, this,
-                                                BFFVariable::VAR_STRUCT,
-                                                v->GetType() );
+        Error::Error_1008_VariableOfWrongType( varToken,
+                                               this,
+                                               BFFVariable::VAR_STRUCT,
+                                               v->GetType() );
         return false;
     }
 
     const BFFVariable * sameNameMember = nullptr;
-    const Array< const BFFVariable * > & members = v->GetStructMembers();
-    for ( const BFFVariable ** it = members.Begin();
-            it != members.End();
-            ++it )
+    for ( const BFFVariable * member : v->GetStructMembers() )
     {
-        const BFFVariable * member = ( *it );
         if ( ( sameNameMember == nullptr ) && ( parentScope == false ) && ( member->GetName() == v->GetName() ) )
         {
             // We have a struct member with the same name as the struct variable itself.
@@ -108,12 +106,12 @@ FunctionUsing::FunctionUsing()
             sameNameMember = member;
             continue;
         }
-        BFFStackFrame::SetVar( member, frame );
+        BFFStackFrame::SetVar( member, *varToken, frame );
     }
 
     if ( sameNameMember != nullptr )
     {
-        BFFStackFrame::SetVar( sameNameMember, frame );
+        BFFStackFrame::SetVar( sameNameMember, *varToken, frame );
     }
 
     if ( headerIter.IsAtEnd() == false )

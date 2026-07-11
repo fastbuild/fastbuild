@@ -41,10 +41,10 @@ CompilerDriver_OrbisWavePSSLC::~CompilerDriver_OrbisWavePSSLC() = default;
 // ProcessArg_CompilePreprocessed
 //------------------------------------------------------------------------------
 /*virtual*/ bool CompilerDriver_OrbisWavePSSLC::ProcessArg_CompilePreprocessed( const AString & token,
-                                                                          size_t & index,
-                                                                          const AString & /*nextToken*/,
-                                                                          bool /*isLocal*/,
-                                                                          Args & /*outFullArgs*/ ) const
+                                                                                size_t & index,
+                                                                                const AString & /*nextToken*/,
+                                                                                bool /*isLocal*/,
+                                                                                Args & /*outFullArgs*/ ) const
 {
     // Remove forced includes so they aren't forced twice
     if ( StripTokenWithArg( "-include", token, index ) )

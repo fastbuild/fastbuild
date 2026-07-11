@@ -14,4 +14,3 @@ public:
         return AnonFunction();
     }
 };
-

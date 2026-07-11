@@ -4,22 +4,22 @@
 // Select desired Clang version
 //------------------------------------------------------------------------------
 #if __LINUX__ && !CI_BUILD
-    //#define USING_CLANG_3
     //#define USING_CLANG_6
     #define USING_CLANG_10
-#endif
-#if __OSX__ && !CI_BUILD
-    #define USING_CLANG_8
-    //#define USING_CLANG_12
-#endif
-#if __WINDOWS__ && !CI_BUILD
-    //#define USING_CLANG_7
-    //#define USING_CLANG_8
-    //#define USING_CLANG_9
-    //#define USING_CLANG_10
-    #define USING_CLANG_11
     //#define USING_CLANG_14
     //#define USING_CLANG_15
+    //#define USING_CLANG_18
+#endif
+#if __OSX__ && !CI_BUILD
+    //#define USING_CLANG_8
+    #define USING_CLANG_12
+#endif
+#if __WINDOWS__ && !CI_BUILD
+    //#define USING_CLANG_14
+    //#define USING_CLANG_15
+    //#define USING_CLANG_17
+    //#define USING_CLANG_18
+    #define USING_CLANG_19
 #endif
 
 // Activate
@@ -28,14 +28,20 @@
     #if CI_BUILD
         #include "Linux/Clang_CI.bff"
     #endif
-    #if USING_CLANG_3
-        #include "Linux/Clang3.bff"
-    #endif
     #if USING_CLANG_6
         #include "Linux/Clang6.bff"
     #endif
     #if USING_CLANG_10
         #include "Linux/Clang10.bff"
+    #endif
+    #if USING_CLANG_14
+        #include "Linux/Clang14.bff"
+    #endif
+    #if USING_CLANG_15
+        #include "Linux/Clang15.bff"
+    #endif
+    #if USING_CLANG_18
+        #include "Linux/Clang18.bff"
     #endif
 #endif
 #if __OSX__
@@ -51,28 +57,22 @@
 #endif
 #if __WINDOWS__
     #if CI_BUILD
-        #define USING_CLANG_11
-    #endif
-    #if USING_CLANG_7
-        #include "Windows/Clang7.bff"
-    #endif
-    #if USING_CLANG_8
-        #include "Windows/Clang8.bff"
-    #endif
-    #if USING_CLANG_9
-        #include "Windows/Clang9.bff"
-    #endif
-    #if USING_CLANG_10
-        #include "Windows/Clang10.bff"
-    #endif
-    #if USING_CLANG_11
-        #include "Windows/Clang11.bff"
+        #define USING_CLANG_19
     #endif
     #if USING_CLANG_14
         #include "Windows/Clang14.bff"
     #endif
     #if USING_CLANG_15
         #include "Windows/Clang15.bff"
+    #endif
+    #if USING_CLANG_17
+        #include "Windows/Clang17.bff"
+    #endif
+    #if USING_CLANG_18
+        #include "Windows/Clang18.bff"
+    #endif
+    #if USING_CLANG_19
+        #include "Windows/Clang19.bff"
     #endif
 #endif
 

@@ -11,7 +11,7 @@
 class NodeProxy : public Node
 {
 public:
-    explicit NodeProxy( const AString & name );
+    explicit NodeProxy( AString && name );
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) override;
     virtual ~NodeProxy() override;
 

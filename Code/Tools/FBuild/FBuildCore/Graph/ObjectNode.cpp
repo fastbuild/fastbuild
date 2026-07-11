@@ -5,12 +5,14 @@
 //------------------------------------------------------------------------------
 #include "ObjectNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/Cache/ICache.h"
+#include "Tools/FBuild/FBuildCore/Cache/LightCache.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriverBase.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CL.h"
-#include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CodeWarriorWii.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CUDA.h"
+#include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_CodeWarriorWii.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_GCCClang.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_Generic.h"
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_GreenHillsWiiU.h"
@@ -20,10 +22,10 @@
 #include "Tools/FBuild/FBuildCore/ExeDrivers/Compiler/CompilerDriver_VBCC.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Cache/LightCache.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
@@ -46,11 +48,11 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
-#include "Core/Profile/Profile.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
 #include "Core/Time/Time.h"
 #include "Core/Tracing/Tracing.h"
-#include "Core/Strings/AStackString.h"
 
 #include <string.h>
 #if defined( __OSX__ ) || defined( __LINUX__ )
@@ -60,42 +62,26 @@
 // Static Data
 //------------------------------------------------------------------------------
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
-    /*static*/ Atomic<uint32_t> ObjectNode::sFakeSystemFailureState( FakeSystemFailureState::DISABLED );
+/*static*/ Atomic<uint32_t> ObjectNode::sFakeSystemFailureState( FakeSystemFailureState::DISABLED );
 #endif
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile())
-    REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
-    REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
-    REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
-    REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
-    REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
-    REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
-    REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
-    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
-    REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
-
-    // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
-    REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
-
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
+REFLECT_NODE_BEGIN( ObjectNode, Node )
+    REFLECT( m_CompilerInputFile, MetaFile() )
 
     // Internal State
-    REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
-    REFLECT( m_CompilerFlags.m_Flags,               "CompilerFlags",                    MetaHidden() )
-    REFLECT( m_PreprocessorFlags.m_Flags,           "PreprocessorFlags",                MetaHidden() )
-    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
-    REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
+    REFLECT_RENAME( m_CompilerFlags.m_Flags, "CompilerFlags", MetaHidden() )
+    REFLECT_RENAME( m_PreprocessorFlags.m_Flags, "PreprocessorFlags", MetaHidden() )
+    REFLECT( m_PCHCacheKey, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_OwnerObjectList, MetaHidden() )
+    REFLECT( m_OwnerObjectListHash, MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ObjectNode::ObjectNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
 {
     m_Type = OBJECT_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
@@ -105,20 +91,13 @@ ObjectNode::ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
-    ASSERT( m_OwnerObjectList.IsEmpty() == false ); // Must be set before we get here
+    ASSERT( m_OwnerObjectList ); // Must be set before we get here
+    ASSERT( m_OwnerObjectListHash );
 
-    // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    // .PreBuildDependencies (OwnerObjectList will have handled checks/errors)
+    m_PreBuildDependencies = m_OwnerObjectList->GetPreBuildDependencies();
 
-    // .Compiler
-    CompilerNode * compiler( nullptr );
-    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compiler ) )
-    {
-        return false; // GetCompilerNode will have emitted an error
-    }
+    // NOTE: ConcurrencyGroup stored in mOwnerObjectList
 
     // .CompilerInputFile
     Dependencies compilerInputFile;
@@ -128,31 +107,34 @@ ObjectNode::ObjectNode()
     }
     ASSERT( compilerInputFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
 
-    // .Preprocessor
-    CompilerNode * preprocessor( nullptr );
-    if ( m_Preprocessor.IsEmpty() == false )
-    {
-        if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessor ) )
-        {
-            return false; // GetCompilerNode will have emitted an error
-        }
-    }
-
     // .CompilerForceUsing
     Dependencies compilerForceUsing;
-    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    if ( !Function::GetFileNodes( nodeGraph,
+                                  iter,
+                                  function,
+                                  m_OwnerObjectList->GetCompilerForceUsing(),
+                                  ".CompilerForceUsing",
+                                  compilerForceUsing ) )
     {
         return false; // GetFileNode will have emitted an error
     }
 
     // Precompiled Header
     Dependencies precompiledHeader;
-    if ( m_PrecompiledHeader.IsEmpty() == false )
+    if ( GetPrecompiledHeaderName().IsEmpty() == false )
     {
         // m_PrecompiledHeader is only set if our associated ObjectList or Library created one
-        VERIFY( Function::GetFileNode( nodeGraph, iter, function, m_PrecompiledHeader, ".PrecompiledHeader", precompiledHeader ) );
+        VERIFY( Function::GetFileNode( nodeGraph,
+                                       iter,
+                                       function,
+                                       GetPrecompiledHeaderName(),
+                                       ".PrecompiledHeader",
+                                       precompiledHeader ) );
         ASSERT( precompiledHeader.GetSize() == 1 );
     }
+
+    CompilerNode * compiler = m_OwnerObjectList->GetCompiler();
+    CompilerNode * preprocessor = m_OwnerObjectList->GetPreprocessor();
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
@@ -168,37 +150,9 @@ ObjectNode::ObjectNode()
     return true;
 }
 
-// CONSTRUCTOR (Remote)
-//------------------------------------------------------------------------------
-ObjectNode::ObjectNode( const AString & objectName,
-                        NodeProxy * srcFile,
-                        const AString & compilerOptions,
-                        uint32_t flags )
-: FileNode( objectName, Node::FLAG_NONE )
-, m_CompilerOptions( compilerOptions )
-, m_Remote( true )
-{
-    m_Type = OBJECT_NODE;
-    m_LastBuildTimeMs = 5000; // higher default than a file node
-    m_CompilerFlags.m_Flags = flags;
-
-    m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.Add( nullptr );
-    m_StaticDependencies.Add( srcFile );
-}
-
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::~ObjectNode()
-{
-    // remote worker owns the ProxyNode for the source file, so must free it
-    if ( m_Remote )
-    {
-        Node * srcFile = GetSourceFile();
-        ASSERT( srcFile->GetType() == Node::PROXY_NODE );
-        FDELETE srcFile;
-    }
-}
+ObjectNode::~ObjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -213,13 +167,13 @@ ObjectNode::~ObjectNode()
     {
         if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
+            return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
         }
         if ( IsMSVC() && IsCreatingPCH() )
         {
-            if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
+            if ( DoPreBuildFileDeletion( GetPCHObjectName() ) == false )
             {
-                return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
+                return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
             }
         }
     }
@@ -234,7 +188,7 @@ ObjectNode::~ObjectNode()
     bool useDeoptimization = ShouldUseDeoptimization();
 
     const bool useCache = ShouldUseCache();
-    const bool useDist = m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+    const bool useDist = IsDistributionAllowed();
     const bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
     bool usePreProcessor = !useSimpleDist && ( useCache || useDist || IsGCC() || IsSNC() || IsClang() || IsClangCl() || IsCodeWarriorWii() || IsGreenHillsWiiU() || IsVBCC() || IsOrbisWavePSSLC() );
     if ( GetDedicatedPreprocessor() )
@@ -287,14 +241,12 @@ ObjectNode::~ObjectNode()
     // convert includes to nodes
     m_DynamicDependencies.Clear();
     m_DynamicDependencies.SetCapacity( m_Includes.GetSize() );
-    for ( Array< AString >::ConstIter it = m_Includes.Begin();
-            it != m_Includes.End();
-            it++ )
+    for ( const AString & include : m_Includes )
     {
-        Node * fn = nodeGraph.FindNode( *it );
+        Node * fn = nodeGraph.FindNode( include );
         if ( fn == nullptr )
         {
-            fn = nodeGraph.CreateFileNode( *it );
+            fn = nodeGraph.CreateNode<FileNode>( include );
         }
         else if ( fn->IsAFile() == false )
         {
@@ -308,7 +260,7 @@ ObjectNode::~ObjectNode()
              ( fn->GetStamp() == 0 ) &&
              ( fn->GetStatFlag( Node::STATS_BUILT ) == false ) )
         {
-            fn->CastTo< FileNode >()->DoBuild( nullptr );
+            fn->CastTo<FileNode>()->DoBuild( nullptr );
         }
 
         m_DynamicDependencies.Add( fn );
@@ -330,7 +282,14 @@ ObjectNode::~ObjectNode()
     // lazily determined during a build, but needs to persist across migrations
     // to prevent unnecessary rebuilds of object that depend on this one, if this
     // is a precompiled header object.
-    m_PCHCacheKey = oldNode.CastTo< ObjectNode >()->m_PCHCacheKey;
+    m_PCHCacheKey = oldNode.CastTo<ObjectNode>()->m_PCHCacheKey;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ObjectNode::GetConcurrencyGroupIndex() const
+{
+    // ObjectNodes inherit their concurrency group value from their owner
+    return m_OwnerObjectList->GetConcurrencyGroupIndex();
 }
 
 // DoBuildMSCL_NoCache
@@ -344,16 +303,21 @@ ObjectNode::~ObjectNode()
     const bool finalize( true );
     if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     EmitCompilationMessage( fullArgs, useDeoptimization );
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) ) // use response file for MSVC
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       GetCompiler(),
+                                                       GetCompiler()->GetExecutable(),
+                                                       fullArgs );
+    if ( result != Node::BuildResult::eOk )
     {
-        return NODE_RESULT_FAILED; // SpawnCompiler has logged error
+        return result; // SpawnCompiler logs error for eFailed case
     }
 
     // Handle MSCL warnings if not already a failure
@@ -372,7 +336,7 @@ ObjectNode::~ObjectNode()
         }
     }
 
-    const char *output = nullptr;
+    const char * output = nullptr;
     uint32_t outputSize = 0;
 
     // MSVC will write /ShowIncludes output on stderr sometimes (ex: /Fi)
@@ -391,13 +355,13 @@ ObjectNode::~ObjectNode()
     // compiled ok, try to extract includes
     if ( ProcessIncludesMSCL( output, outputSize ) == false )
     {
-        return NODE_RESULT_FAILED; // ProcessIncludesMSCL will have emitted an error
+        return BuildResult::eFailed; // ProcessIncludesMSCL will have emitted an error
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuildWithPreProcessor
@@ -413,22 +377,26 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
     if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // Try to use the light cache if enabled
     if ( useCache && GetCompiler()->GetUseLightCache() )
     {
         LightCache lc;
-        if ( lc.Hash( this, fullArgs.GetFinalArgs(), m_LightCacheKey, m_Includes ) == false )
+        if ( lc.Hash( this,
+                      GetOwnerObjectList().GetCompilerInfo(),
+                      fullArgs.GetRawArgs(),
+                      m_LightCacheKey,
+                      m_Includes ) == false )
         {
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
                 FLOG_OUTPUT( "LightCache cannot be used for '%s'\n"
                              "%s",
-                              GetName().Get(),
-                              lc.GetErrors().Get() );
+                             GetName().Get(),
+                             lc.GetErrors().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -442,12 +410,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
             if ( RetrieveFromCache( job ) )
             {
-                return NODE_RESULT_OK_CACHE;
+                return BuildResult::eOk;
             }
 
             // Cache miss
             const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
-            const bool canDistribute = belowMemoryLimit && m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+            const bool canDistribute = belowMemoryLimit && IsDistributionAllowed();
             if ( canDistribute == false )
             {
                 // can't distribute, so generating preprocessed output is useless
@@ -464,15 +432,16 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     if ( pass == PASS_PREPROCESSOR_ONLY )
     {
-        if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
+        const BuildResult result = BuildPreprocessedOutput( fullArgs, job, useDeoptimization );
+        if ( result != BuildResult::eOk )
         {
-            return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+            return result; // BuildPreprocessedOutput will have emitted an error for eFailed
         }
 
         // preprocessed ok, try to extract includes
         if ( ProcessIncludesWithPreProcessor( job ) == false )
         {
-            return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
+            return BuildResult::eFailed; // ProcessIncludesWithPreProcessor will have emitted an error
         }
     }
 
@@ -480,7 +449,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     {
         if ( LoadStaticSourceFileForDistribution( fullArgs, job, useDeoptimization ) == false )
         {
-            return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+            return BuildResult::eFailed; // BuildPreprocessedOutput will have emitted an error
         }
     }
 
@@ -499,12 +468,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
         if ( RetrieveFromCache( job ) )
         {
-            return NODE_RESULT_OK_CACHE;
+            return BuildResult::eOk;
         }
     }
 
     // can we do the rest of the work remotely?
-    const bool canDistribute = useSimpleDist || ( m_CompilerFlags.IsDistributable() && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed );
+    const bool canDistribute = useSimpleDist || IsDistributionAllowed();
     const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
     if ( canDistribute && belowMemoryLimit )
     {
@@ -515,7 +484,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         job->OwnData( c.ReleaseResult(), compressedSize, true );
 
         // yes... re-queue for secondary build
-        return NODE_RESULT_NEED_SECOND_BUILD_PASS;
+        return BuildResult::eNeedSecondPass;
     }
 
     // can't do the work remotely, so do it right now
@@ -523,12 +492,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const bool racingRemoteJob = false;
     const bool isFollowingLightCacheMiss = false;
     const Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, isFollowingLightCacheMiss );
-    if ( result != Node::NODE_RESULT_OK )
+    if ( result != BuildResult::eOk )
     {
         return result;
     }
 
-    return Node::NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuildWithPreProcessor2
@@ -606,13 +575,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     }
 
     Args fullArgs;
-    AStackString<> tmpDirectoryName;
-    AStackString<> tmpFileName;
+    AStackString tmpDirectoryName;
+    AStackString tmpFileName;
     if ( usePreProcessedOutput )
     {
         if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
         {
-            return NODE_RESULT_FAILED; // WriteTmpFile will have emitted an error
+            return BuildResult::eFailed; // WriteTmpFile will have emitted an error
         }
 
         const bool showIncludes( false );
@@ -620,7 +589,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool finalize( true );
         if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
     }
     else
@@ -630,7 +599,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool finalize( true );
         if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
     }
 
@@ -643,22 +612,22 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );
     }
 
-    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
-        // If racing while inducing a remote failure, ensure the remote failure
-        // always wins.
-        if ( racingRemoteJob && ( sFakeSystemFailureState.Load() > FakeSystemFailureState::DISABLED ) )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+    // If racing while inducing a remote failure, ensure the remote failure
+    // always wins.
+    if ( racingRemoteJob && ( sFakeSystemFailureState.Load() > FakeSystemFailureState::DISABLED ) )
+    {
+        // Notify the remote side we're ready for it to fail
+        // and wait for it to be returned
+        sFakeSystemFailureState.Store( RACING );
+        while ( job->GetDistributionState() == Job::DIST_RACING )
         {
-            // Notify the remote side we're ready for it to fail
-            // and wait for it to be returned
-            sFakeSystemFailureState.Store( RACING );
-            while ( job->GetDistributionState() == Job::DIST_RACING )
-            {
-                Thread::Sleep( 1 );
-            }
+            Thread::Sleep( 1 );
         }
-    #endif
+    }
+#endif
 
-    const bool result = BuildFinalOutput( job, fullArgs );
+    const BuildResult result = BuildFinalOutput( job, fullArgs );
 
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )
@@ -672,7 +641,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         FileIO::DirectoryDelete( tmpDirectoryName );
     }
 
-    if ( result == false )
+    if ( result != BuildResult::eOk )
     {
         // If the failure is forced due to a local cancellation, mark up the profiler
         // state so we can see that
@@ -681,7 +650,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
             job->GetBuildProfilerScope()->SetStepName( "Compile (Race Lost)" );
         }
 
-        return NODE_RESULT_FAILED; // BuildFinalOutput will have emitted error
+        return result; // BuildFinalOutput will have emitted error for eFailed
     }
 
     // record new file time
@@ -697,7 +666,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuild_QtRCC
@@ -714,15 +683,20 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         Args fullArgs;
         if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
 
         EmitCompilationMessage( fullArgs, false );
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                           GetName(),
+                                                           GetCompiler(),
+                                                           GetCompiler()->GetExecutable(),
+                                                           fullArgs );
+        if ( result != Node::BuildResult::eOk )
         {
-            return NODE_RESULT_FAILED; // compile has logged error
+            return result; // SpawnCompiler logs error for eFailed case
         }
 
         // get output
@@ -730,7 +704,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         output.Replace( '\r', '\n' ); // Normalize all carriage line endings
 
         // split into lines
-        Array< AString > lines( 256, true );
+        Array<AString> lines;
         output.Tokenize( lines, '\n' );
 
         m_Includes.Clear();
@@ -740,7 +714,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         {
             if ( line.GetLength() > 0 )
             {
-                AStackString<> cleanedInclude;
+                AStackString cleanedInclude;
                 NodeGraph::CleanPath( line, cleanedInclude );
                 m_Includes.Append( cleanedInclude );
             }
@@ -757,20 +731,25 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         Args fullArgs;
         if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
         {
-            return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+            return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                           GetName(),
+                                                           GetCompiler(),
+                                                           GetCompiler()->GetExecutable(),
+                                                           fullArgs );
+        if ( result != Node::BuildResult::eOk )
         {
-            return NODE_RESULT_FAILED; // compile has logged error
+            return result; // SpawnCompiler logs error for eFailed case
         }
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // DoBuildOther
@@ -784,22 +763,27 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     const bool finalize( true );
     if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, useSourceMapping, finalize ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     EmitCompilationMessage( fullArgs, useDeoptimization );
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       GetCompiler(),
+                                                       GetCompiler()->GetExecutable(),
+                                                       fullArgs );
+    if ( result != Node::BuildResult::eOk )
     {
-        return NODE_RESULT_FAILED; // compile has logged error
+        return result; // SpawnCompiler logs error for eFailed case
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // ProcessIncludesMSCL
@@ -893,10 +877,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::LoadRemote( IOStream & stream )
 {
-    AStackString<> name;
-    AStackString<> sourceFile;
+    AString name;
+    AString sourceFile;
     uint32_t flags;
-    AStackString<> compilerArgs;
+    AString compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -905,9 +889,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         return nullptr;
     }
 
-    NodeProxy * srcFile = FNEW( NodeProxy( sourceFile ) );
+    NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNode( name, srcFile, compilerArgs, flags ) );
+    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags ) );
 }
 
 // DetermineFlags
@@ -922,7 +906,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // set flags known from the context the args will be used in
     if ( creatingPCH )
     {
-        flags .Set( CompilerFlags::FLAG_CREATING_PCH );
+        flags.Set( CompilerFlags::FLAG_CREATING_PCH );
     }
     if ( usingPCH )
     {
@@ -930,28 +914,31 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     const bool isDistributableCompiler = compilerNode->CanBeDistributed();
+    const bool isCacheableCompiler = compilerNode->CanBeCached();
 
     // Compiler Type - TODO:C Eliminate duplication of these flags
     const CompilerNode::CompilerFamily compilerFamily = compilerNode->GetCompilerFamily();
     switch ( compilerFamily )
     {
-        case CompilerNode::CompilerFamily::CUSTOM:          break; // Nothing to do
-        case CompilerNode::CompilerFamily::MSVC:            flags.Set( CompilerFlags::FLAG_MSVC );              break;
-        case CompilerNode::CompilerFamily::CLANG:           flags.Set( CompilerFlags::FLAG_CLANG );             break;
-        case CompilerNode::CompilerFamily::CLANG_CL:        flags.Set( CompilerFlags::FLAG_CLANG_CL );          break;
-        case CompilerNode::CompilerFamily::GCC:             flags.Set( CompilerFlags::FLAG_GCC );               break;
-        case CompilerNode::CompilerFamily::SNC:             flags.Set( CompilerFlags::FLAG_SNC );               break;
-        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags.Set( CompilerFlags::CODEWARRIOR_WII );        break;
-        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags.Set( CompilerFlags::GREENHILLS_WIIU );        break;
-        case CompilerNode::CompilerFamily::CUDA_NVCC:       flags.Set( CompilerFlags::FLAG_CUDA_NVCC );         break;
-        case CompilerNode::CompilerFamily::QT_RCC:          flags.Set( CompilerFlags::FLAG_QT_RCC );            break;
-        case CompilerNode::CompilerFamily::VBCC:            flags.Set( CompilerFlags::FLAG_VBCC );              break;
-        case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags.Set( CompilerFlags::FLAG_ORBIS_WAVE_PSSLC );  break;
-        case CompilerNode::CompilerFamily::CSHARP:          ASSERT( false ); break; // Guarded in ObjectListNode::Initialize
+        case CompilerNode::CompilerFamily::CUSTOM: break; // Nothing to do
+        case CompilerNode::CompilerFamily::MSVC: flags.Set( CompilerFlags::FLAG_MSVC ); break;
+        case CompilerNode::CompilerFamily::CLANG: flags.Set( CompilerFlags::FLAG_CLANG ); break;
+        case CompilerNode::CompilerFamily::CLANG_CL: flags.Set( CompilerFlags::FLAG_CLANG_CL ); break;
+        case CompilerNode::CompilerFamily::GCC: flags.Set( CompilerFlags::FLAG_GCC ); break;
+        case CompilerNode::CompilerFamily::SNC: flags.Set( CompilerFlags::FLAG_SNC ); break;
+        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags.Set( CompilerFlags::CODEWARRIOR_WII ); break;
+        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags.Set( CompilerFlags::GREENHILLS_WIIU ); break;
+        case CompilerNode::CompilerFamily::CUDA_NVCC: flags.Set( CompilerFlags::FLAG_CUDA_NVCC ); break;
+        case CompilerNode::CompilerFamily::QT_RCC: flags.Set( CompilerFlags::FLAG_QT_RCC ); break;
+        case CompilerNode::CompilerFamily::VBCC: flags.Set( CompilerFlags::FLAG_VBCC ); break;
+        case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC: flags.Set( CompilerFlags::FLAG_ORBIS_WAVE_PSSLC ); break;
+        case CompilerNode::CompilerFamily::CSHARP: ASSERT( false ); break; // Guarded in ObjectListNode::Initialize
     }
 
     // Source mappings are not currently forwarded so can only compiled locally
     const bool hasSourceMapping = ( compilerNode->GetSourceMapping().IsEmpty() == false );
+
+    StackArray<AString::TokenRange, 512> tokenRanges;
 
     // Check MS compiler options
     if ( flags.IsMSVC() || flags.IsClangCl() )
@@ -960,12 +947,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         bool usingWinRT = false;
         bool usingPreprocessorOnly = false;
 
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-        const AString * const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        args.Tokenize( tokenRanges );
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AString & token = *it;
+            const AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                      ( args.Get() + tokenRange.m_EndIndex ) );
 
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
@@ -1003,6 +989,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                     flags.Set( CompilerFlags::FLAG_STATIC_ANALYSIS_MSVC );
                 }
             }
+            else if ( IsStartOfCompilerArg_MSVC( token, "dynamicdeopt" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_DYNAMIC_DEOPT );
+            }
+            else if ( flags.IsClangCl() && IsCompilerArg_MSVC( token, "nostdinc" ) )
+            {
+                // Clang-Cl has -nostdinc, but not -nostdinc++
+                flags.Set( CompilerFlags::FLAG_NOSTDINC );
+            }
         }
 
         // 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
@@ -1016,7 +1011,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         {
             if ( isDistributableCompiler &&
                  !usingWinRT &&
-                 !( flags.IsCreatingPCH() )&&
+                 !( flags.IsCreatingPCH() ) &&
                  !( flags.IsUsingStaticAnalysisMSVC() ) &&
                  !hasSourceMapping )
             {
@@ -1024,7 +1019,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
 
             // TODO:A Support caching of 7i format
-            if ( flags.IsUsingPDB() == false )
+            if ( isCacheableCompiler &&
+                 ( flags.IsUsingPDB() == false ) )
             {
                 flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
             }
@@ -1043,12 +1039,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         bool coverage = false;
 
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-        const AString * const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        args.Tokenize( tokenRanges );
+        const size_t numTokens = tokenRanges.GetSize();
+        for ( size_t i = 0; i < numTokens; ++i )
         {
-            const AString & token = *it;
+            const AStackString token( ( args.Get() + tokenRanges[ i ].m_StartIndex ),
+                                      ( args.Get() + tokenRanges[ i ].m_EndIndex ) );
 
             if ( token == "-fdiagnostics-color=auto" )
             {
@@ -1082,14 +1078,24 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
             else if ( token == "-x" )
             {
-                if ( it < ( end - 1 ) )
+                if ( i < ( numTokens - 1 ) )
                 {
-                    const AString & nextToken = *( it + 1);
+                    const AStackString nextToken( ( args.Get() + tokenRanges[ i + 1 ].m_StartIndex ),
+                                                  ( args.Get() + tokenRanges[ i + 1 ].m_EndIndex ) );
                     if ( nextToken == "objective-c" )
                     {
                         objectiveC = true;
                     }
                 }
+            }
+            else if ( ( token == "-nostdinc" ) ||
+                      ( token == "--no-standard-includes" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_NOSTDINC );
+            }
+            else if ( ( token == "-nostdinc++" ) )
+            {
+                flags.Set( CompilerFlags::FLAG_NOSTDINCPP );
             }
         }
 
@@ -1099,7 +1105,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
     }
 
-    // check for cacheability/distributability for non-MSVC
+    // check for cachability/distributability for non-MSVC
     if ( flags.IsClang() ||
          flags.IsGCC() ||
          flags.IsSNC() ||
@@ -1121,14 +1127,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
 
         // all objects can be cached with GCC/SNC/Clang (including PCH files)
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     // CUDA Compiler
     if ( flags.IsCUDANVCC() )
     {
         // Can cache objects
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     if ( flags.IsOrbisWavePSSLC() )
@@ -1139,7 +1151,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
 
         // Can cache objects
-        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        if ( isCacheableCompiler )
+        {
+            flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+        }
     }
 
     return flags;
@@ -1152,7 +1167,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Compiler args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -1175,7 +1190,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     ASSERT( token.IsEmpty() == false );
 
     // MSVC Compiler args can start with - or /
-    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    if ( ( token[ 0 ] != '/' ) && ( token[ 0 ] != '-' ) )
     {
         return false;
     }
@@ -1196,7 +1211,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 /*virtual*/ void ObjectNode::SaveRemote( IOStream & stream ) const
 {
     // Force using implies /clr which is not distributable
-    ASSERT( m_CompilerForceUsing.IsEmpty() );
+    ASSERT( m_OwnerObjectList->GetCompilerForceUsing().IsEmpty() );
 
     // Save minimal information for the remote worker
     stream.Write( m_Name );
@@ -1205,12 +1220,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
-    const AString & compilerOptions = ShouldUseDeoptimization() ? m_CompilerOptionsDeoptimized : m_CompilerOptions;
+    const AString & compilerOptions = ShouldUseDeoptimization() ? m_OwnerObjectList->GetCompilerOptionsDeoptimized()
+                                                                : m_OwnerObjectList->GetCompilerOptions();
 
     // Prepare args for remote worker
-    UniquePtr<CompilerDriverBase, DeleteDeletor> driver;
+    UniquePtr<CompilerDriverBase> driver;
     CreateDriver( m_CompilerFlags, AString::GetEmpty(), driver );
-    Array< AString > tokens( 1024, true );
+    StackArray<AString> tokens;
     compilerOptions.Tokenize( tokens );
     Args fullArgs;
 
@@ -1242,32 +1258,24 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 CompilerNode * ObjectNode::GetCompiler() const
 {
     // node can be null if compiling remotely
-    const Node * node = m_StaticDependencies[0].GetNode();
-    return node ? node->CastTo< CompilerNode >() : nullptr;
+    const Node * node = m_StaticDependencies[ 0 ].GetNode();
+    return node ? node->CastTo<CompilerNode>() : nullptr;
 }
 
 // GetDedicatedPreprocessor
 //------------------------------------------------------------------------------
 CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
 {
-    if ( m_Preprocessor.IsEmpty() )
-    {
-        return nullptr;
-    }
-    size_t preprocessorIndex = 2;
-    if ( m_PrecompiledHeader.IsEmpty() == false )
-    {
-        ++preprocessorIndex;
-    }
-    return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPreprocessor()
+                             : nullptr;
 }
 
 // GetPrecompiledHeader()
 //------------------------------------------------------------------------------
 ObjectNode * ObjectNode::GetPrecompiledHeader() const
 {
-    ASSERT( m_PrecompiledHeader.IsEmpty() == false );
-    return m_StaticDependencies[ 2 ].GetNode()->CastTo< ObjectNode >();
+    ASSERT( GetPrecompiledHeaderName().IsEmpty() == false );
+    return m_StaticDependencies[ 2 ].GetNode()->CastTo<ObjectNode>();
 }
 
 // GetPDBName
@@ -1281,11 +1289,11 @@ void ObjectNode::GetPDBName( AString & pdbName ) const
 
 // GetNativeAnalysisXMLPath
 //------------------------------------------------------------------------------
-void ObjectNode::GetNativeAnalysisXMLPath( AString& outXMLFileName ) const
+void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
-    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
 
     // TODO:B The xml path can be manually specified with /analyze:log
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
@@ -1305,19 +1313,32 @@ void ObjectNode::GetGCNOPath( AString & gcnoFileName ) const
     gcnoFileName += ".gcno";
 }
 
-// GetObjExtension
+// GetAltObjPath
 //------------------------------------------------------------------------------
-const char * ObjectNode::GetObjExtension() const
+void ObjectNode::GetAltObjPath( AString & altObjName ) const
 {
-    if ( m_CompilerOutputExtension.IsEmpty() )
-    {
-        #if defined( __WINDOWS__ )
-            return ".obj";
-        #else
-            return ".o";
-        #endif
-    }
-    return m_CompilerOutputExtension.Get();
+    ASSERT( IsUsingDynamicDeopt() );
+
+    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
+
+    // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
+    const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
+    altObjName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
+    altObjName += ".alt.obj";
+}
+
+//------------------------------------------------------------------------------
+const AString & ObjectNode::GetPCHObjectName() const
+{
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPCHObjectFileName()
+                             : AString::GetEmpty();
+}
+
+//------------------------------------------------------------------------------
+const AString & ObjectNode::GetPrecompiledHeaderName() const
+{
+    return m_OwnerObjectList ? m_OwnerObjectList->GetPrecompiledHeaderName()
+                             : AString::GetEmpty();
 }
 
 // GetCacheName
@@ -1334,35 +1355,17 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
-    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey : xxHash::Calc64( job->GetData(), job->GetDataSize() );
+    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey
+                                                           : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
     ASSERT( preprocessedSourceKey );
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
-    uint32_t commandLineKey;
-    {
-        Args args;
-        const bool useDeoptimization = false;
-        const bool showIncludes = false;
-        const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
-        const bool finalize = false; // Don't write args to response file
-        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
-
-        if ( job->IsLocal() )
-        {
-            // Append the source mapping destination only, so different machines with different
-            // working directory local paths compute consistent keys.
-            const AString& sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
-            args.AddDelimiter();
-            args += sourceMapping;
-        }
-
-        commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
-    }
+    const uint32_t commandLineKey = GetCommandLineKey( job );
     ASSERT( commandLineKey );
 
     // ToolChain hash
-    const uint64_t toolChainKey = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
+    const uint64_t toolChainKey = GetCompiler()->CastTo<CompilerNode>()->GetManifest().GetToolId();
     ASSERT( toolChainKey );
 
     // PCH dependency
@@ -1373,11 +1376,34 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         ASSERT( pchKey != 0 ); // Should not be in here if PCH is not cached
     }
 
-    AStackString<> cacheName;
+    AStackString cacheName;
     ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
-    job->SetCacheName(cacheName);
+    job->SetCacheName( cacheName );
 
     return job->GetCacheName();
+}
+
+// GetCommandLineKey
+//------------------------------------------------------------------------------
+uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
+{
+    Args args;
+    const bool useDeoptimization = false;
+    const bool showIncludes = false;
+    const bool useSourceMapping = false; // Source mapping compiler flags contain local paths, so we treat them specially
+    const bool finalize = false; // Don't write args to response file
+    BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize );
+
+    if ( job->IsLocal() )
+    {
+        // Append the source mapping destination only, so different machines with different
+        // working directory local paths compute consistent keys.
+        const AString & sourceMapping = job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetSourceMapping();
+        args.AddDelimiter();
+        args += sourceMapping;
+    }
+
+    return xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
 }
 
 // RetrieveFromCache
@@ -1391,7 +1417,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
     PROFILE_FUNCTION;
 
-    const AString & cacheFileName = GetCacheName(job);
+    const AString & cacheFileName = GetCacheName( job );
 
     const Timer t;
 
@@ -1408,9 +1434,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         uint64_t pchKey = 0;
         if ( IsCreatingPCH() && IsMSVC() )
         {
-            pchKey = xxHash::Calc64( cacheData, cacheDataSize );
+            pchKey = xxHash3::Calc64Big( cacheData, cacheDataSize );
         }
-        
+
         const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
 
         MultiBuffer buffer( cacheData, cacheDataSize );
@@ -1421,25 +1447,27 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             FLOG_WARN( "Cache returned invalid data\n"
                        " - File: '%s'\n"
                        " - Key : %s\n",
-                       m_Name.Get(), cacheFileName.Get() );
+                       m_Name.Get(),
+                       cacheFileName.Get() );
+            cache->FreeMemory( cacheData, cacheDataSize );
             return false;
         }
         const size_t uncompressedDataSize = buffer.GetDataSize();
         const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
 
-        Array< AString > fileNames( 4, false );
+        StackArray<AString> fileNames;
         fileNames.Append( m_Name );
 
         GetExtraCacheFilePaths( job, fileNames );
 
         // Extract the files
         const size_t numFiles = fileNames.GetSize();
-        for ( size_t i=0; i<numFiles; ++i )
+        for ( size_t i = 0; i < numFiles; ++i )
         {
             if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
             {
-                cache->FreeMemory( cacheData, cacheDataSize );
                 FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
+                cache->FreeMemory( cacheData, cacheDataSize );
                 return false;
             }
 
@@ -1449,8 +1477,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             // set the time on the local file
             if ( timeSetOK == false )
             {
-                cache->FreeMemory( cacheData, cacheDataSize );
                 FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
+                cache->FreeMemory( cacheData, cacheDataSize );
                 return false;
             }
         }
@@ -1467,7 +1495,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         if ( FBuild::Get().GetOptions().m_ShowCommandSummary ||
              FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            AStackString<> output;
+            AStackString output;
             output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
@@ -1494,7 +1522,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     {
         FLOG_OUTPUT( "Obj: %s\n"
                      " - Cache Miss: %u ms '%s'\n",
-                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                     GetName().Get(),
+                     uint32_t( t.GetElapsedMS() ),
+                     cacheFileName.Get() );
     }
 
     SetStatFlag( Node::STATS_CACHE_MISS );
@@ -1505,7 +1535,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 //------------------------------------------------------------------------------
 void ObjectNode::WriteToCache_FromDisk( Job * job )
 {
-    if (FBuild::Get().GetOptions().m_UseCacheWrite == false)
+    if ( FBuild::Get().GetOptions().m_UseCacheWrite == false )
     {
         return;
     }
@@ -1513,7 +1543,7 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
     PROFILE_FUNCTION;
 
     // Get list of files
-    Array< AString > fileNames( 4, false );
+    StackArray<AString> fileNames;
     fileNames.Append( m_Name );
     GetExtraCacheFilePaths( job, fileNames );
 
@@ -1525,8 +1555,9 @@ void ObjectNode::WriteToCache_FromDisk( Job * job )
         if ( FBuild::Get().GetOptions().m_CacheVerbose )
         {
             FLOG_OUTPUT( "Obj: %s\n"
-                            " - Cache Store Fail: '%s' (local IO problem)\n",
-                            GetName().Get(), GetCacheName( job ).Get() );
+                         " - Cache Store Fail: '%s' (local IO problem)\n",
+                         GetName().Get(),
+                         GetCacheName( job ).Get() );
         }
         return;
     }
@@ -1551,7 +1582,18 @@ void ObjectNode::WriteToCache_FromUncompressedData( Job * job,
     const Timer t;
     const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
     Compressor c;
-    c.Compress(uncompressedData, uncompressedDataSize, FBuild::Get().GetOptions().m_CacheCompressionLevel );
+    const int16_t compressionLevel = FBuild::Get().GetOptions().m_CacheCompressionLevel;
+    if ( compressionLevel <= 0 )
+    {
+        // Use LZ4 for low compression levels (level < 0)
+        // This call also handles disabled compression (level 0)
+        c.Compress( uncompressedData, uncompressedDataSize, compressionLevel );
+    }
+    else
+    {
+        // Use Ztd for higher compression levels (level > 0)
+        c.CompressZstd( uncompressedData, uncompressedDataSize, compressionLevel );
+    }
     const uint32_t compressionTime = ( (uint32_t)t.GetElapsedMS() - startCompress );
 
     WriteToCache_FromCompressedData( job,
@@ -1575,7 +1617,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
     // Ensure data is compressed
     ASSERT( Compressor::IsValidData( compressedData, compressedDataSize ) );
 
-    const AString & cacheFileName = GetCacheName(job);
+    const AString & cacheFileName = GetCacheName( job );
 
     // Commit to cache
     const Timer t;
@@ -1590,7 +1632,7 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         // Dependent objects need to know the PCH key to be able to pull from the cache
         if ( IsCreatingPCH() && IsMSVC() )
         {
-            m_PCHCacheKey = xxHash::Calc64( compressedData, compressedDataSize );
+            m_PCHCacheKey = xxHash3::Calc64Big( compressedData, compressedDataSize );
         }
 
         const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
@@ -1600,10 +1642,16 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         if ( FBuild::Get().GetOptions().m_CacheVerbose )
         {
             const uint64_t uncompressedDataSize = Compressor::GetUncompressedSize( compressedData, compressedDataSize );
-            AStackString<> output;
+            AStackString output;
             output.Format( "Obj: %s\n"
                            " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %" PRIu64 " - Uncompressed: %" PRIu64 ") '%s'\n",
-                           GetName().Get(), cachingTime, publishTime, compressionTimeMS, compressedDataSize, uncompressedDataSize, cacheFileName.Get() );
+                           GetName().Get(),
+                           cachingTime,
+                           publishTime,
+                           compressionTimeMS,
+                           compressedDataSize,
+                           uncompressedDataSize,
+                           cacheFileName.Get() );
             if ( m_PCHCacheKey != 0 )
             {
                 output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
@@ -1620,14 +1668,16 @@ void ObjectNode::WriteToCache_FromCompressedData( Job * job,
         {
             FLOG_OUTPUT( "Obj: %s\n"
                          " - Cache Store Fail: %u ms '%s'\n",
-                         GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                         GetName().Get(),
+                         uint32_t( t.GetElapsedMS() ),
+                         cacheFileName.Get() );
         }
     }
 }
 
 // GetExtraCacheFilePaths
 //------------------------------------------------------------------------------
-void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const
+void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array<AString> & outFileNames ) const
 {
     const Node * node = job->GetNode();
     if ( node->GetType() != Node::OBJECT_NODE )
@@ -1635,13 +1685,14 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         return;
     }
 
-    const ObjectNode * objectNode = node->CastTo< ObjectNode >();
+    const ObjectNode * objectNode = node->CastTo<ObjectNode>();
 
-    // MSVC precompiled headers have an extra file
-    if ( objectNode->m_CompilerFlags.IsCreatingPCH() && objectNode->m_CompilerFlags.IsMSVC() )
+    // MSVC precompiled headers have an extra file (as does clang in "cl" mode)
+    if ( objectNode->m_CompilerFlags.IsCreatingPCH() &&
+         ( objectNode->m_CompilerFlags.IsMSVC() || objectNode->m_CompilerFlags.IsClangCl() ) )
     {
         // .pch.obj
-        outFileNames.Append( m_PCHObjectFileName );
+        outFileNames.Append( GetPCHObjectName() );
     }
 
     // MSVC static analysis adds extra files
@@ -1652,9 +1703,9 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
             // .pchast (precompiled headers only)
 
             // Get file name start
-            ASSERT( PathUtils::IsFullPath( m_PCHObjectFileName ) ); // Something is terribly wrong
+            ASSERT( PathUtils::IsFullPath( GetPCHObjectName() ) ); // Something is terribly wrong
 
-            AStackString<> pchASTFileName( m_PCHObjectFileName );
+            AStackString pchASTFileName( GetPCHObjectName() );
             if ( pchASTFileName.EndsWithI( ".obj" ) )
             {
                 pchASTFileName.SetLength( pchASTFileName.GetLength() - 4 );
@@ -1665,7 +1716,7 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         }
 
         // .nativecodeanalysis.xml (all files)
-        AStackString<> xmlFileName;
+        AStackString xmlFileName;
         GetNativeAnalysisXMLPath( xmlFileName );
         outFileNames.Append( xmlFileName );
     }
@@ -1674,9 +1725,18 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
     if ( objectNode->m_CompilerFlags.IsUsingGcovCoverage() )
     {
         // .gcno
-        AStackString<> gcnoFileName;
+        AStackString gcnoFileName;
         GetGCNOPath( gcnoFileName );
         outFileNames.Append( gcnoFileName );
+    }
+
+    // MSVC dynamic deoptimization adds extra files
+    if ( objectNode->m_CompilerFlags.IsUsingDynamicDeopt() )
+    {
+        // .alt.obj
+        AStackString altObjName;
+        GetAltObjPath( altObjName );
+        outFileNames.Append( altObjName );
     }
 }
 
@@ -1687,8 +1747,8 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
     // the output
-    AStackString<> output;
-    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
+    AStackString output;
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Obj: ";
         if ( useDeoptimization )
@@ -1712,12 +1772,16 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     }
     if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
-        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
+        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get()
+                                                                                                               : "";
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // BuildArgs
@@ -1726,26 +1790,17 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 {
     PROFILE_FUNCTION;
 
-    Array< AString > tokens( 1024, true );
+    StackArray<AString> tokens;
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
-    if ( useDedicatedPreprocessor )
-    {
-        m_PreprocessorOptions.Tokenize( tokens );
-    }
-    else if ( useDeoptimization )
-    {
-        ASSERT( !m_CompilerOptionsDeoptimized.IsEmpty() );
-        m_CompilerOptionsDeoptimized.Tokenize( tokens );
-    }
-    else
-    {
-        m_CompilerOptions.Tokenize( tokens );
-    }
+
+    const AString & commandLine = GetCommandLine( useDedicatedPreprocessor, useDeoptimization );
+    ASSERT( !commandLine.IsEmpty() );
+    commandLine.Tokenize( tokens );
     fullArgs.Clear();
 
     // Get base path if needed
-    AStackString<> basePath;
+    AStackString basePath;
     const bool useRelativePaths = job->IsLocal() && // TODO:C We'd want to support this remotely as well
                                   job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetUseRelativePaths();
     if ( useRelativePaths )
@@ -1758,7 +1813,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 
     const bool forceColoredDiagnostics = ( flags.IsDiagnosticsColorAuto() && ( Env::IsStdOutRedirected() == false ) );
 
-    UniquePtr<CompilerDriverBase, DeleteDeletor> driver;
+    UniquePtr<CompilerDriverBase> driver;
     CreateDriver( flags, job->GetRemoteSourceRoot(), driver );
 
     driver->SetOverrideSourceFile( overrideSrcFile );
@@ -1822,12 +1877,12 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     }
 
     // Handle all the special needs of args
-    AStackString<> remoteCompiler;
+    AStackString remoteCompiler;
     if ( job->IsLocal() == false )
     {
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
     }
-    const AString& compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
+    const AString & compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
     if ( fullArgs.Finalize( compiler, GetName(), GetResponseFileMode() ) == false )
     {
         return false; // Finalize will have emitted an error
@@ -1840,9 +1895,12 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 //------------------------------------------------------------------------------
 void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1u : 0u ) + ( !m_Preprocessor.IsEmpty() ? 1u : 0u ); // Skip Compiler, InputFile, PCH and Preprocessor
+    // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t startIndex = 2 +
+                              ( !GetPrecompiledHeaderName().IsEmpty() ? 1u : 0u ) +
+                              ( ( GetDedicatedPreprocessor() != nullptr ) ? 1u : 0u );
     const size_t endIndex = m_StaticDependencies.GetSize();
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
@@ -1855,7 +1913,7 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
 
 // BuildPreprocessedOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const
+Node::BuildResult ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const
 {
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
     EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
@@ -1863,10 +1921,12 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     // spawn the process
     CompileHelper ch( false ); // don't handle output (we'll do that)
     // TODO:A Add checks in BuildArgs for length of dedicated preprocessor
-    if ( !ch.SpawnCompiler( job, GetName(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
-         fullArgs ) )
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler(),
+                                                       useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
+                                                       fullArgs );
+    if ( result != Node::BuildResult::eOk )
     {
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
@@ -1886,13 +1946,13 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
             }
         }
 
-        return false; // SpawnCompiler will have emitted error
+        return result; // SpawnCompiler logs error for eFailed case
     }
 
     // take a copy of the output because ReadAllData uses huge buffers to avoid re-sizing
     TransferPreprocessedData( ch.GetOut().Get(), ch.GetOut().GetLength(), job );
 
-    return true;
+    return BuildResult::eOk;
 }
 
 // LoadStaticSourceFileForDistribution
@@ -1902,7 +1962,7 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
     // PreProcessing for SimpleDistribution is just loading the source file
 
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
-    EmitCompilationMessage(fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor);
+    EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
 
     const AString & fileName = job->GetNode()->CastTo<ObjectNode>()->GetSourceFile()->CastTo<FileNode>()->GetName();
 
@@ -1914,14 +1974,14 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
         return false;
     }
     const uint32_t contentSize = (uint32_t)fs.GetFileSize();
-    UniquePtr< void > mem( ALLOC( contentSize ) );
+    UniquePtr<void, FreeDeletor> mem( ALLOC( contentSize ) );
     if ( fs.Read( mem.Get(), contentSize ) != contentSize )
     {
         FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", fileName.Get() );
         return false;
     }
 
-    job->OwnData( mem.Release(), contentSize );
+    job->OwnData( mem.ReleaseOwnership(), contentSize );
 
     return true;
 }
@@ -1931,107 +1991,108 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
 void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const
 {
     // We will trim the buffer
-    const char* outputBuffer = data;
+    const char * outputBuffer = data;
     const size_t outputBufferSize = dataSize;
     size_t newBufferSize = outputBufferSize;
     char * bufferCopy = nullptr;
 
-    #if defined( __WINDOWS__ )
-        // VS 2012 sometimes generates corrupted code when preprocessing an already preprocessed file when it encounters
-        // enum definitions.
-        // Example:
-        //      enum dateorder
-        //      {
-        //          no_order, dmy, mdy, ymd, ydm
-        //      };
-        // Becomes:
-        //      enummdateorder
-        //      {
-        //          no_order, dmy, mdy, ymd, ydm
-        //      };
-        // And then compilation fails.
-        //
-        // Adding a space between the enum keyword and the name avoids the bug.
-        // This bug is fixed in VS2013 or later.
-        bool doVS2012Fixup = false;
-        if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
-        {
-            const CompilerNode* cn = GetCompiler();
-            doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
-        }
+#if defined( __WINDOWS__ )
+    // VS 2012 sometimes generates corrupted code when preprocessing an already preprocessed file when it encounters
+    // enum definitions.
+    // Example:
+    //      enum dateorder
+    //      {
+    //          no_order, dmy, mdy, ymd, ydm
+    //      };
+    // Becomes:
+    //      enummdateorder
+    //      {
+    //          no_order, dmy, mdy, ymd, ydm
+    //      };
+    // And then compilation fails.
+    //
+    // Adding a space between the enum keyword and the name avoids the bug.
+    // This bug is fixed in VS2013 or later.
+    bool doVS2012Fixup = false;
+    if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
+    {
+        const CompilerNode * cn = GetCompiler();
+        doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
+    }
 
-        if ( doVS2012Fixup )
-        {
-            Array< const char * > enumsFound( 2048, true );
-            const char BUGGY_CODE[] = "enum ";
-            const char* workBuffer = outputBuffer;
-            ASSERT( workBuffer[ outputBufferSize ] == '\0' );
+    if ( doVS2012Fixup )
+    {
+        Array<const char *> enumsFound;
+        enumsFound.SetCapacity( 2048 );
+        const char BUGGY_CODE[] = "enum ";
+        const char * workBuffer = outputBuffer;
+        ASSERT( workBuffer[ outputBufferSize ] == '\0' );
 
-            // First scan the buffer to find all occurences of the enums.
-            // This will then let us resize the buffer to the appropriate size.
-            // Keeping the found enums let us avoid searching for them twice.
-            uint32_t nbrEnumsFound = 0;
-            const char * buggyEnum = nullptr;
-            for (;;)
+        // First scan the buffer to find all occurrences of the enums.
+        // This will then let us resize the buffer to the appropriate size.
+        // Keeping the found enums let us avoid searching for them twice.
+        uint32_t nbrEnumsFound = 0;
+        const char * buggyEnum = nullptr;
+        for ( ;; )
+        {
+            buggyEnum = strstr( workBuffer, BUGGY_CODE );
+            if ( buggyEnum == nullptr )
             {
-                buggyEnum = strstr( workBuffer, BUGGY_CODE );
-                if ( buggyEnum == nullptr )
-                {
-                    break;
-                }
-                ++nbrEnumsFound;
-                enumsFound.Append( buggyEnum );
-                workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+                break;
             }
-            ASSERT( enumsFound.GetSize() == nbrEnumsFound );
+            ++nbrEnumsFound;
+            enumsFound.Append( buggyEnum );
+            workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+        }
+        ASSERT( enumsFound.GetSize() == nbrEnumsFound );
 
-            // Now allocate the new buffer with enough space to add a space after each enum found
-            newBufferSize = outputBufferSize + nbrEnumsFound;
-            bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
+        // Now allocate the new buffer with enough space to add a space after each enum found
+        newBufferSize = outputBufferSize + nbrEnumsFound;
+        bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
 
-            uint32_t enumIndex = 0;
-            workBuffer = outputBuffer;
-            char * writeDest = bufferCopy;
-            size_t sizeLeftInSourceBuffer = outputBufferSize;
-            buggyEnum = nullptr;
-            for (;;)
+        uint32_t enumIndex = 0;
+        workBuffer = outputBuffer;
+        char * writeDest = bufferCopy;
+        size_t sizeLeftInSourceBuffer = outputBufferSize;
+        buggyEnum = nullptr;
+        for ( ;; )
+        {
+            if ( enumIndex < nbrEnumsFound )
             {
-                if ( enumIndex < nbrEnumsFound )
-                {
-                    buggyEnum = enumsFound[ enumIndex ];
-                    ++enumIndex;
-                }
-                else
-                {
-                    buggyEnum = nullptr;
-                }
+                buggyEnum = enumsFound[ enumIndex ];
+                ++enumIndex;
+            }
+            else
+            {
+                buggyEnum = nullptr;
+            }
 
-                if ( buggyEnum == nullptr )
-                {
+            if ( buggyEnum == nullptr )
+            {
                     // Copy the rest of the data.
-                    memcpy( writeDest, workBuffer, sizeLeftInSourceBuffer );
-                    break;
-                }
-
-                // Copy what's before the enum + the enum.
-                size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
-                sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
-                memcpy( writeDest, workBuffer, sizeToCopy );
-                writeDest += sizeToCopy;
-
-                // Add a space
-                *writeDest = ' ';
-                ++writeDest;
-
-                ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
-                sizeLeftInSourceBuffer -= sizeToCopy;
-                workBuffer += sizeToCopy;
+                memcpy( writeDest, workBuffer, sizeLeftInSourceBuffer );
+                break;
             }
 
-            bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
+            // Copy what's before the enum + the enum.
+            size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
+            sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
+            memcpy( writeDest, workBuffer, sizeToCopy );
+            writeDest += sizeToCopy;
+
+            // Add a space
+            *writeDest = ' ';
+            ++writeDest;
+
+            ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
+            sizeLeftInSourceBuffer -= sizeToCopy;
+            workBuffer += sizeToCopy;
         }
-        else
-    #endif
+
+        bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
+    }
+    else
+#endif
     {
         bufferCopy = (char *)ALLOC( newBufferSize + 1 ); // null terminator for include parser
         memcpy( bufferCopy, outputBuffer, newBufferSize );
@@ -2048,10 +2109,24 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     ASSERT( job->GetData() && job->GetDataSize() );
 
     const Node * sourceFile = GetSourceFile();
-    const uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    uint32_t sourceNameHash = 0;
+
+    if ( job->IsLocal() )
+    {
+        // Make the source file path relative to the working dir so the hash is deterministic.
+        AStackString basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+        AStackString relativeFileName;
+        PathUtils::GetRelativePath( basePath, sourceFile->GetName(), relativeFileName );
+        sourceNameHash = xxHash3::Calc32( relativeFileName.Get(), relativeFileName.GetLength() );
+    }
+    else
+    {
+        sourceNameHash = xxHash3::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+    }
 
     FileStream tmpFile;
-    AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
+    AStackString fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
     if ( IsGCC() )
     {
         // Add extension to the name of the temporary file that corresponds to
@@ -2059,9 +2134,9 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         // That way GCC will be able to deduce the same language from the name
         // of temporary file as it would do from the original name.
         const char * lastDot = fileName.FindLast( '.' );
-        if ( ( lastDot != nullptr ) && ( lastDot[1] != '\0' ) )
+        if ( ( lastDot != nullptr ) && ( lastDot[ 1 ] != '\0' ) )
         {
-            AStackString<> extension( lastDot + 1 );
+            AStackString extension( lastDot + 1 );
             if ( extension == "c" )
             {
                 fileName += ".i";
@@ -2120,38 +2195,53 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     Compressor c; // scoped here so we can access decompression buffer
     if ( job->IsDataCompressed() )
     {
-        VERIFY( c.Decompress( dataToWrite ) );
+        if ( c.Decompress( dataToWrite ) == false )
+        {
+            // Decompression failure would indicate a bug
+            job->Error( "Decompression failed. Target: '%s'", GetName().Get() );
+            job->OnSystemError();
+            return false;
+        }
         dataToWrite = c.GetResult();
         dataToWriteSize = c.GetResultSize();
     }
 
-    WorkerThread::GetTempFileDirectory( tmpDirectory );
+    const CompilerNode * compiler = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
+    if ( compiler && compiler->GetUseDeterministicPaths() )
+    {
+        VERIFY( FBuild::GetTempDir( tmpDirectory ) );
+#if defined( __WINDOWS__ )
+        tmpDirectory += ".fbuild.tmp\\";
+#else
+        tmpDirectory += "_fbuild.tmp/";
+#endif
+        tmpDirectory.AppendFormat( "%08X-", GetCommandLineKey( job ) );
+    }
+    else
+    {
+        WorkerThread::GetTempFileDirectory( tmpDirectory );
+    }
+
     tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {
         job->Error( "Failed to create temp directory. Error: %s TmpDir: '%s' Target: '%s'", LAST_ERROR_STR, tmpDirectory.Get(), GetName().Get() );
         job->OnSystemError();
-        return NODE_RESULT_FAILED;
+        return false;
     }
     tmpFileName = tmpDirectory;
     tmpFileName += fileName;
     if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
     {
-        FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName, FileStream::WRITE_ONLY, 10 ); // 10s max wait
-
-        // Try again
-        if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
-        {
-            job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
-            job->OnSystemError();
-            return NODE_RESULT_FAILED;
-        }
+        job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
         job->Error( "Failed to write to temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
         job->OnSystemError();
-        return NODE_RESULT_FAILED;
+        return false;
     }
     tmpFile.Close();
 
@@ -2169,11 +2259,11 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
 // BuildFinalOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
+Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 {
     // Use the remotely synchronized compiler if building remotely
-    AStackString<> compiler;
-    AStackString<> workingDir;
+    AStackString compiler;
+    AStackString workingDir;
     if ( job->IsLocal() )
     {
         compiler = GetCompiler()->GetExecutable();
@@ -2187,7 +2277,13 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 
     // spawn the process
     CompileHelper ch( true, job->GetAbortFlagPointer() );
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
+    const Node::BuildResult result = ch.SpawnCompiler( job,
+                                                       GetName(),
+                                                       GetCompiler(),
+                                                       compiler,
+                                                       fullArgs,
+                                                       workingDir.IsEmpty() ? nullptr : workingDir.Get() );
+    if ( result != Node::BuildResult::eOk )
     {
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
@@ -2197,14 +2293,14 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
             // for remote jobs, we must serialize the errors to return with the job
             if ( job->IsLocal() == false )
             {
-                UniquePtr< char > mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
                 memcpy( mem.Get(), ch.GetOut().Get(), ch.GetOut().GetLength() );
                 memcpy( mem.Get() + ch.GetOut().GetLength(), ch.GetErr().Get(), ch.GetErr().GetLength() );
-                job->OwnData( mem.Release(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
+                job->OwnData( mem.ReleaseOwnership(), ( ch.GetOut().GetLength() + ch.GetErr().GetLength() ) );
             }
         }
 
-        return false; // compile has logged error
+        return result; // SpawnCompiler logs error for eFailed case
     }
     else
     {
@@ -2256,12 +2352,12 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
         }
     }
 
-    return true;
+    return BuildResult::eOk;
 }
 
 // CompileHelper::CONSTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool * abortPointer )
+ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const Atomic<bool> * abortPointer )
     : m_HandleOutput( handleOutput )
     , m_Process( FBuild::GetAbortBuildPointer(), abortPointer )
     , m_Result( 0 )
@@ -2272,14 +2368,14 @@ ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool
 //------------------------------------------------------------------------------
 ObjectNode::CompileHelper::~CompileHelper() = default;
 
-// CompilHelper::SpawnCompiler
+// CompileHelper::SpawnCompiler
 //------------------------------------------------------------------------------
-bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
-                                               const AString & name,
-                                               const CompilerNode * compilerNode,
-                                               const AString & compiler,
-                                               const Args & fullArgs,
-                                               const char * workingDir )
+Node::BuildResult ObjectNode::CompileHelper::SpawnCompiler( Job * job,
+                                                            const AString & name,
+                                                            const CompilerNode * compilerNode,
+                                                            const AString & compiler,
+                                                            const Args & fullArgs,
+                                                            const char * workingDir )
 {
     const char * environmentString = nullptr;
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
@@ -2299,12 +2395,12 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     {
         if ( m_Process.HasAborted() )
         {
-            return false;
+            return BuildResult::eAborted;
         }
 
         job->Error( "Failed to spawn process. Error: %s Target: '%s'\n", LAST_ERROR_STR, name.Get() );
         job->OnSystemError();
-        return false;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -2314,41 +2410,41 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     m_Result = m_Process.WaitForExit();
     if ( m_Process.HasAborted() )
     {
-        return false;
+        return BuildResult::eAborted;
     }
 
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out, m_Err );
 
-    #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
+#if defined( ENABLE_FAKE_SYSTEM_FAILURE )
         // Fake system failure for tests
-        if ( ( job->IsLocal() == false ) && ( sFakeSystemFailureState.Load() > DISABLED ) )
+    if ( ( job->IsLocal() == false ) && ( sFakeSystemFailureState.Load() > DISABLED ) )
+    {
+        // Wait until racing
+        while ( sFakeSystemFailureState.Load() != RACING )
         {
-            // Wait until racing
-            while ( sFakeSystemFailureState.Load() != RACING )
-            {
-                Thread::Sleep( 1 );
-            }
-            
-            // Add fake failure
-            ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
-            m_Result = 1;
-            job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
-            job->OnSystemError();
-            
-            // Clear failure state
-            sFakeSystemFailureState.Store( DISABLED );
+            Thread::Sleep( 1 );
         }
-    #endif
+
+        // Add fake failure
+        ASSERT( m_Result == 0 ); // Should not have real failures if we're faking them
+        m_Result = 1;
+        job->Error( "Injecting system failure (sFakeSystemFailure)\n" );
+        job->OnSystemError();
+
+        // Clear failure state
+        sFakeSystemFailureState.Store( DISABLED );
+    }
+#endif
 
     if ( m_HandleOutput )
     {
         if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
         {
             // Suppress /showIncludes - TODO:C leave in if user specified it
-            StackArray< AString > exclusions;
+            StackArray<AString> exclusions;
             if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
-                ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+                 ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
             {
                 exclusions.EmplaceBack( "Note: including file:" );
             }
@@ -2378,10 +2474,10 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
 
-        return false;
+        return BuildResult::eFailed;
     }
 
-    return true;
+    return BuildResult::eOk;
 }
 
 // HandleSystemFailures
@@ -2400,131 +2496,131 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         return;
     }
 
-    const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+    const ObjectNode * objectNode = job->GetNode()->CastTo<ObjectNode>();
 
     // General process failures
-    #if defined( __WINDOWS__ )
-        // If remote PC is shutdown by user, compiler can be terminated
-        if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
-             ( (uint32_t)result == 0xC000013A ) || // STATUS_CONTROL_C_EXIT - Occurs if remote user forcibly ended the process
-             ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
+#if defined( __WINDOWS__ )
+    // If remote PC is shutdown by user, compiler can be terminated
+    if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
+         ( (uint32_t)result == 0xC000013A ) || // STATUS_CONTROL_C_EXIT - Occurs if remote user forcibly ended the process
+         ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
+    {
+        job->OnSystemError(); // task will be retried on another worker
+        return;
+    }
+
+    // When a process is terminated by a user on Windows, the return code can
+    // be 1. There seems to be no definitive way to differentiate this from
+    // a process exiting with return code 1, so we default to considering it a
+    // system failure, unless we can detect some specific situations.
+    if ( result == 0x1 ) // ERROR_INVALID_FUNCTION
+    {
+        bool treatAsSystemError = true;
+
+        // Some compilers (like Clang) return 1 when there are compile errors
+        // and write those errors to stderr
+        // don't consider this a system failure if there are compile errors
+        if ( stdErr.IsEmpty() == false )
+        {
+            treatAsSystemError = false;
+        }
+
+        if ( treatAsSystemError )
         {
             job->OnSystemError(); // task will be retried on another worker
             return;
         }
+    }
 
-        // When a process is terminated by a user on Windows, the return code can
-        // be 1. There seems to be no definitive way to differentiate this from
-        // a process exiting with return code 1, so we default to considering it a
-        // system failure, unless we can detect some specific situations.
-        if ( result == 0x1 ) // ERROR_INVALID_FUNCTION
-        {
-            bool treatAsSystemError = true;
+    // This error was observed remotely without a clear cause
+    if ( result == 0x4 ) // ERROR_TOO_MANY_OPEN_FILES
+    {
+        job->OnSystemError(); // task will be retried on another worker
+        return;
+    }
 
-            // Some compilers (like Clang) return 1 when there are compile errors
-            // and write those errors to stderr
-            // don't consider this a system failure if there are compile errors
-            if ( stdErr.IsEmpty() == false )
-            {
-                treatAsSystemError = false;
-            }
-
-            if ( treatAsSystemError )
-            {
-                job->OnSystemError(); // task will be retried on another worker
-                return;
-            }
-        }
-
-        // This error was observed remotely without a clear cause
-        if ( result == 0x4 ) // ERROR_TOO_MANY_OPEN_FILES
-        {
-            job->OnSystemError(); // task will be retried on another worker
-            return;
-        }
-
-        // If DLLs are not correctly sync'd, add an extra message to help the user
-        if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
-        {
-            job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
-            return;
-        }
-        if ( (uint32_t)result == 0xC0000135 ) // STATUS_DLL_NOT_FOUND
-        {
-            job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
-            return;
-        }
-    #endif
+    // If DLLs are not correctly sync'd, add an extra message to help the user
+    if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
+    {
+        job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
+        return;
+    }
+    if ( (uint32_t)result == 0xC0000135 ) // STATUS_DLL_NOT_FOUND
+    {
+        job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
+        return;
+    }
+#endif
 
     // Compiler specific failures
 
-    #if defined( __WINDOWS__ )
-        // MSVC errors
-        if ( objectNode->IsMSVC() )
+#if defined( __WINDOWS__ )
+    // MSVC errors
+    if ( objectNode->IsMSVC() )
+    {
+        // But we need to determine if it's actually an out of space
+        // (rather than some compile error with missing file(s))
+        // These error codes have been observed in the wild
+        if ( stdOut.Find( "C1082" ) ||
+             stdOut.Find( "C1085" ) ||
+             stdOut.Find( "C1088" ) )
         {
-            // But we need to determine if it's actually an out of space
-            // (rather than some compile error with missing file(s))
-            // These error codes have been observed in the wild
-            if ( stdOut.Find( "C1082" ) ||
-                 stdOut.Find( "C1085" ) ||
-                 stdOut.Find( "C1088" ) )
-            {
-                job->OnSystemError();
-                return;
-            }
+            job->OnSystemError();
+            return;
+        }
 
-            // If the compiler can fail with C1083 on the remote host for at least the following
-            // reasons:
-            //     a) Failed to create a temp file (C1083: Cannot open compiler intermediate file)
-            //          - This was seen when the tmp dir was full (tmp file creation failed)
-            //     b) Failed to write an extra output file (C1083: Cannot open compiler generated file)
-            //          - This was seen when using /sourceDependencies and the output folder didn't exist
-            if ( stdOut.Find( "C1083" ) )
-            {
-                job->OnSystemError();
-                return;
-            }
+        // If the compiler can fail with C1083 on the remote host for at least the following
+        // reasons:
+        //     a) Failed to create a temp file (C1083: Cannot open compiler intermediate file)
+        //          - This was seen when the tmp dir was full (tmp file creation failed)
+        //     b) Failed to write an extra output file (C1083: Cannot open compiler generated file)
+        //          - This was seen when using /sourceDependencies and the output folder didn't exist
+        if ( stdOut.Find( "C1083" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
 
-            // The MSVC compiler can fail with "compiler is out of heap space" even if
-            // using the 64bit toolchain. This failure can be intermittent and not
-            // repeatable with the same code on a different machine, so we don't want it
-            // to fail the build.
-            if ( stdOut.Find( "C1060" ) )
-            {
-                // If either of these are present
-                //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
-                //  - C3859 : virtual memory range for PCH exceeded; please recompile with a command line option of '-Zmvalue' or greater
-                // then the issue is related to compiler settings.
-                // If they are not present, it's a system error, possibly caused by system resource
-                // exhaustion on the remote machine
-                if ( ( stdOut.Find( "C1076" ) == nullptr ) &&
-                     ( stdOut.Find( "C3859" ) == nullptr ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
-            }
-
-            // If the compiler crashed (Internal Compiler Error), treat this
-            // as a system error so it will be retried, since it can alse be
-            // the result of faulty hardware.
-            if ( stdOut.Find( "C1001" ) )
-            {
-                job->OnSystemError();
-                return;
-            }
-
-            // Error messages above also contains this text
-            // (We check for this message additionally to handle other error codes
-            //  that may not have been observed yet)
-            // TODO:C Should we check for localized msg?
-            if ( stdOut.Find( "No space left on device" ) )
+        // The MSVC compiler can fail with "compiler is out of heap space" even if
+        // using the 64bit toolchain. This failure can be intermittent and not
+        // repeatable with the same code on a different machine, so we don't want it
+        // to fail the build.
+        if ( stdOut.Find( "C1060" ) )
+        {
+            // If either of these are present
+            //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
+            //  - C3859 : virtual memory range for PCH exceeded; please recompile with a command line option of '-Zmvalue' or greater
+            // then the issue is related to compiler settings.
+            // If they are not present, it's a system error, possibly caused by system resource
+            // exhaustion on the remote machine
+            if ( ( stdOut.Find( "C1076" ) == nullptr ) &&
+                 ( stdOut.Find( "C3859" ) == nullptr ) )
             {
                 job->OnSystemError();
                 return;
             }
         }
-    #endif
+
+        // If the compiler crashed (Internal Compiler Error), treat this
+        // as a system error so it will be retried, since it can also be
+        // the result of faulty hardware.
+        if ( stdOut.Find( "C1001" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
+
+        // Error messages above also contains this text
+        // (We check for this message additionally to handle other error codes
+        //  that may not have been observed yet)
+        // TODO:C Should we check for localized msg?
+        if ( stdOut.Find( "No space left on device" ) )
+        {
+            job->OnSystemError();
+            return;
+        }
+    }
+#endif
 
     // Clang
     if ( objectNode->IsClang() || objectNode->IsClangCl() )
@@ -2550,9 +2646,9 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
     }
 
-    #if !defined( __WINDOWS__) 
-        (void)stdOut; // No checks use stdOut outside of Windows right now
-    #endif
+#if !defined( __WINDOWS__ )
+    (void)stdOut; // No checks use stdOut outside of Windows right now
+#endif
 }
 
 // ShouldUseDeoptimization
@@ -2564,8 +2660,8 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // disabled for Unity files (which are always writable)
     }
 
-    if ( ( m_DeoptimizeWritableFilesWithToken == false ) &&
-         ( m_DeoptimizeWritableFiles == false ) )
+    if ( ( GetDeoptimizeWritableFilesWithToken() == false ) &&
+         ( GetDeoptimizeWritableFiles() == false ) )
     {
         return false; // feature not enabled
     }
@@ -2578,7 +2674,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // file is read only (not modified)
     }
 
-    if ( m_DeoptimizeWritableFiles )
+    if ( GetDeoptimizeWritableFiles() )
     {
         return true; // file modified - deoptimize with or without token
     }
@@ -2587,7 +2683,7 @@ bool ObjectNode::ShouldUseDeoptimization() const
     FileStream fs;
     if ( fs.Open( GetSourceFile()->GetName().Get(), FileStream::READ_ONLY ) )
     {
-        const size_t bytesToRead = Math::Min< size_t >( 1024, (size_t)fs.GetFileSize() );
+        const size_t bytesToRead = Math::Min<size_t>( 1024, (size_t)fs.GetFileSize() );
         char buffer[ 1025 ];
         if ( fs.Read( buffer, bytesToRead ) == bytesToRead )
         {
@@ -2604,18 +2700,42 @@ bool ObjectNode::ShouldUseDeoptimization() const
     return false;
 }
 
+//------------------------------------------------------------------------------
+bool ObjectNode::GetDeoptimizeWritableFiles() const
+{
+    ASSERT( m_OwnerObjectList );
+    return !m_CompilerFlags.IsCreatingPCH() &&
+           m_OwnerObjectList &&
+           m_OwnerObjectList->GetDeoptimizeWritableFiles();
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::GetDeoptimizeWritableFilesWithToken() const
+{
+    ASSERT( m_OwnerObjectList );
+    return !m_CompilerFlags.IsCreatingPCH() &&
+           m_OwnerObjectList &&
+           m_OwnerObjectList->GetDeoptimizeWritableFilesWithToken();
+}
+
 // ShouldUseCache
 //------------------------------------------------------------------------------
 bool ObjectNode::ShouldUseCache() const
 {
     bool useCache = IsCacheable() &&
-                    m_AllowCaching &&
+                    m_OwnerObjectList->IsCachingAllowed() &&
                     ( FBuild::Get().GetOptions().m_UseCacheRead ||
-                     FBuild::Get().GetOptions().m_UseCacheWrite );
+                      FBuild::Get().GetOptions().m_UseCacheWrite );
     if ( IsIsolatedFromUnity() )
     {
-        // disable caching for locally modified files (since they will rarely if ever get a hit)
-        useCache = false;
+        // If -nounity is being used, we want to treat files as if being
+        // compiled in an ObjectList without use of unity, which inclues
+        // caching
+        if ( FBuild::Get().GetOptions().m_NoUnity == false )
+        {
+            // disable caching for locally modified files (since they will rarely if ever get a hit)
+            useCache = false;
+        }
     }
     if ( IsMSVC() && IsUsingPCH() )
     {
@@ -2627,6 +2747,14 @@ bool ObjectNode::ShouldUseCache() const
         }
     }
     return useCache;
+}
+
+//------------------------------------------------------------------------------
+bool ObjectNode::IsDistributionAllowed() const
+{
+    return m_CompilerFlags.IsDistributable() &&
+           m_OwnerObjectList->IsDistributionAllowed() &&
+           FBuild::Get().GetOptions().m_AllowDistributed;
 }
 
 // GetResponseFileMode
@@ -2646,21 +2774,21 @@ ArgsResponseFileMode ObjectNode::GetResponseFileMode() const
     }
 
     // Detect a compiler that supports response file args?
-    #if defined( __WINDOWS__ )
-        // Generally only windows applications support response files (to overcome Windows command line limits)
-        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
-        // probably want this for other platforms as well though.
-        if ( IsMSVC() ||
-             IsGCC() ||
-             IsSNC() ||
-             IsClang() ||
-             IsClangCl() ||
-             IsCodeWarriorWii() ||
-             IsGreenHillsWiiU() )
-        {
-            return ArgsResponseFileMode::IF_NEEDED;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Generally only windows applications support response files (to overcome Windows command line limits)
+    // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+    // probably want this for other platforms as well though.
+    if ( IsMSVC() ||
+         IsGCC() ||
+         IsSNC() ||
+         IsClang() ||
+         IsClangCl() ||
+         IsCodeWarriorWii() ||
+         IsGreenHillsWiiU() )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+#endif
 
     // Cannot use response files
     return ArgsResponseFileMode::NEVER;
@@ -2674,7 +2802,7 @@ bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) cons
     const AString & sourceFileName = GetSourceFile()->GetName();
     const char * lastDot = sourceFileName.FindLast( '.' );
     lastDot = lastDot ? lastDot : sourceFileName.GetEnd();
-    AStackString<> preprocessedFile( sourceFileName.Get(), lastDot );
+    AStackString preprocessedFile( sourceFileName.Get(), lastDot );
     preprocessedFile += ".i";
 
     // Try to open the file
@@ -2712,8 +2840,8 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // file by checking the directives left by the preprocessor, as described here:
     //  - https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
     //
-    // Be removing the "push" flags the preprocesser adds (1) when leaving the main cpp
-    // file and entering an inluded file only for the Unity, the compiler thinks
+    // Be removing the "push" flags the preprocessor adds (1) when leaving the main cpp
+    // file and entering an included file only for the Unity, the compiler thinks
     // the included files are the top-level files and applies analysis the same way
     // as when they are built outside of Unity.
     //
@@ -2735,14 +2863,14 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
 
     // We'll walk the output and fix it up in-place
 
-    AStackString<> srcFileName( GetSourceFile()->GetName() );
-    #if defined( __WINDOWS__ )
-        // Clang escapes backslashes, so we must do the same
-        srcFileName.Replace( "\\", "\\\\" );
-    #endif
+    AStackString srcFileName( GetSourceFile()->GetName() );
+#if defined( __WINDOWS__ )
+    // Clang escapes backslashes, so we must do the same
+    srcFileName.Replace( "\\", "\\\\" );
+#endif
 
     // Build the string used to find "pop" directives when returning to this file
-    AStackString<> popDirectiveString;
+    AStackString popDirectiveString;
     popDirectiveString = " \"";
     popDirectiveString += srcFileName;
     popDirectiveString += "\" 2"; // 2 is "pop" flag
@@ -2753,15 +2881,15 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     if ( pos == nullptr )
     {
         // If not found, try relative path
-        AStackString<> basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
+        AStackString basePath( FBuild::Get().GetOptions().GetWorkingDir() ); // NOTE: FBuild only valid locally
         PathUtils::EnsureTrailingSlash( basePath );
 
-        AStackString<> relativeFileName;
+        AStackString relativeFileName;
         PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
-        #if defined( __WINDOWS__ )
-            // Clang escapes backslashes, so we must do the same
-            relativeFileName.Replace( "\\", "\\\\" );
-        #endif
+#if defined( __WINDOWS__ )
+        // Clang escapes backslashes, so we must do the same
+        relativeFileName.Replace( "\\", "\\\\" );
+#endif
         pos = strstr( (char *)job->GetData(), relativeFileName.Get() );
 
         // Update pop directive string
@@ -2828,20 +2956,116 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
 //------------------------------------------------------------------------------
 void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
                                const AString & remoteSourceRoot,
-                               UniquePtr<CompilerDriverBase, DeleteDeletor> & outDriver ) const
+                               UniquePtr<CompilerDriverBase> & outDriver ) const
 {
-    if      ( flags.IsMSVC() || flags.IsClangCl() ) { outDriver = FNEW( CompilerDriver_CL( flags.IsClangCl() ) ); }
-    else if ( flags.IsClang() || flags.IsGCC() )    { outDriver = FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ); }
-    else if ( flags.IsVBCC() )                      { outDriver = FNEW( CompilerDriver_VBCC() ); }
-    else if ( flags.IsQtRCC() )                     { outDriver = FNEW( CompilerDriver_QtRCC() ); }
-    else if ( flags.IsOrbisWavePSSLC() )            { outDriver = FNEW( CompilerDriver_OrbisWavePSSLC() ); }
-    else if ( flags.IsSNC() )                       { outDriver = FNEW( CompilerDriver_SNC() ); }
-    else if ( flags.IsCUDANVCC() )                  { outDriver = FNEW( CompilerDriver_CUDA() ); }
-    else if ( flags.IsCodeWarriorWii() )            { outDriver = FNEW( CompilerDriver_CodeWarriorWii() ); }
-    else if ( flags.IsGreenHillsWiiU() )            { outDriver = FNEW( CompilerDriver_GreenHillsWiiU() ); }
-    else                                            { outDriver = FNEW( CompilerDriver_Generic() ); }
+    if ( flags.IsMSVC() || flags.IsClangCl() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_CL( flags.IsClangCl() ) ) );
+    }
+    else if ( flags.IsClang() || flags.IsGCC() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_GCCClang( flags.IsClang() ) ) );
+    }
+    else if ( flags.IsVBCC() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_VBCC() ) );
+    }
+    else if ( flags.IsQtRCC() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_QtRCC() ) );
+    }
+    else if ( flags.IsOrbisWavePSSLC() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_OrbisWavePSSLC() ) );
+    }
+    else if ( flags.IsSNC() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_SNC() ) );
+    }
+    else if ( flags.IsCUDANVCC() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_CUDA() ) );
+    }
+    else if ( flags.IsCodeWarriorWii() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_CodeWarriorWii() ) );
+    }
+    else if ( flags.IsGreenHillsWiiU() )
+    {
+        outDriver.Replace( FNEW( CompilerDriver_GreenHillsWiiU() ) );
+    }
+    else
+    {
+        outDriver.Replace( FNEW( CompilerDriver_Generic() ) );
+    }
 
     outDriver->Init( this, remoteSourceRoot );
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & ObjectNode::GetCommandLine( bool useDedicatedPreprocessor,
+                                                        bool useDeoptimization ) const
+{
+    // Objects compiled locally in all situations source their command line
+    // from the OwnerObjectList node
+
+    if ( useDedicatedPreprocessor )
+    {
+        return m_OwnerObjectList->GetPreprocessorOptions();
+    }
+
+    if ( useDeoptimization )
+    {
+        return m_OwnerObjectList->GetCompilerOptionsDeoptimized();
+    }
+
+    if ( IsCreatingPCH() )
+    {
+        return m_OwnerObjectList->GetCompilerOptionsPCH();
+    }
+
+    return m_OwnerObjectList->GetCompilerOptions();
+}
+
+//------------------------------------------------------------------------------
+ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
+                                    NodeProxy * srcFile,
+                                    AString && compilerOptions,
+                                    uint32_t flags )
+    : ObjectNode()
+    , m_CompilerOptions( Move( compilerOptions ) )
+{
+    SetName( Move( objectName ) );
+    m_CompilerFlags.m_Flags = flags;
+
+    m_StaticDependencies.SetCapacity( 2 );
+    m_StaticDependencies.Add( nullptr );
+    m_StaticDependencies.Add( srcFile );
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ ObjectNodeRemote::~ObjectNodeRemote()
+{
+    // remote worker owns the ProxyNode for the source file, so must free it
+    Node * srcFile = GetSourceFile();
+    ASSERT( srcFile->GetType() == Node::PROXY_NODE );
+    FDELETE srcFile;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & ObjectNodeRemote::GetCommandLine( bool useDedicatedPreprocessor,
+                                                              bool useDeoptimization ) const
+{
+    // Objects compiled remotely use the options serialized in the special
+    // derived node (and don't have access to the OwnerObjectList)
+
+    // Flags are unused compiling remotely (everything is baked into m_CompilerOptions)
+    ASSERT( !useDedicatedPreprocessor && !useDeoptimization );
+#if !defined( ASSERTS_ENABLED )
+    (void)useDedicatedPreprocessor;
+    (void)useDeoptimization;
+#endif
+    return m_CompilerOptions;
 }
 
 //------------------------------------------------------------------------------

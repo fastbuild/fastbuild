@@ -7,8 +7,9 @@
 #include "DirectoryListNode.h"
 #include "UnityNode.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
@@ -28,26 +29,26 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) + MetaFile() )
-    REFLECT( m_Librarian,                       "Librarian",                    MetaFile() )
-    REFLECT( m_LibrarianOptions,                "LibrarianOptions",             MetaNone() )
-    REFLECT( m_LibrarianType,                   "LibrarianType",                MetaOptional() )
-    REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
-    REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
-    REFLECT( m_LibrarianAllowResponseFile,      "LibrarianAllowResponseFile",   MetaOptional() )
-    REFLECT( m_LibrarianForceResponseFile,      "LibrarianForceResponseFile",   MetaOptional() )   
+    REFLECT( m_Librarian, MetaFile() + MetaRequired() )
+    REFLECT( m_LibrarianOptions, MetaRequired() )
+    REFLECT( m_LibrarianType )
+    REFLECT( m_LibrarianOutput, MetaFile() + MetaRequired() )
+    REFLECT( m_LibrarianAdditionalInputs, MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
+    REFLECT( m_LibrarianAllowResponseFile )
+    REFLECT( m_LibrarianForceResponseFile )
 
-    REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
-    REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
-    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
+    REFLECT( m_NumLibrarianAdditionalInputs, MetaHidden() )
+    REFLECT( m_LibrarianFlags, MetaHidden() )
+    REFLECT( m_Environment )
 REFLECT_END( LibraryNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LibraryNode::LibraryNode()
-: ObjectListNode()
-, m_LibrarianType( "auto" )
-, m_LibrarianAllowResponseFile( false )
-, m_LibrarianForceResponseFile( false )
+    : ObjectListNode()
+    , m_LibrarianType( "auto" )
+    , m_LibrarianAllowResponseFile( false )
+    , m_LibrarianForceResponseFile( false )
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
@@ -121,11 +122,11 @@ LibraryNode::~LibraryNode()
 
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool LibraryNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool LibraryNode::GatherDynamicDependencies( NodeGraph & nodeGraph )
 {
-    if ( ObjectListNode::GatherDynamicDependencies( nodeGraph, forceClean ) == false )
+    if ( ObjectListNode::GatherDynamicDependencies( nodeGraph ) == false )
     {
-        return false; // GatherDynamicDependencies will have emited an error
+        return false; // GatherDynamicDependencies will have emitted an error
     }
 
     // .LibrarianAdditionalInputs
@@ -133,7 +134,7 @@ LibraryNode::~LibraryNode()
     //  handle expanding them into the command line like everything else)
     const size_t startIndex = m_StaticDependencies.GetSize() - m_NumLibrarianAdditionalInputs;
     const size_t endIndex = m_StaticDependencies.GetSize();
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         m_DynamicDependencies.Add( m_StaticDependencies[ i ].GetNode() );
     }
@@ -153,7 +154,7 @@ LibraryNode::~LibraryNode()
     {
         if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
+            return BuildResult::eFailed; // HandleFileDeletion will have emitted an error
         }
     }
 
@@ -161,7 +162,7 @@ LibraryNode::~LibraryNode()
     Args fullArgs;
     if ( !BuildArgs( fullArgs ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // use the exe launch dir as the working dir
@@ -182,11 +183,11 @@ LibraryNode::~LibraryNode()
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for Library creation for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -198,7 +199,7 @@ LibraryNode::~LibraryNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eAborted;
     }
 
     // did the executable fail?
@@ -215,7 +216,7 @@ LibraryNode::~LibraryNode()
         }
 
         FLOG_ERROR( "Failed to build Library. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     else
     {
@@ -230,58 +231,71 @@ LibraryNode::~LibraryNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // BuildArgs
 //------------------------------------------------------------------------------
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
-    Array< AString > tokens( 1024, true );
+    StackArray<AString> tokens;
     m_LibrarianOptions.Tokenize( tokens );
 
     // When merging libs for non-MSVC toolchains, merge the source
     // objects instead of the libs
     const bool objectsInsteadOfLibs = ( m_LibrarianFlags & LIB_FLAG_LIB ) ? false : true;
 
-    const AString * const end = tokens.End();
-    for ( const AString * it = tokens.Begin(); it!=end; ++it )
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
             }
 
             // concatenate files, unquoted
-            GetInputFiles( fullArgs, pre, AString::GetEmpty(), objectsInsteadOfLibs );
+            StackArray<AString> inputs;
+            GetInputFiles( objectsInsteadOfLibs, inputs );
+            for ( const AString & input : inputs )
+            {
+                fullArgs += pre;
+                fullArgs += input;
+                fullArgs.AddDelimiter();
+            }
         }
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
-            AStackString<> post( "\"" );
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString post( "\"" );
 
             // concatenate files, quoted
-            GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            StackArray<AString> inputs;
+            GetInputFiles( objectsInsteadOfLibs, inputs );
+            for ( const AString & input : inputs )
+            {
+                fullArgs += pre;
+                fullArgs += input;
+                fullArgs += post;
+                fullArgs.AddDelimiter();
+            }
         }
         else if ( token.EndsWith( "%2" ) )
         {
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += m_Name;
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += m_Name;
             fullArgs += '"'; // post
@@ -366,13 +380,13 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     if ( flags & LIB_FLAG_LIB )
     {
         // Parse args for some other flags
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-
-        const AString* const end = tokens.End();
-        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        StackArray<AString::TokenRange, 512> tokenRanges;
+        args.Tokenize( tokenRanges );
+        for ( const AString::TokenRange & tokenRange : tokenRanges )
         {
-            const AString& token = *it;
+            const AStackString token( ( args.Get() + tokenRange.m_StartIndex ),
+                                      ( args.Get() + tokenRange.m_EndIndex ) );
+
             if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
                 flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;
@@ -388,7 +402,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 //------------------------------------------------------------------------------
 void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Lib: ";
@@ -402,7 +416,10 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // GetResponseFileMode
@@ -422,18 +439,18 @@ ArgsResponseFileMode LibraryNode::GetResponseFileMode() const
     }
 
     // Detect a librarian that supports response file args?
-    #if defined( __WINDOWS__ )
-        // Generally only windows applications support response files (to overcome Windows command line limits)
-        // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
-        // probably want this for other platforms as well though.
-        if ( GetFlag( LIB_FLAG_LIB ) ||
-             GetFlag( LIB_FLAG_AR ) ||
-             GetFlag( LIB_FLAG_ORBIS_AR ) ||
-             GetFlag( LIB_FLAG_GREENHILLS_AX ) )
-        {
-            return ArgsResponseFileMode::IF_NEEDED;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    // Generally only windows applications support response files (to overcome Windows command line limits)
+    // TODO:C This logic is Windows only as that's how it was originally implemented. It seems we
+    // probably want this for other platforms as well though.
+    if ( GetFlag( LIB_FLAG_LIB ) ||
+         GetFlag( LIB_FLAG_AR ) ||
+         GetFlag( LIB_FLAG_ORBIS_AR ) ||
+         GetFlag( LIB_FLAG_GREENHILLS_AX ) )
+    {
+        return ArgsResponseFileMode::IF_NEEDED;
+    }
+#endif
 
     // Cannot use response files
     return ArgsResponseFileMode::NEVER;

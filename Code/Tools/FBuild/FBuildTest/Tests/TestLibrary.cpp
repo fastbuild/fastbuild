@@ -11,42 +11,31 @@
 // Core
 #include <Core/Strings/AStackString.h>
 
-// TestLibrary
 //------------------------------------------------------------------------------
-class TestLibrary : public FBuildTest
+TEST_GROUP( TestLibrary, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void LibraryType() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestLibrary )
-    REGISTER_TEST( LibraryType )    // Test library detection code
-REGISTER_TESTS_END
-
-// LibraryType
-//------------------------------------------------------------------------------
-void TestLibrary::LibraryType() const
+TEST_CASE( TestLibrary, LibraryType )
 {
-    #define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
-    do { \
-        const uint32_t flags = LibraryNode::DetermineFlags( AStackString<>( "auto" ), \
-                                                            AStackString<>( exeName ), \
+#define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
+    do \
+    { \
+        const uint32_t flags = LibraryNode::DetermineFlags( AStackString( "auto" ), \
+                                                            AStackString( exeName ), \
                                                             AString::GetEmpty() ); \
         TEST_ASSERT( flags & expectedFlag ); \
-    } while( false )
+    } while ( false )
 
-    TEST_LIBRARYTYPE( "link",       LibraryNode::LIB_FLAG_LIB );
-    TEST_LIBRARYTYPE( "lib",        LibraryNode::LIB_FLAG_LIB );
-    TEST_LIBRARYTYPE( "ar",         LibraryNode::LIB_FLAG_AR );
-    TEST_LIBRARYTYPE( "orbis-ar",   LibraryNode::LIB_FLAG_ORBIS_AR );
-    TEST_LIBRARYTYPE( "\\ax",       LibraryNode::LIB_FLAG_GREENHILLS_AX );
+    TEST_LIBRARYTYPE( "link", LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "lib", LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "ar", LibraryNode::LIB_FLAG_AR );
+    TEST_LIBRARYTYPE( "orbis-ar", LibraryNode::LIB_FLAG_ORBIS_AR );
+    TEST_LIBRARYTYPE( "\\ax", LibraryNode::LIB_FLAG_GREENHILLS_AX );
 
-    #undef TEST_LIBRARYTYPE
+#undef TEST_LIBRARYTYPE
 }
 
 //------------------------------------------------------------------------------

@@ -1,46 +1,34 @@
 // TestResources.cpp
 //------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
+    #include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+    #include "Tools/FBuild/FBuildCore/FBuild.h"
 
-#include "Core/FileIO/FileIO.h"
-#include "Core/Process/Process.h"
-#include "Core/Strings/AStackString.h"
+    #include "Core/FileIO/FileIO.h"
+    #include "Core/Process/Process.h"
+    #include "Core/Strings/AStackString.h"
 
-// TestResources
 //------------------------------------------------------------------------------
-class TestResources : public FBuildTest
+TEST_GROUP( TestResources, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void BuildResource() const;
-    void BuildResource_NoRebuild() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestResources )
-    REGISTER_TEST( BuildResource )
-    REGISTER_TEST( BuildResource_NoRebuild )
-REGISTER_TESTS_END
-
-// BuildResource
-//------------------------------------------------------------------------------
-void TestResources::BuildResource() const
+TEST_CASE( TestResources, BuildResource )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestResources/fbuild.bff";
     options.m_ForceCleanBuild = true;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> binRes( "../tmp/Test/Resources/resource.res" );
+    const AStackString binRes( "../tmp/Test/Resources/resource.res" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( "binRes" );
@@ -51,42 +39,40 @@ void TestResources::BuildResource() const
     // make sure all output files are as expected
     EnsureFileExists( binRes );
 
-    // spawn exe which does a runtime check that the resource is availble
+    // spawn exe which does a runtime check that the resource is available
     Process p;
     TEST_ASSERT( p.Spawn( "../tmp/Test/Resources/exe.exe", nullptr, nullptr, nullptr ) );
     const int ret = p.WaitForExit();
     TEST_ASSERT( ret == 1 ); // verify expected ret code
 
-    // Check stats
-    //               Seen,  Built,  Type
+    // Check stats: Seen, Built, Type
     // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 1, Node::EXE_NODE );
 }
 
-// BuildResource_NoRebuild
 //------------------------------------------------------------------------------
-void TestResources::BuildResource_NoRebuild() const
+TEST_CASE( TestResources, BuildResource_NoRebuild )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestResources/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Resources/resource.fdb" ) );
 
     TEST_ASSERT( fBuild.Build( "exe" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
+    // Check stats: Seen, Built, Type
     // NOTE: Don't test file nodes since test used windows.h
-    CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-    CheckStatsNode ( 1,     0,      Node::LIBRARY_NODE );
-    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
+    CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 0, Node::OBJECT_LIST_NODE );
+    CheckStatsNode( 1, 0, Node::LIBRARY_NODE );
+    CheckStatsNode( 1, 1, Node::ALIAS_NODE );
+    CheckStatsNode( 1, 0, Node::EXE_NODE );
 }
 
 //------------------------------------------------------------------------------
+#endif

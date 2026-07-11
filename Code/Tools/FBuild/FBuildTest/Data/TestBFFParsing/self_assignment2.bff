@@ -1,4 +1,3 @@
-
 .ExpectedValue = 'String'
 
 .ConfigA = [ .Config = .ExpectedValue ]

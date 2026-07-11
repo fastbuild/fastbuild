@@ -5,45 +5,48 @@
 //------------------------------------------------------------------------------
 #include "CompilerNode.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
-
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
-    REFLECT( m_Executable,          "Executable",           MetaFile() )
-    REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
-    REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
-    REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
-    REFLECT( m_AllowResponseFile,   "AllowResponseFile",    MetaOptional() )
-    REFLECT( m_ForceResponseFile,   "ForceResponseFile",    MetaOptional() )
-    REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
-    REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
-    REFLECT( m_ClangGCCUpdateXLanguageArg, "ClangGCCUpdateXLanguageArg",  MetaOptional() )
-    REFLECT( m_ClangFixupUnity_Disable, "ClangFixupUnity_Disable", MetaOptional() )
-    REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
-    REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
-    REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
-    REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
-    REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
-    REFLECT( m_UseRelativePaths,    "UseRelativePaths_Experimental", MetaOptional() )
-    REFLECT( m_SourceMapping,       "SourceMapping_Experimental", MetaOptional() )
+REFLECT_NODE_BEGIN( CompilerNode, Node )
+    REFLECT( m_Executable, MetaFile() + MetaRequired() )
+    REFLECT( m_ExtraFiles, MetaFile() )
+    REFLECT( m_CustomEnvironmentVariables )
+    REFLECT( m_AllowDistribution )
+    REFLECT( m_AllowCaching )
+    REFLECT( m_AllowResponseFile )
+    REFLECT( m_ForceResponseFile )
+    REFLECT( m_VS2012EnumBugFix )
+    REFLECT( m_ClangRewriteIncludes )
+    REFLECT( m_ClangGCCUpdateXLanguageArg )
+    REFLECT( m_ClangFixupUnity_Disable )
+    REFLECT( m_ExecutableRootPath, MetaPath() )
+    REFLECT( m_SimpleDistributionMode )
+    REFLECT_RENAME( m_CompilerFamilyString, "CompilerFamily" )
+    REFLECT( m_Environment )
+    REFLECT_RENAME( m_UseLightCache, "UseLightCache_Experimental" )
+    REFLECT_RENAME( m_UseRelativePaths, "UseRelativePaths_Experimental" )
+    REFLECT_RENAME( m_UseDeterministicPaths, "UseDeterministicPaths_Experimental" )
+    REFLECT_RENAME( m_SourceMapping, "SourceMapping_Experimental" )
 
     // Internal
-    REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
-    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_CompilerFamilyEnum, MetaHidden() )
+    REFLECT( m_Manifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::CompilerNode()
-    : Node( AString::GetEmpty(), Node::COMPILER_NODE, Node::FLAG_NONE )
+    : Node( Node::COMPILER_NODE )
     , m_AllowDistribution( true )
     , m_AllowResponseFile( false )
     , m_ForceResponseFile( false )
@@ -52,10 +55,11 @@ CompilerNode::CompilerNode()
     , m_ClangGCCUpdateXLanguageArg( false )
     , m_ClangFixupUnity_Disable( false )
     , m_CompilerFamilyString( "auto" )
-    , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
+    , m_CompilerFamilyEnum( static_cast<uint8_t>( CUSTOM ) )
     , m_SimpleDistributionMode( false )
     , m_UseLightCache( false )
     , m_UseRelativePaths( false )
+    , m_UseDeterministicPaths( false )
     , m_EnvironmentString( nullptr )
 {
 }
@@ -73,7 +77,7 @@ CompilerNode::CompilerNode()
     ASSERT( compilerExeFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
 
     // .ExtraFiles
-    Dependencies extraFiles( 32 );
+    Dependencies extraFiles;
     if ( !Function::GetNodeList( nodeGraph, iter, function, ".ExtraFiles", m_ExtraFiles, extraFiles ) )
     {
         return false; // GetNodeList will have emitted an error
@@ -90,14 +94,13 @@ CompilerNode::CompilerNode()
     }
 
     // Check for conflicting files
-    AStackString<> relPathExe;
+    AStackString relPathExe;
     ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
-
     const size_t numExtraFiles = extraFiles.GetSize();
-    for ( size_t i=0; i<numExtraFiles; ++i )
+    for ( size_t i = 0; i < numExtraFiles; ++i )
     {
-        AStackString<> relPathA;
+        AStackString relPathA;
         ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
@@ -108,9 +111,9 @@ CompilerNode::CompilerNode()
         }
 
         // Conflicts with another file?
-        for ( size_t j=(i+1); j<numExtraFiles; ++j )
+        for ( size_t j = ( i + 1 ); j < numExtraFiles; ++j )
         {
-            AStackString<> relPathB;
+            AStackString relPathB;
             ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
@@ -126,17 +129,8 @@ CompilerNode::CompilerNode()
     m_StaticDependencies.Add( compilerExeFile );
     m_StaticDependencies.Add( extraFiles );
 
-    if (InitializeCompilerFamily( iter, function ) == false)
+    if ( InitializeCompilerFamily( iter, function ) == false )
     {
-        return false;
-    }
-
-    // The LightCache is only compatible with MSVC for now
-    // - GCC/Clang can be supported when built in include paths can be extracted
-    //   and -nostdinc/-nostdinc++ is handled
-    if ( m_UseLightCache && ( m_CompilerFamilyEnum != MSVC ) )
-    {
-        Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
         return false;
     }
 
@@ -160,9 +154,9 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
         // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( GetExecutable() );
+        AStackString compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
-        AStackString<> compilerWithoutVersion( compiler.Get() );
+        AStackString compilerWithoutVersion( compiler.Get() );
         if ( const char * last = compiler.FindLast( '-' ) )
         {
             compilerWithoutVersion.Assign( compiler.Get(), last );
@@ -308,7 +302,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Functi
     {
         m_CompilerFamilyEnum = CLANG_CL;
         return true;
-    }    
+    }
     if ( m_CompilerFamilyString.EqualsI( "snc" ) )
     {
         m_CompilerFamilyEnum = SNC;
@@ -366,13 +360,14 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
+    const bool skipHashing = ( !m_AllowCaching && !m_AllowDistribution );
+    if ( !m_Manifest.DoBuild( m_StaticDependencies, skipHashing ) )
     {
-        return Node::NODE_RESULT_FAILED; // Generate will have emitted error
+        return BuildResult::eFailed; // Generate will have emitted error
     }
 
     m_Stamp = m_Manifest.GetTimeStamp();
-    return Node::NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // GetEnvironmentString

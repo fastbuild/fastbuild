@@ -11,8 +11,8 @@
 class FunctionUsing : public Function
 {
 public:
-    explicit        FunctionUsing();
-    inline virtual ~FunctionUsing() override = default;
+    explicit FunctionUsing();
+    virtual ~FunctionUsing() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

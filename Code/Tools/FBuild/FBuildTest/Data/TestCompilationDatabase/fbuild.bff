@@ -18,7 +18,11 @@ Compiler( 'FakeClang')
 // Use constant output extension to make checking of the result easier
 .CompilerOutputExtension = '.result'
 
-.CompilerOptions = '-c -I"path with spaces" -D^'STRING_DEFINE="foobar"^' "%1" -o "%2"'
+.CompilerOptions = '-c'
+                 + ' -I"path with spaces"'
+                 + ' -DSTRING_DEFINE=\"foobar\"'
+                 + ' "-DSTRING_DEFINE_SPACES=\"foo bar\""'
+                 + ' "%1" -o "%2"'
 
 .CompilerOutputPath = .OutDir
 .UnityOutputPath = .OutDir // unused

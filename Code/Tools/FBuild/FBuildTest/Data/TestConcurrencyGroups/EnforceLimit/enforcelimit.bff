@@ -1,0 +1,56 @@
+//
+// Test Concurrency Group limits
+//
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    // Create a group which only allows one task at a time
+    .Group  = [
+                .ConcurrencyGroupName   = 'test'
+                .ConcurrencyLimit       = 1
+              ]
+    .ConcurrencyGroups = { .Group }
+}
+
+{
+    // Each task runs a command
+    #if __WINDOWS__
+        .ExecExecutable     = 'c:\Windows\System32\cmd.exe'
+        .ExecArguments      = '/c'
+    #else
+        .ExecExecutable     = '/bin/bash'
+        .ExecArguments      = '-c'
+    #endif
+    .ExecUseStdOutAsOutput  = true
+
+    // All tasks are part of the same Concurrency Group
+    .ConcurrencyGroupName   = 'test'
+
+    // Each task writes to a common file which can fail if done concurrently
+    .ExecArguments      + ' echo > $Out$/Test/ConcurrencyGroups/EnforceLimit/test.txt'
+
+    Exec( 'Step1' )
+    {
+        .ExecOutput         = '$Out$/Test/ConcurrencyGroups/EnforceLimit/file1.log'
+    }
+    Exec( 'Step2' )
+    {
+        .ExecOutput         = '$Out$/Test/ConcurrencyGroups/EnforceLimit/file2.log'
+    }
+    Exec( 'Step3' )
+    {
+        .ExecOutput         = '$Out$/Test/ConcurrencyGroups/EnforceLimit/file3.log'
+    }
+    Exec( 'Step4' )
+    {
+        .ExecOutput         = '$Out$/Test/ConcurrencyGroups/EnforceLimit/file4.log'
+    }
+}
+
+Alias( 'EnforceLimit' )
+{
+    .Targets = { 'Step1', 'Step2', 'Step3', 'Step4' }
+}

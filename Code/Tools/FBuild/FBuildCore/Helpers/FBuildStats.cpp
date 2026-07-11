@@ -25,7 +25,7 @@
 class NodeCostSorter
 {
 public:
-    inline bool operator () ( const Node * a, const Node * b ) const
+    bool operator()( const Node * a, const Node * b ) const
     {
         return ( a->GetProcessingTime() > b->GetProcessingTime() );
     }
@@ -40,8 +40,9 @@ FBuildStats::FBuildStats()
     , m_TotalLocalCPUTimeMS( 0 )
     , m_TotalRemoteCPUTimeMS( 0 )
     , m_RootNode( nullptr )
-    , m_NodesByTime( 100 * 1000, true )
-{}
+{
+    m_NodesByTime.SetCapacity( 100 * 1000 );
+}
 
 // CONSTRUCTOR - FBuildStats::Stats
 //------------------------------------------------------------------------------
@@ -51,11 +52,14 @@ FBuildStats::Stats::Stats()
     , m_NumCacheHits( 0 )
     , m_NumCacheMisses( 0 )
     , m_NumCacheStores( 0 )
-    , m_NumLightCache( 0 )
+    , m_NumLightCacheHits( 0 )
+    , m_NumLightCacheMisses( 0 )
+    , m_NumLightCacheStores( 0 )
     , m_ProcessingTimeMS( 0 )
     , m_NumFailed( 0 )
     , m_CachingTimeMS( 0 )
-{}
+{
+}
 
 // OnBuildStop
 //------------------------------------------------------------------------------
@@ -84,7 +88,7 @@ void FBuildStats::OnBuildStop( const NodeGraph & nodeGraph, Node * node )
         // stdout summary
         if ( showSummary )
         {
-            OutputSummary();
+            OutputSummary( options );
         }
     }
 }
@@ -105,25 +109,27 @@ void FBuildStats::GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node *
     m_NodesByTime.Sort( ncs );
 
     // Total the stats
-    for ( uint32_t i=0; i< Node::NUM_NODE_TYPES; ++i )
+    for ( uint32_t i = 0; i < Node::NUM_NODE_TYPES; ++i )
     {
-        m_Totals.m_NumProcessed     += m_PerTypeStats[ i ].m_NumProcessed;
-        m_Totals.m_NumBuilt         += m_PerTypeStats[ i ].m_NumBuilt;
-        m_Totals.m_NumCacheHits     += m_PerTypeStats[ i ].m_NumCacheHits;
-        m_Totals.m_NumCacheMisses   += m_PerTypeStats[ i ].m_NumCacheMisses;
-        m_Totals.m_NumCacheStores   += m_PerTypeStats[ i ].m_NumCacheStores;
-        m_Totals.m_NumLightCache    += m_PerTypeStats[ i ].m_NumLightCache;
-        m_Totals.m_CachingTimeMS    += m_PerTypeStats[ i ].m_CachingTimeMS;
+        m_Totals.m_NumProcessed += m_PerTypeStats[ i ].m_NumProcessed;
+        m_Totals.m_NumBuilt += m_PerTypeStats[ i ].m_NumBuilt;
+        m_Totals.m_NumCacheHits += m_PerTypeStats[ i ].m_NumCacheHits;
+        m_Totals.m_NumCacheMisses += m_PerTypeStats[ i ].m_NumCacheMisses;
+        m_Totals.m_NumCacheStores += m_PerTypeStats[ i ].m_NumCacheStores;
+        m_Totals.m_NumLightCacheHits += m_PerTypeStats[ i ].m_NumLightCacheHits;
+        m_Totals.m_NumLightCacheMisses += m_PerTypeStats[ i ].m_NumLightCacheMisses;
+        m_Totals.m_NumLightCacheStores += m_PerTypeStats[ i ].m_NumLightCacheStores;
+        m_Totals.m_CachingTimeMS += m_PerTypeStats[ i ].m_CachingTimeMS;
     }
 }
 
 // OutputSummary
 //------------------------------------------------------------------------------
-void FBuildStats::OutputSummary() const
+void FBuildStats::OutputSummary( const FBuildOptions & options ) const
 {
     PROFILE_FUNCTION;
 
-    AStackString< 4096 > output;
+    AStackString<4096> output;
 
     // Top 10 cost items
     if ( m_NodesByTime.IsEmpty() == false )
@@ -131,7 +137,7 @@ void FBuildStats::OutputSummary() const
         output += "--- Most Expensive ----------------------------------------------\n";
         output += "Time (s)  Name:\n";
         const size_t itemsToDisplay = Math::Min( m_NodesByTime.GetSize(), (size_t)20 );
-        for ( size_t i=0; i<itemsToDisplay; ++i )
+        for ( size_t i = 0; i < itemsToDisplay; ++i )
         {
             const Node * n = m_NodesByTime[ i ];
             output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetPrettyName().Get() );
@@ -145,7 +151,7 @@ void FBuildStats::OutputSummary() const
     // NOTE: Only showing the interesting nodes
     output += "                                 /----- Cache -----\\\n";
     output += "Build:          Seen    Built   Hit     Miss    Store   CPU\n";
-    for ( uint32_t i=0; i< Node::NUM_NODE_TYPES; ++i )
+    for ( uint32_t i = 0; i < Node::NUM_NODE_TYPES; ++i )
     {
         // don't show nodes with no task
         const Stats & stats = m_PerTypeStats[ i ];
@@ -156,10 +162,10 @@ void FBuildStats::OutputSummary() const
 
         const char * typeName = Node::GetTypeName( Node::Type( i ) );
 
-        AStackString<> cpuTime;
+        AStackString cpuTime;
         FormatTime( (float)( (double)stats.m_ProcessingTimeMS / (double)1000 ), cpuTime );
 
-        AStackString<> cacheInfo;
+        AStackString cacheInfo;
         if ( ( stats.m_NumCacheHits + stats.m_NumCacheMisses + stats.m_NumCacheStores ) > 0 )
         {
             cacheInfo.Format( "%-8u%-8u%-8u",
@@ -172,28 +178,50 @@ void FBuildStats::OutputSummary() const
             cacheInfo = "-       -       -       ";
         }
         output.AppendFormat( " - %-10s : %-8u%-8u%s%s\n",
-                        typeName,
-                        stats.m_NumProcessed,
-                        stats.m_NumBuilt,
-                        cacheInfo.Get(),
-                        cpuTime.Get() );
-    }
-    output += "Cache:\n";
-    {
-        const uint32_t hits = m_Totals.m_NumCacheHits;
-        const uint32_t misses = m_Totals.m_NumCacheMisses;
-        const uint32_t stores = m_Totals.m_NumCacheStores;
-        float hitPerc = 0.0f;
-        if ( hits > 0 || misses > 0 )
-        {
-            hitPerc = ( (float)hits / float( hits + misses ) * 100.0f );
-        }
-        output.AppendFormat( " - Hits       : %u (%2.1f %%)\n", hits, (double)hitPerc );
-        output.AppendFormat( " - Misses     : %u\n", misses );
-        output.AppendFormat( " - Stores     : %u\n", stores );
+                             typeName,
+                             stats.m_NumProcessed,
+                             stats.m_NumBuilt,
+                             cacheInfo.Get(),
+                             cpuTime.Get() );
     }
 
-    AStackString<> buffer;
+    // Cache stats
+    if ( options.m_UseCacheRead || options.m_UseCacheWrite )
+    {
+        output += "Cache:\n";
+        if ( options.m_UseCacheRead )
+        {
+            const double hits = static_cast<double>( m_Totals.m_NumCacheHits );
+            const double misses = static_cast<double>( m_Totals.m_NumCacheMisses );
+            const double readable = ( hits + misses );
+            const double hitPerc = ( readable > 0.0 ) ? ( hits / readable * 100.0 ) : 0.0;
+            output.AppendFormat( " - Hits       : %u (%2.1f %%) (%u Light)\n",
+                                 m_Totals.m_NumCacheHits,
+                                 static_cast<double>( hitPerc ),
+                                 m_Totals.m_NumLightCacheHits );
+            output.AppendFormat( " - Misses     : %u (%u Light)\n",
+                                 m_Totals.m_NumCacheMisses,
+                                 m_Totals.m_NumLightCacheMisses );
+        }
+        else
+        {
+            output.AppendFormat( " - Hits       : DISABLED\n" );
+            output.AppendFormat( " - Misses     : DISABLED\n" );
+        }
+        if ( options.m_UseCacheWrite )
+        {
+            output.AppendFormat( " - Stores     : %u (%u Light)\n",
+                                 m_Totals.m_NumCacheStores,
+                                 m_Totals.m_NumLightCacheStores );
+        }
+        else
+        {
+            output.AppendFormat( " - Stores     : DISABLED\n" );
+        }
+    }
+
+    // Time totals
+    AStackString buffer;
     FormatTime( m_TotalBuildTime, buffer );
     output += "Time:\n";
     output.AppendFormat( " - Real       : %s\n", buffer.Get() );
@@ -202,9 +230,12 @@ void FBuildStats::OutputSummary() const
     FormatTime( totalLocalCPUInSeconds, buffer );
     const float localRatio = ( totalLocalCPUInSeconds / m_TotalBuildTime );
     output.AppendFormat( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), (double)localRatio );
-    FormatTime( totalRemoteCPUInSeconds, buffer );
-    const float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
-    output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), (double)remoteRatio );
+    if ( options.m_AllowDistributed )
+    {
+        FormatTime( totalRemoteCPUInSeconds, buffer );
+        const float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
+        output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), (double)remoteRatio );
+    }
     output += "-----------------------------------------------------------------\n";
 
     OUTPUT( "%s", output.Get() );
@@ -229,7 +260,7 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         stats.m_NumProcessed++;
 
         m_TotalLocalCPUTimeMS += node->GetProcessingTime();
-        if (node->GetStatFlag(Node::STATS_BUILT_REMOTE))
+        if ( node->GetStatFlag( Node::STATS_BUILT_REMOTE ) )
         {
             m_TotalRemoteCPUTimeMS += node->GetLastBuildTime();
         }
@@ -268,7 +299,18 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         }
         if ( node->GetStatFlag( Node::STATS_LIGHT_CACHE ) )
         {
-            stats.m_NumLightCache++;
+            if ( node->GetStatFlag( Node::STATS_CACHE_HIT ) )
+            {
+                stats.m_NumLightCacheHits++;
+            }
+            else if ( node->GetStatFlag( Node::STATS_CACHE_STORE ) )
+            {
+                stats.m_NumLightCacheStores++;
+            }
+            else
+            {
+                stats.m_NumLightCacheMisses++;
+            }
         }
     }
 

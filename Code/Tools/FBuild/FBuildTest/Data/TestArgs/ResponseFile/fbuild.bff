@@ -17,6 +17,6 @@ Using( .StandardEnvironment )
 // Common settings
 ObjectList( 'ResponseFilePath' )
 {
-    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/'
+    .CompilerInputFiles         = 'Tools/FBuild/FBuildTest/Data/TestArgs/ResponseFile/file.cpp'
     .CompilerOutputPath         = '$Out$/Test/ObjectList/ResponseFile/'
 }

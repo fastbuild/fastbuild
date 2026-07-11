@@ -5,47 +5,52 @@
 //------------------------------------------------------------------------------
 #include "ExecNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
+#include "Core/Strings/AStackString.h"
 
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
-    REFLECT(        m_ExecExecutable,           "ExecExecutable",           MetaFile() )
-    REFLECT_ARRAY(  m_ExecInput,                "ExecInput",                MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_ExecInputPath,            "ExecInputPath",            MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_ExecInputPattern,         "ExecInputPattern",         MetaOptional() )
-    REFLECT(        m_ExecInputPathRecurse,     "ExecInputPathRecurse",     MetaOptional() )
-    REFLECT_ARRAY(  m_ExecInputExcludePath,     "ExecInputExcludePath",     MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_ExecInputExcludedFiles,   "ExecInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_ExecInputExcludePattern,  "ExecInputExcludePattern",  MetaOptional() + MetaFile( true ) )
-    REFLECT(        m_ExecArguments,            "ExecArguments",            MetaOptional() )
-    REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
-    REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
-    REFLECT(        m_ExecAlwaysShowOutput,     "ExecAlwaysShowOutput",     MetaOptional() )
-    REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
-    REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
+    REFLECT( m_ExecExecutable, MetaFile() + MetaRequired() )
+    REFLECT( m_ExecInput, MetaFile() )
+    REFLECT( m_ExecInputPath, MetaPath() )
+    REFLECT( m_ExecInputPattern )
+    REFLECT( m_ExecInputPathRecurse )
+    REFLECT( m_ExecInputExcludePath, MetaPath() )
+    REFLECT( m_ExecInputExcludedFiles, MetaFile( true ) )
+    REFLECT( m_ExecInputExcludePattern, MetaFile( true ) )
+    REFLECT( m_ExecArguments )
+    REFLECT( m_ExecWorkingDir, MetaPath() )
+    REFLECT( m_ExecReturnCode )
+    REFLECT( m_ExecAlwaysShowOutput )
+    REFLECT( m_ExecUseStdOutAsOutput )
+    REFLECT( m_ExecAlways )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Environment )
+    REFLECT( m_ConcurrencyGroupName )
+    REFLECT( m_Hidden )
 
     // Internal State
-    REFLECT(        m_NumExecInputFiles,        "NumExecInputFiles",        MetaHidden() )
+    REFLECT( m_NumExecInputFiles, MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex, MetaHidden() )
 REFLECT_END( ExecNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ExecNode::ExecNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_ExecReturnCode( 0 )
     , m_ExecAlwaysShowOutput( false )
     , m_ExecUseStdOutAsOutput( false )
@@ -63,9 +68,16 @@ ExecNode::ExecNode()
 /*virtual*/ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph,
+                                      iter,
+                                      function,
+                                      m_ConcurrencyGroupName,
+                                      m_ConcurrencyGroupIndex ) )
     {
-        return false; // InitializePreBuildDependencies will have emitted an error
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .ExecExecutable
@@ -95,6 +107,7 @@ ExecNode::ExecNode()
                                               m_ExecInputExcludePattern,
                                               m_ExecInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_ExecInputPattern,
                                               "ExecInputPath",
                                               execInputPaths ) )
@@ -121,14 +134,14 @@ ExecNode::~ExecNode()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
+/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1 + m_NumExecInputFiles; // Skip Compiler + ExecInputFiles
-    const size_t endIndex =  ( 1 + m_NumExecInputFiles + m_ExecInputPath.GetSize() );
+    const size_t endIndex = ( 1 + m_NumExecInputFiles + m_ExecInputPath.GetSize() );
     for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
@@ -136,8 +149,8 @@ ExecNode::~ExecNode()
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {
@@ -145,7 +158,7 @@ ExecNode::~ExecNode()
             Node * sn = nodeGraph.FindNode( file.m_Name );
             if ( sn == nullptr )
             {
-                sn = nodeGraph.CreateFileNode( file.m_Name );
+                sn = nodeGraph.CreateNode<FileNode>( file.m_Name );
             }
             else if ( sn->IsAFile() == false )
             {
@@ -180,8 +193,8 @@ ExecNode::~ExecNode()
     const char * workingDir = m_ExecWorkingDir.IsEmpty() ? nullptr : m_ExecWorkingDir.Get();
 
     // Format compiler args string
-    AStackString< 4 * KILOBYTE > fullArgs;
-    GetFullArgs(fullArgs);
+    AStackString<4 * KILOBYTE> fullArgs;
+    GetFullArgs( fullArgs );
 
     const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
@@ -190,19 +203,19 @@ ExecNode::~ExecNode()
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
     const bool spawnOK = p.Spawn( GetExecutable()->GetName().Get(),
-                            fullArgs.Get(),
-                            workingDir,
-                            environment );
+                                  fullArgs.Get(),
+                                  workingDir,
+                                  environment );
 
     if ( !spawnOK )
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -214,14 +227,14 @@ ExecNode::~ExecNode()
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eAborted;
     }
     const bool buildFailed = ( result != m_ExecReturnCode );
-    
+
     // Print output if appropriate
     if ( buildFailed ||
-        m_ExecAlwaysShowOutput ||
-        FBuild::Get().GetOptions().m_ShowCommandOutput )
+         m_ExecAlwaysShowOutput ||
+         FBuild::Get().GetOptions().m_ShowCommandOutput )
     {
         Node::DumpOutput( job, memOut );
         Node::DumpOutput( job, memErr );
@@ -231,7 +244,7 @@ ExecNode::~ExecNode()
     if ( buildFailed )
     {
         FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     if ( m_ExecUseStdOutAsOutput == true )
@@ -249,7 +262,13 @@ ExecNode::~ExecNode()
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
+}
+
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ExecNode::GetConcurrencyGroupIndex() const
+{
+    return m_ConcurrencyGroupIndex;
 }
 
 // EmitCompilationMessage
@@ -257,7 +276,7 @@ ExecNode::~ExecNode()
 void ExecNode::EmitCompilationMessage( const AString & args ) const
 {
     // basic info
-    AStackString< 2048 > output;
+    AStackString<2048> output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Run: ";
@@ -268,7 +287,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     // verbose mode
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        AStackString< 1024 > verboseOutput;
+        AStackString<1024> verboseOutput;
         verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: %i\n",
                               GetExecutable()->GetName().Get(),
                               args.Get(),
@@ -278,56 +297,57 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     }
 
     // output all at once for contiguousness
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // GetFullArgs
 //------------------------------------------------------------------------------
-void ExecNode::GetFullArgs(AString & fullArgs) const
+void ExecNode::GetFullArgs( AString & fullArgs ) const
 {
     // split into tokens
-    Array< AString > tokens(1024, true);
-    m_ExecArguments.Tokenize(tokens);
+    StackArray<AString> tokens;
+    m_ExecArguments.Tokenize( tokens );
 
-    AStackString<> quote("\"");
+    AStackString quote( "\"" );
 
-    const AString * const end = tokens.End();
-    for (const AString * it = tokens.Begin(); it != end; ++it)
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
-        if (token.EndsWith("%1"))
+        if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
-            if (token.GetLength() > 2)
+            AStackString pre;
+            if ( token.GetLength() > 2 )
             {
-                pre.Assign(token.Get(), token.GetEnd() - 2);
+                pre.Assign( token.Get(), token.GetEnd() - 2 );
             }
 
             // concatenate files, unquoted
-            GetInputFiles(fullArgs, pre, AString::GetEmpty());
+            GetInputFiles( fullArgs, pre, AString::GetEmpty() );
         }
-        else if (token.EndsWith("\"%1\""))
+        else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre(token.Get(), token.GetEnd() - 3); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
 
             // concatenate files, quoted
-            GetInputFiles(fullArgs, pre, quote);
+            GetInputFiles( fullArgs, pre, quote );
         }
-        else if (token.EndsWith("%2"))
+        else if ( token.EndsWith( "%2" ) )
         {
             // handle /Option:%2 -> /Option:A
-            if (token.GetLength() > 2)
+            if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>(token.Get(), token.GetEnd() - 2);
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += GetName().Get();
         }
-        else if (token.EndsWith("\"%2\""))
+        else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre(token.Get(), token.GetEnd() - 3); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += GetName().Get();
             fullArgs += '"'; // post
@@ -343,10 +363,10 @@ void ExecNode::GetFullArgs(AString & fullArgs) const
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const
+void ExecNode::GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const
 {
     bool first = true; // Handle comma separation
-    for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (exectuable)
+    for ( size_t i = 1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (executable)
     {
         const Dependency & dep = m_StaticDependencies[ i ];
         const Node * n = dep.GetNode();
@@ -354,8 +374,8 @@ void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AStr
         // Handle directory lists
         if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & file : files )
             {
                 if ( !first )

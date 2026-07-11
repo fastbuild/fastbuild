@@ -1,4 +1,3 @@
-
 ; loop variables are frozen
 
 .array = { 'a', 'b', 'c' }

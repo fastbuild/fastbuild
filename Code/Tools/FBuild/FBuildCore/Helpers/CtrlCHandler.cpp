@@ -21,9 +21,9 @@
 // System-Specific Callbacks
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    BOOL WINAPI CtrlHandlerFunc( DWORD fdwCtrlType );
+BOOL WINAPI CtrlHandlerFunc( DWORD fdwCtrlType );
 #elif defined( __LINUX__ ) || defined( __OSX__ )
-    void CtrlHandlerFunc( int dummy );
+void CtrlHandlerFunc( int dummy );
 #endif
 
 // CONSTRUCTOR
@@ -46,11 +46,11 @@ void CtrlCHandler::RegisterHandler()
 {
     ASSERT( m_IsRegistered == false );
 
-    #if defined( __WINDOWS__ )
-        VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandlerFunc, TRUE ) );
-    #elif defined( __LINUX__ ) || defined( __OSX__ )
-        signal( SIGINT, CtrlHandlerFunc );
-    #endif
+#if defined( __WINDOWS__ )
+    VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandlerFunc, TRUE ) );
+#elif defined( __LINUX__ ) || defined( __OSX__ )
+    signal( SIGINT, CtrlHandlerFunc );
+#endif
 
     m_IsRegistered = true;
 }
@@ -62,13 +62,13 @@ void CtrlCHandler::DeregisterHandler()
     // Handle manual deregistration
     if ( m_IsRegistered )
     {
-        #if defined( __WINDOWS__ )
-            VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)nullptr, TRUE ) );
-        #elif defined( __LINUX__ )
-            signal( SIGINT, SIG_DFL );
-        #elif defined( __OSX__ )
-            // TODO:MAC Implement
-        #endif
+#if defined( __WINDOWS__ )
+        VERIFY( SetConsoleCtrlHandler( ( PHANDLER_ROUTINE ) nullptr, TRUE ) );
+#elif defined( __LINUX__ )
+        signal( SIGINT, SIG_DFL );
+#elif defined( __OSX__ )
+        // TODO:MAC Implement
+#endif
 
         m_IsRegistered = false;
     }
@@ -77,45 +77,45 @@ void CtrlCHandler::DeregisterHandler()
 // CtrlHandler
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    BOOL WINAPI CtrlHandlerFunc( DWORD /*fdwCtrlType*/ )
+BOOL WINAPI CtrlHandlerFunc( DWORD /*fdwCtrlType*/ )
+{
+    // tell FBuild we want to stop the build cleanly
+    FBuild::AbortBuild();
+
+    // only printf output for the first break received
+    static bool received = false;
+    if ( received == false )
     {
-        // tell FBuild we want to stop the build cleanly
-        FBuild::AbortBuild();
+        received = true;
 
-        // only printf output for the first break received
-        static bool received = false;
-        if ( received == false )
-        {
-            received = true;
+        // get the console colours
+        CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+        VERIFY( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &consoleInfo ) );
 
-            // get the console colours
-            CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-            VERIFY( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &consoleInfo ) );
+        // print a big red msg
+        VERIFY( SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_RED ) );
+        OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
 
-            // print a big red msg
-            VERIFY( SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_RED ) );
-            OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
-
-            // put the console back to normal
-            VERIFY( SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), consoleInfo.wAttributes ) );
-        }
-
-        return TRUE; // tell Windows we've "handled" it
+        // put the console back to normal
+        VERIFY( SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), consoleInfo.wAttributes ) );
     }
+
+    return TRUE; // tell Windows we've "handled" it
+}
 #elif defined( __LINUX__ ) || defined( __OSX__ )
-    void CtrlHandlerFunc( int /*dummy*/ )
-    {
-        // tell FBuild we want to stop the build cleanly
-        FBuild::AbortBuild();
+void CtrlHandlerFunc( int /*dummy*/ )
+{
+    // tell FBuild we want to stop the build cleanly
+    FBuild::AbortBuild();
 
-        // only printf output for the first break received
-        static bool received = false;
-        if ( received == false )
-        {
-            received = true;
-            OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
-        }
+    // only printf output for the first break received
+    static bool received = false;
+    if ( received == false )
+    {
+        received = true;
+        OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
     }
+}
 #endif
 
 //------------------------------------------------------------------------------

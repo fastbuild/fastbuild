@@ -16,37 +16,20 @@
 
 #include <memory.h>
 
-// TestCompressor
 //------------------------------------------------------------------------------
-class TestCompressor : public FBuildTest
+TEST_GROUP( TestCompressor, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void CompressSimple() const;
-    void CompressPreprocessedFile() const;
-    void CompressObjFile() const;
-    void TestHeaderValidity() const;
-
+public:
     void CompressSimpleHelper( const char * data,
                                size_t size,
                                size_t expectedCompressedSize,
-                               bool shouldCompress ) const;
+                               bool shouldCompress,
+                               bool useZstd = false ) const;
     void CompressHelper( const char * fileName ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestCompressor )
-    REGISTER_TEST( CompressSimple )
-    REGISTER_TEST( CompressPreprocessedFile )
-    REGISTER_TEST( CompressObjFile )
-    REGISTER_TEST( TestHeaderValidity )
-REGISTER_TESTS_END
-
-// CompressSimple
-//------------------------------------------------------------------------------
-void TestCompressor::CompressSimple() const
+TEST_CASE( TestCompressor, CompressSimple )
 {
     CompressSimpleHelper( "AAAAAAAA",
                           8,
@@ -71,12 +54,12 @@ void TestCompressor::CompressSimple() const
     CompressSimpleHelper( "A", 1, 0, false );
 }
 
-// CompressSimpleHelper
 //------------------------------------------------------------------------------
 void TestCompressor::CompressSimpleHelper( const char * data,
                                            size_t size,
                                            size_t expectedCompressedSize,
-                                           bool shouldCompress ) const
+                                           bool shouldCompress,
+                                           bool useZstd ) const
 {
     // raw input strings may not be aligned on Linux/OSX, so copy
     // them to achieve our required alignment
@@ -86,7 +69,8 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // compress
     Compressor c;
-    const bool compressed = c.Compress( data, size );
+    const bool compressed = useZstd ? c.CompressZstd( data, size )
+                                    : c.Compress( data, size );
     TEST_ASSERT( compressed == shouldCompress );
     const size_t compressedSize = c.GetResultSize();
     if ( expectedCompressedSize > 0 )
@@ -98,6 +82,7 @@ void TestCompressor::CompressSimpleHelper( const char * data,
     // decompress
     Compressor d;
     TEST_ASSERT( d.Decompress( compressedMem ) );
+
     const size_t decompressedSize = d.GetResultSize();
     TEST_ASSERT( decompressedSize == size );
     TEST_ASSERT( memcmp( data, d.GetResult(), size ) == 0 );
@@ -105,15 +90,14 @@ void TestCompressor::CompressSimpleHelper( const char * data,
     FDELETE_ARRAY( alignedData );
 }
 
-// CompressPreprocessedFile
 //------------------------------------------------------------------------------
-void TestCompressor::CompressPreprocessedFile() const
+TEST_CASE( TestCompressor, CompressPreprocessedFile )
 {
     CompressHelper( "Tools/FBuild/FBuildTest/Data/TestCompressor/TestPreprocessedFile.ii" );
 }
 
 //------------------------------------------------------------------------------
-void TestCompressor::CompressObjFile() const
+TEST_CASE( TestCompressor, CompressObjFile )
 {
     CompressHelper( "Tools/FBuild/FBuildTest/Data/TestCompressor/TestObjFile.o" );
 }
@@ -123,13 +107,13 @@ void TestCompressor::CompressObjFile() const
 void TestCompressor::CompressHelper( const char * fileName ) const
 {
     // read some test data into a file
-    UniquePtr< void > data;
+    UniquePtr<void, FreeDeletor> data;
     size_t dataSize;
     {
         FileStream fs;
         TEST_ASSERT( fs.Open( fileName ) );
         dataSize = (size_t)fs.GetFileSize();
-        data = (char *)ALLOC( dataSize );
+        data.Replace( (char *)ALLOC( dataSize ) );
         TEST_ASSERT( (uint32_t)fs.Read( data.Get(), dataSize ) == dataSize );
     }
 
@@ -140,28 +124,36 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "Level | Time (ms)  MB/s  Ratio | Time (ms)  MB/s\n" );
     OUTPUT( "------------------------------------------------\n" );
 
+    OUTPUT( "LZ4:\n" );
+
     // Compress at various compression levels
+    // clang-format off
     const int32_t compressionLevels[] =
-    { 
+    {
         0,                                          // Disabled
         -256, -128, -64, -32, -16, -8, -4, -2, -1,  // LZ4
         1, 3, 6, 9, 12                              // LZ4 HC
     };
+    // clang-format on
 
     for ( const int32_t compressionLevel : compressionLevels )
     {
         // compress/decompress the data several times to get more stable throughput value
+#if defined( __ASAN__ ) || defined( __TSAN__ ) || defined( __MSAN__ )
+        const uint32_t numRepeats = 1; // Slow sanitizer configs do only 1 pass
+#else
         const uint32_t numRepeats = 4; // Increase to get more consistent numbers
+#endif
         double compressTimeTaken = 0.0;
         double decompressTimeTaken = 0.0;
         uint64_t compressedSize = 0;
 
         // Compression speed
-        UniquePtr< Compressor, DeleteDeletor > c;
+        UniquePtr<Compressor> c;
         for ( uint32_t i = 0; i < numRepeats; ++i )
         {
             // Compress
-            c = FNEW( Compressor );
+            c.Replace( FNEW( Compressor ) );
             const Timer t;
             c.Get()->Compress( data.Get(), dataSize, compressionLevel );
             compressedSize = c.Get()->GetResultSize();
@@ -185,22 +177,90 @@ void TestCompressor::CompressHelper( const char * fileName ) const
             }
         }
 
-        const double compressThroughputMBs    = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
-        const double decompressThroughputMBs  = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double compressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double decompressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
         const double ratio = ( (double)dataSize / (double)compressedSize );
 
-        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
-                                                            ( compressTimeTaken / numRepeats ), compressThroughputMBs, (double)ratio,
-                                                            ( decompressTimeTaken / numRepeats ), decompressThroughputMBs );
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n",
+                compressionLevel,
+                ( compressTimeTaken / numRepeats ),
+                compressThroughputMBs,
+                (double)ratio,
+                ( decompressTimeTaken / numRepeats ),
+                decompressThroughputMBs );
+    }
+
+    OUTPUT( "Zstd:\n" );
+
+    // Compress at various compression levels
+    // clang-format off
+    const int32_t zStdCompressionLevels[] =
+    {
+        0,                                          // Disabled
+        1, 3, 6, 9, 12, 15, 18, 21                  // Zstd
+    };
+    // clang-format on
+
+    for ( const int32_t compressionLevel : zStdCompressionLevels )
+    {
+        // compress/decompress the data several times to get more stable throughput value
+#if defined( __ASAN__ ) || defined( __TSAN__ ) || defined( __MSAN__ )
+        const uint32_t numRepeats = 1; // Slow sanitizer configs do only 1 pass
+#else
+        const uint32_t numRepeats = 4; // Increase to get more consistent numbers
+#endif
+        double compressTimeTaken = 0.0;
+        double decompressTimeTaken = 0.0;
+        uint64_t compressedSize = 0;
+
+        // Compression speed
+        UniquePtr<Compressor> c;
+        for ( uint32_t i = 0; i < numRepeats; ++i )
+        {
+            // Compress
+            c.Replace( FNEW( Compressor ) );
+            const Timer t;
+            c.Get()->CompressZstd( data.Get(), dataSize, compressionLevel );
+            compressedSize = c.Get()->GetResultSize();
+            compressTimeTaken += (double)t.GetElapsedMS();
+        }
+
+        // Decompression speed
+        for ( uint32_t i = 0; i < numRepeats; ++i )
+        {
+            // Decompress
+            const Timer t2;
+            Compressor d;
+            TEST_ASSERT( d.Decompress( c.Get()->GetResult() ) );
+            TEST_ASSERT( d.GetResultSize() == dataSize );
+            decompressTimeTaken += (double)t2.GetElapsedMS();
+
+            // Sanity check decompression returns original results
+            if ( i == 0 )
+            {
+                TEST_ASSERT( memcmp( data.Get(), d.GetResult(), dataSize ) == 0 );
+            }
+        }
+
+        const double compressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double decompressThroughputMBs = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double ratio = ( (double)dataSize / (double)compressedSize );
+
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n",
+                compressionLevel,
+                ( compressTimeTaken / numRepeats ),
+                compressThroughputMBs,
+                (double)ratio,
+                ( decompressTimeTaken / numRepeats ),
+                decompressThroughputMBs );
     }
     OUTPUT( "------------------------------------------------\n" );
 }
 
-// TestHeaderValidity
 //------------------------------------------------------------------------------
-void TestCompressor::TestHeaderValidity() const
+TEST_CASE( TestCompressor, TestHeaderValidity )
 {
-    UniquePtr< uint32_t > buffer( (uint32_t *)ALLOC( 1024 ) );
+    UniquePtr<uint32_t, FreeDeletor> buffer( (uint32_t *)ALLOC( 1024 ) );
     memset( buffer.Get(), 0, 1024 );
     Compressor c;
     uint32_t * data = (uint32_t *)buffer.Get();

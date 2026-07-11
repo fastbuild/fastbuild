@@ -1,0 +1,21 @@
+//
+// Ensure args are correctly handled when response files are in use
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+// Use response files even if args could fit on command line
+.ForceResponseFile = true
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    // Add include path which compilation depends on
+    .CompilerOptions    + ' -I$TestRoot$/Data/TestCache/LightCache_ResponseFile/SubDir'
+
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/LightCache_ResponseFile/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_ResponseFile/'
+}

@@ -28,6 +28,471 @@
 
 
 <div class='newsitemheader'>
+    v1.20&nbsp;<font color='#bbbbbb'>(26th-Apr-2026)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>FBuildWorker <a href="options.html#console">-console</a> on Windows no longer forces <a href="options.html#nosubprocess">-nosubprocess</a></li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Correctly detect corrupt cache items when &lt; 12 bytes in size</li>
+        <li>Avoid unnecessary rebuilds after bff edits when using Clang & LightCache</li>
+        <li>[Windows] Improve CPU core type detection on some systems</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>BFF Parsing</li>
+        <ul>
+            <li>Improve BFF tokenizing performance</li>
+            <li>BFF parsing time reduced for complex Aliases and PreBuildDependencies</li>
+            <li>BFF parsing performance improved slightly</li>
+        </ul>
+        <li>Reduce directory list node fdb costs for complex directory listings</li>
+        <li>DB load/save time improved for complex Aliases and PreBuildDependencies</li>
+        <li>Memory usage reduced for complex Aliases and PreBuildDependencies</li>
+        <li>FBuildWorker will self-restart on Windows when updated even if <a href="options.html#console">-console</a> mode is used</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.19&nbsp;<font color='#bbbbbb'>(22nd-Feb-2026)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>OSX version now requires at least OSX 10.13</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Add <a href="options.html#sourcefile">-sourcefile</a> cmdline option to support .CompileFileCommand in <a href="functions/vcxproject.html">VCXProject</a></li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix precompiled headers not rebuilding after PCHOptions edited (v1.18 regression)</li>
+        <li>VCXProject documentation example fixes (Thanks to Léo Carnaut-Delord)</li>
+        <li>Stop altering normal remote errors and impacting the Visual Studio Error List</li>
+        <li>Prevent rebuilding when LightCache encouters missing full-path includes (Thanks to Antoine Vugliano)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>        
+        <li>Light Cache</li>
+        <ul>
+            <li>LightCache now supports Clang & GCC</li>
+            <li>LightCache respects UseRelativePath when generating cache keys</li>
+            <li>LightCache can process comments in the middle of include directives</li>
+            <li><a href="options.html#summary">-summary<a/> shows additional info relating to LightCache use</li>
+        </ul>
+        <li>Add #elif support to bff parsing (Thanks to Dan Andrus)</li>
+        <li>Support <a href="functions/vcxproject.html">CompileFileCommand</a> (Ctrl+F7) with VS2022 or later (Thanks to Léo Carnaut-Delord)</li>
+        <li>Add "FASTBuild Task Provider" VSCode ext as 3rd party (Thanks to SherAndrei)</li>
+        <li>Add retries to LNK1140 & LNK1158 to work around MSVC linker /dynamicdeopt bugs</li>
+        <li>Exec exposes then Hidden flag to allow hiding from <a href="options.html#showtargets">-showtargets<a/></li>
+        <li><a href="options.html#summary">-summary</a> omits distribution timing if not using distributed compilation</li>
+        <li>Reduce FBuild startup time slightly by avoiding redundant SetWorkingDir</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.18&nbsp;<font color='#bbbbbb'>(29th-Nov-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix Dependencies::GrowCapacity potential memory corruption (Thanks to Jean-Sebastien Pelletier)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>FBuild ignores Low Power E-Cores (Intel Meteor Lake)</li>
+        <li>FBuildWorker -cpus and UI ignores Low Power E-Cores (Intel Meteor Lake)</li>
+        <li>Worker brokerage tokens contain CPU information (vendor, model, family & core breakdown)</li>
+        <li>-profile output contains CPU information (vendor, model, family & core breakdown)</li>
+        <li>FBuild and FBuildWorker are no longer "below normal" priority</li>
+        <li>New AllowCaching option on Compiler() can be used to disable caching</li>
+        <li>Various operations use a more performant hash, improving performance slightly</li>
+        <li>Small fdb load/save performance gains on x86_64 with AVX2 support</li>
+        <li>Small VisualStudio and XCode project gen performance gains on x86_64 with AVX2 support</li>
+        <li>Cache performance improved slightly on x86_64 with AVX2</li>
+        <li>Improve performance of Unity generation slightly on x86_64 with AVX2 support</li>
+        <li>Improve BFF parsing performance slightly on x86_64 with AVX2 support</li>
+        <li>Compiler() file hashing is skipped when !AllowDistribution and !AllowCaching (Thanks to Bill Hoffman)</li>
+        <li>Reduce memory usage of dependency graph</li>
+        <li>Reduce cost of PreBuildDependencies processing for ObjectList & Library when parsing bff files</li>
+        <li>Reduce redundancy in .fdb, improving startup/shutdown times</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.17&nbsp;<font color='#bbbbbb'>(30th-Sep-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>[Note] -nounity command line is no longer considered experimental</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Unity generates correct paths when using UseRelativePaths_Experimental (Thanks to Eduard Voronkin)</li>
+        <li>Total build "Time: X.XXXs" captures missing shutdown costs</li>
+        <li>-profile option includes missing shutdown costs</li>
+        <li>-profile write failure return code correctly returned when using -wrapper mode</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Improve bff parsing performance by avoiding string copies</li>
+        <li>Improve bff parsing speed by eliminating redundant PreBuildDependencies and Alias Targets</li>
+        <li>Improve fbd load/save performance</li>
+        <li>Improve fdb load/save time slightly by removing redundant properties</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.16&nbsp;<font color='#bbbbbb'>(13th-Sep-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed</li>
+        <li>-dist will no longer be auto disabled if there are no workers at startup</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Fixed distributed compilation failure due to deadlocks under heavy network load</li>
+            <li>Remote file read failures are correctly handled (Thanks to Justin Webb)</li>
+        </ul>
+        <li>[OSX][Linux] Fix failure reading .fdb file > 2GiB in size (Thanks to Eduard Voronkin)</li>
+        <li>[OSX][Linux] Fix failures reading/writing build outputs > 2GiB in size (Thanks to Eduard Voronkin)</li>
+        <li>[OSX][Linux] Fix missing process memory in -profile output json</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Move worker discovery to Client thread, reducing startup time</li>
+            <li>Parallelize connecting to workers</li>
+        </ul>
+        <li>Greatly improve directory listing performance for large result sets</li>
+        <li>Improve performance of DB load/save</li>
+        <li>Reduce job processing overhead slightly</li>
+        <li>Improve performance in -quiet mode by avoiding unnecessary work</li>
+        <li>Reduce startup time slightly by deferring some LightCache setup work</li>
+        <li>Improve fbd load/save performance reducing build overhead</li>
+        <li>Improve fdb load/save performance</li>
+        <li>Improve fdb efficiency</li>
+        <li>[OSX] Significantly reduce process management overhead</li>
+        <li>[Linux] Reduce process spawning overhead</li>
+        <li>Reduce time taken to write -profile output</li>
+        <li>-profile emits total system memory usage</li>
+        <li>[Linux] Reduce process spawning cost using posix_spawn if possible</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.15&nbsp;<font color='#bbbbbb'>(1st-May-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Support <a href="https://learn.microsoft.com/en-us/cpp/build/reference/dynamic-deopt">/dynamicdeopt</a> feature of MSVC (Thanks to Xiang Fan MSFT)</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix FBuildWorker crash on OSX</li>
+        <li>Fix crash when Unity is configured with no files and only isolated files</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Optimize db save time for large databases</li>
+        <li>Improve startup by avoiding some per-node work loading the fdb file</li>
+        <li>[OSX][Linux] Reduce process spawning overhead</li>
+        <li>Ensure directory listings are deterministic (Thanks to Javier Blazquez)</li>
+        <li>Make hashes used in local temp paths deterministic (Thanks to Javier Blazquez)</li>
+        <li>Add UseDeterministicPaths_Experimental flag (Thanks to Javier Blazquez)</li>
+        <li>Objects built using -nounity can read/write the cache when when "isolated"</li>        
+        <li>BFF Parsing</li>
+        <ul>
+            <li>Reduce bff parsing time for ObjectList, Library, Executable and DLL</li>            
+            <li>Reduce bff parsing cost for every ObjectList slightly</li>
+            <li>Further reduce bff parsing cost for every ObjectList slightly for non-MSVC compilers</li>
+        </ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Improve error message when FBuildWorker fails to mount TMP dir</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+            <li>Cache bandwidth and storage space reduced slightly (~1-3%)</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Massively improve VCXProj and XCode project generation performance</li>
+            <li>Optimize VCXProj generation when processing relative file paths in various places</li>
+            <li>VCXProj and XCode project generation performance improved significantly</li>
+        </ul>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.14&nbsp;<font color='#bbbbbb'>(12th-Jan-2025)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>Settings exposes <a href="functions/settings.html">ConcurrencyGroups</a> allowing additional parallelism constraints</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Ensure PCH object files are inputs to linking at most once</li>
+        <li>Unity deterministically sorts files in same directory that are substring matches (Thanks to Michal Kawalec)</li>
+        <li>-report=json output is no longer corrupt when not using the cache</li>
+        <li>nans no longer emitted in -report=json for extremely fast builds</li>
+        <li>[Linux] Eliminate several dependencies on glibc 2.17 and 2.33 (Thanks to dummyunit)</li>
+        <li>[Linux] Ensure compatibility with glibc 2.10 (Thanks to dummyunit)</li> 
+        <li>Project Generation</li>
+        <ul>
+            <li>XCode project generation handles defines with quotes and slashes</li>
+            <li>Fix handling of quoted defines in Intellisense/CodeSense</li>
+            <li>Fix handling of various strings in XCode project generation</li>
+        </ul>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Add additional safety checks to decompression</li>
+        <li>Reduce database disk write time</li>
+        <li>Compiler() manifests provide extended error info when failing to open/read files</li>
+        <li>[OSX] Shrink FBuild and FBuildWorker binary size</li>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compression performance improved slightly (~5%)</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+           <li>Cache decompression performance improved slightly at defaults (~5%)</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li>Xcode projects have CLANG_CXX_LANGUAGE_STANDARD set automatically</li>
+        </ul>
+    </ul>
+</div>
+
+
+<div class='newsitemheader'>
+    v1.13&nbsp;<font color='#bbbbbb'>(21st-Apr-2024)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version has changed</li>
+        <li>Workers are forwards/backwards compatible, but new workers are required to see all performance gains.</li>
+        <li>Behavior Changes</li>
+        <ul>
+            <li><b>Arg processing</b> has been overhauled for correctness and consistency; fixes may invalidate previous work-arounds</li>
+            <li>Failed/aborted <b>multi-target builds</b> now behave as single target builds, stopping as soon as possible.<br>
+                <a href="options.html#nostoponerror">-nostoponerror</a> can still be used to build as much before failing.</li>
+            <li><b>Cache compression</b> defaults and algorithms have changed</li>
+        </ul>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Caching</li>        
+        <ul>
+            <li>Clang-CL on Windows stores/retrieves pch.obj when needed (Thanks to poljak181)</li>
+            <li>LightCache finds dependencies correctly when response files are used</li>
+        </ul>
+        <li>Args Processing</li>
+        <ul>
+            <li>Escaped quotes are correctly handled in process arguments</li>
+            <li>Quotes are properly tokenized regardless of quote position</li>
+            <li>Args with quotes and spaces are correctly tokenized</li>
+            <li>[OSX][Linux] Args with quotes are handled correctly when spawning processes</li>
+            <li><a href="options.html#compdb">-compdb</a> correctly handles escaped quotes in arguments</li>
+        </ul>
+        <li>Project Generation</li>
+        <ul>
+            <li><a href="functions/vsprojectexternal.html">VCXProject</a> generation correctly escapes &amp;, &lt; and &gt; in all properties</li>
+            <li>Fix typo in build-time errors regarding <a href="functions/vsprojectexternal.html">VSProjectExternal</a> config problems</li>
+        </ul>
+        <li>Fix typo in Error 1035 regarding exessive depth complexity</li>
+        <li>[Windows] Directories ignored when checking FileExists (consistent with OSX &amp; Linux)</li>
+        <li>Ensure different dir listings on same folder respect exclude paths (v1.12 regression)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compilation return bandwidth reduced ~40% with new defaults</li>
+            <li>Improved message for "Failed to store fileId" errors in FBuildWorker</li>
+        </ul>
+        <li>Caching</li>        
+        <ul>
+            <li>Cache storage space reduced by ~40% with new defaults</li>
+            <li>Cache hit/store bandwidth reduced by ~40% with new defaults</li>            
+        </ul>
+        <li>Other Performance</li>
+        <ul>
+            <li>Optimize startup time by avoiding unnecessary work during DB loading</li>
+            <li>Optimize startup time after bff edits by avoiding unnecessary work during DB migration</li>
+            <li>Small optimization to bff parsing when handling aliases</li>
+            <li>Improve bff parsing performance slightly for Linker/DLL items</li>
+        </ul>        
+        <li>Build stop on failure/abort behavior for multiple targets matches one target builds</li>
+        <li>Build output now differentiates "Failure" from "Incomplete" for multiple targets</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.12&nbsp;<font color='#bbbbbb'>(2nd-Feb-2024)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>RemoveDir will remove directories as well as files by default</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Fix slow job processing with extremely large amounts of jobs</li>
+        <li>Fix spurious "Failed to spawn" errors when a build is being aborted</li>
+        <li>Restore full stack size for threads that call cache plugins (regression in v1.11)</li>
+        <li>Fix memory leak when a corrupt cache item is retrieved</li>
+        <li>Various documentation fixes (Thanks to Harrison Ting)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li><a href="options.html#distverbose">-distverbose</a> emits worker version info for v1.12 workers onwards</li>
+        <li><a href="functions/removedir.html">RemoveDir</a> removes dirs as well as files by default</li>
+        <li><a href="functions/removedir.html">RemoveDir</a> directory berhavior can be controlled with .RemoveDirs and .RemoveRootDir</li>
+        <li>Small performance improvement to various internal hashing operations</li>
+        <li><a href="functions/vcxproject.html">VCXProject</a> supports additional Android Game Development Extension options</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.11&nbsp;<font color='#bbbbbb'>(19th-Aug-2023)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>[Linux] Robustify file copy if sendfile isn't supported  (Thanks to Nick Krecklow)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Reduce cost of queueing jobs during graph traversal</li>
+        <li>Improve LightCache performance considerably for many CPU core systems</li>
+        <li>Directory listings with excluded folders optimized significantly</li>
+        <li>All directory listings optimized slightly</li>
+        <li>Database loading and various lookup performance improved slightly</li>
+        <li>Improve database load time slightly</li>
+        <li>Error #1100 emits location of previous declaration</li>
+        <li><a href="options.html#dbfile">-dbfile</a> arg can explicitly set dependency db file location (Thanks to Troels Gram)</li>
+        <li>[Linux] Improve detection of max args length using _SC_ARG_MAX (Thanks to Domain)</li>
+        <li>VXCProject exposes AndroidApkLocation for Android Game Development Extension</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.10&nbsp;<font color='#bbbbbb'>(28th-May-2023)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed : cache will be re-populated</li>
+    </ul>
+    <b>New</b>
+    <ul>
+        <li>[OSX] Apple Silicon is supported natively using Universal binaries</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Prevent Worker over-requesting jobs when there are multiple Clients</li>
+        </ul>
+        <li>[Linux][OSX] Fix file/folder permissions being exessively permissive (Thanks to Pete Lewis)</li>
+        <li>Chained ObjectLists correctly handle duplicate names in sub-directories (Thanks to Dandielo)</li>
+        <li>Fix crash when .CompilerOutputPath is missing but required on ObjectList/Library</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Toolchain management performance improved slightly when toolchain changes</li>
+            <li>Remove some unecessary lock contention in FBuildWorker</li>
+            <li>FBuildWorker can be set to restart every 4 hours (<a href="options.html#periodicrestart">-periodicrestart</a>)</li>
+            <li>Eliminate various instances of lock contention in FBuildWorker</li>
+        </ul>
+        <li>Cache performance improved slightly for check, store and retrieve operations</li>
+        <li>Performance of various build steps improved slightly</li>
+        <li>Database validation improved, reducing startup/shutdown time slightly</li>
+        <li>Fix documenation errors for some optional fields (Thanks to Harrison Ting)</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
+    v1.09&nbsp;<font color='#bbbbbb'>(5th-Mar-2023)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+    <ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>Distributed compilation will no longer distribute to itself (the host machine)</li>
+        </ul>
+        <li>[Windows] Working dir canonicalization works in directories with special display names</li>
+        <li>Response files arg is correctly quoted for Clang compatibility (Thanks to Sebastien Alaiwan)</li>
+        <li>Directories ending in /.. or /. (no trailing slash) are handled correctly in various places (Thanks to dummyunit)</li>
+        <li>Re-instate optimization to avoid some processing when MSVC warnings as errors (/WX) is used</li>
+        <li>Concatenating empty arrays within structs is properly handled (Thanks to Curtis Maves)</li>
+        <li>Concatenating non-empty ArrayOfStructs no longer incorrectly changes type to Struct (Thanks to Curtis Maves)</li>
+        <li>Add missing .CompilerInputAllowNoFiles for Library() in basic documentation</li>
+        <li>-Werror for clang/gcc was not properly detected inhibiting a minor optimization (Thanks to poljak181)</li>
+    </ul>
+    <b>Improvements</b>
+    <ul>
+        <li>Distributed Compilation</li>
+        <ul>
+            <li>[Windows] STATUS_CONTROL_C_EXIT (0xC000013A) is considered a retryable System Failure (Thanks to Sam Hocevar)</li>
+        </ul>
+        <li>Add FASTBUILD_EXE_PATH built-in variable (Thanks to Lambert Clara)</li>
+        <li>Add .Environment option to Exec() (Thanks to ZeroErrors)</li>
+        <li>Improved compression perf in some scenarios (LZ4 1.9.4)</li>
+        <li>Expose recursion control for in VCXProject & XCodeProject via .CompilerInputPathsRecurse (Thanks to Troels Gram)</li>
+        <li><a href="options.html#report">-report</a> can output in json format as well as html (Thanks to EwanMoshi)</li>
+    </ul>
+</div>
+
+<div class='newsitemheader'>
     v1.08&nbsp;<font color='#bbbbbb'>(5th-Nov-2022)</font>
 </div>
 <div class='newsitembody'>
@@ -2315,6 +2780,6 @@ Fixes
     </div>
 
 
-    </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2026 Franta Fulin</div></div></div>
 </body>
 </html>

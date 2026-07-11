@@ -4,10 +4,12 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionCopy.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/FLog.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -18,7 +20,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionCopy::FunctionCopy()
-: Function( "Copy" )
+    : Function( "Copy" )
 {
 }
 
@@ -34,7 +36,7 @@ FunctionCopy::FunctionCopy()
 /*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     // make sure all required variables are defined
-    Array< AString > sources( 16, true );
+    StackArray<AString> sources;
     const BFFVariable * dstFileV;
     if ( !GetStrings( funcStartIter, sources, ".Source", true ) ||
          !GetString( funcStartIter, dstFileV, ".Dest", true ) )
@@ -43,7 +45,7 @@ FunctionCopy::FunctionCopy()
     }
 
     // Optional
-    AStackString<> sourceBasePath;
+    AStackString sourceBasePath;
     if ( !GetString( funcStartIter, sourceBasePath, ".SourceBasePath", false ) )
     {
         return false; // GetString will have emitted errors
@@ -52,25 +54,20 @@ FunctionCopy::FunctionCopy()
     // Canonicalize the SourceBasePath
     if ( !sourceBasePath.IsEmpty() )
     {
-        AStackString<> cleanValue;
+        AStackString cleanValue;
         NodeGraph::CleanPath( sourceBasePath, cleanValue );
         PathUtils::EnsureTrailingSlash( cleanValue );
         sourceBasePath = cleanValue;
     }
 
     // check sources are not paths
+    for ( const AString & srcFile : sources )
     {
-        const AString * const end = sources.End();
-        for ( const AString * it = sources.Begin(); it != end; ++it )
+        // source must be a file, not a  path
+        if ( PathUtils::IsFolderPath( srcFile ) )
         {
-            const AString & srcFile( *it );
-
-            // source must be a file, not a  path
-            if ( PathUtils::IsFolderPath( srcFile ) )
-            {
-                Error::Error_1105_PathNotAllowed( funcStartIter, this, ".Source", srcFile );
-                return false;
-            }
+            Error::Error_1105_PathNotAllowed( funcStartIter, this, ".Source", srcFile );
+            return false;
         }
     }
 
@@ -80,20 +77,20 @@ FunctionCopy::FunctionCopy()
     {
         return false; // GetNodeList will have emitted an error
     }
-    Array< AString > preBuildDependencyNames( preBuildDependencies.GetSize(), false );
+    StackArray<Node *> preBuildDependencyNames;
+    preBuildDependencyNames.SetCapacity( preBuildDependencies.GetSize() );
     for ( const Dependency & dep : preBuildDependencies )
     {
-        preBuildDependencyNames.Append( dep.GetNode()->GetName() );
+        preBuildDependencyNames.Append( dep.GetNode() );
     }
 
     // get source node
-    Array< Node * > srcNodes;
+    Array<Node *> srcNodes;
     {
-        const AString * const end = sources.End();
-        for ( const AString * it = sources.Begin(); it != end; ++it )
+        for ( const AString & source : sources )
         {
 
-            Node * srcNode = nodeGraph.FindNode( *it );
+            Node * srcNode = nodeGraph.FindNode( source );
             if ( srcNode )
             {
                 if ( GetSourceNodes( funcStartIter, srcNode, srcNodes ) == false )
@@ -104,12 +101,12 @@ FunctionCopy::FunctionCopy()
             else
             {
                 // source file not defined by use - assume an external file
-                srcNodes.Append( nodeGraph.CreateFileNode( *it ) );
+                srcNodes.Append( nodeGraph.CreateNode<FileNode>( source, funcStartIter ) );
             }
         }
     }
 
-    AStackString<> dstFile;
+    AStackString dstFile;
     NodeGraph::CleanPath( dstFileV->GetString(), dstFile );
     const bool dstIsFolderPath = PathUtils::IsFolderPath( dstFile );
 
@@ -124,7 +121,7 @@ FunctionCopy::FunctionCopy()
     Dependencies copyNodes( srcNodes.GetSize() );
     for ( const Node * srcNode : srcNodes )
     {
-        AStackString<> dst( dstFile );
+        AStackString dst( dstFile );
 
         // dest can be a file OR a path.  If it's a path, use the source filename part
         if ( dstIsFolderPath )
@@ -142,20 +139,21 @@ FunctionCopy::FunctionCopy()
             {
                 // Use just the file name
                 const char * lastSlash = srcName.FindLast( NATIVE_SLASH );
-                dst += lastSlash ? ( lastSlash + 1 )    // append filename part if found
-                                     : srcName.Get();   // otherwise append whole thing
+                dst += lastSlash ? ( lastSlash + 1 ) // append filename part if found
+                                 : srcName.Get(); // otherwise append whole thing
             }
         }
 
         // check node doesn't already exist
-        if ( nodeGraph.FindNode( dst ) )
+        if ( const Node * existingNode = nodeGraph.FindNode( dst ) )
         {
-            Error::Error_1100_AlreadyDefined( funcStartIter, this, dst );
+            const BFFToken * existingToken = nodeGraph.FindNodeSourceToken( existingNode );
+            Error::Error_1100_AlreadyDefined( funcStartIter, this, dst, existingToken );
             return false;
         }
 
         // create our node
-        CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dst );
+        CopyFileNode * copyFileNode = nodeGraph.CreateNode<CopyFileNode>( dst, funcStartIter );
         copyFileNode->m_Source = srcNode->GetName();
         copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames;
         if ( !copyFileNode->Initialize( nodeGraph, funcStartIter, this ) )
@@ -167,17 +165,17 @@ FunctionCopy::FunctionCopy()
     }
 
     // handle alias creation
-    return ProcessAlias( nodeGraph, funcStartIter, copyNodes );
+    return ProcessAlias( nodeGraph, copyNodes );
 }
 
 // GetSourceNodes
 //------------------------------------------------------------------------------
-bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array< Node * > & nodes ) const
+bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array<Node *> & nodes ) const
 {
     if ( node->GetType() == Node::ALIAS_NODE )
     {
         // resolve aliases to real nodes
-        const AliasNode * aliasNode = node->CastTo< AliasNode >();
+        const AliasNode * aliasNode = node->CastTo<AliasNode>();
         for ( const Dependency & dep : aliasNode->GetAliasedNodes() )
         {
             if ( !GetSourceNodes( iter, dep.GetNode(), nodes ) )

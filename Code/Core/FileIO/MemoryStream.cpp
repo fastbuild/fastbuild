@@ -12,13 +12,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-MemoryStream::MemoryStream()
-    : m_Begin( nullptr )
-    , m_End( nullptr )
-    , m_MaxEnd( nullptr )
-    , m_MinGrowth( 4096 )
-{
-}
+MemoryStream::MemoryStream() = default;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -35,6 +29,33 @@ MemoryStream::MemoryStream( size_t initialBufferSize, size_t minGrowthFactor )
 MemoryStream::~MemoryStream()
 {
     FREE( m_Begin );
+}
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+MemoryStream::MemoryStream( MemoryStream && other )
+    : m_Begin( other.m_Begin )
+    , m_End( other.m_End )
+    , m_MaxEnd( other.m_MaxEnd )
+    , m_MinGrowth( other.m_MinGrowth )
+{
+    other.m_Begin = nullptr;
+    other.m_End = nullptr;
+    other.m_MaxEnd = nullptr;
+}
+
+// oeprator=
+//------------------------------------------------------------------------------
+void MemoryStream::operator=( MemoryStream && other )
+{
+    FREE( m_Begin );
+    m_Begin = other.m_Begin;
+    m_End = other.m_End;
+    m_MaxEnd = other.m_MaxEnd;
+    m_MinGrowth = other.m_MinGrowth;
+    other.m_Begin = nullptr;
+    other.m_End = nullptr;
+    other.m_MaxEnd = nullptr;
 }
 
 // Reset
@@ -63,7 +84,7 @@ void MemoryStream::Replace( void * memory, size_t size )
     FREE( m_Begin );
 
     // Own new memory
-    m_Begin = static_cast<char *>(memory);
+    m_Begin = static_cast<char *>( memory );
     m_End = m_Begin + size;
     m_MaxEnd = m_End;
 }
@@ -74,7 +95,7 @@ uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )
 {
     if ( ( m_End + bytesToWrite ) > m_MaxEnd )
     {
-        GrowToAccomodate( bytesToWrite );
+        GrowToAccommodate( bytesToWrite );
     }
 
     // Read directly into end of buffer
@@ -99,7 +120,7 @@ uint64_t MemoryStream::WriteBuffer( const void * buffer, uint64_t bytesToWrite )
 {
     if ( ( m_End + bytesToWrite ) > m_MaxEnd )
     {
-        GrowToAccomodate( bytesToWrite );
+        GrowToAccommodate( bytesToWrite );
     }
 
     memcpy( m_End, buffer, (size_t)bytesToWrite );
@@ -119,8 +140,7 @@ void MemoryStream::Flush()
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::Tell() const
 {
-    ASSERT( false ); // Not implemented - implement if required
-    return 0;
+    return GetSize(); // Write position is always at end
 }
 
 // Seek
@@ -139,19 +159,22 @@ uint64_t MemoryStream::GetFileSize() const
     return GetSize();
 }
 
-// Grow
+// GrowToAccommodate
 //------------------------------------------------------------------------------
-void MemoryStream::GrowToAccomodate( uint64_t bytesToAccomodate )
+void MemoryStream::GrowToAccommodate( uint64_t bytesToAccommodate )
 {
     // grow by at least MinGrowth
-    size_t newCapacity = (size_t)( m_MaxEnd - m_Begin ) + Math::Max<size_t>( (size_t)bytesToAccomodate, m_MinGrowth );
+    size_t newCapacity = (size_t)( m_MaxEnd - m_Begin ) + Math::Max<size_t>( (size_t)bytesToAccommodate, m_MinGrowth );
     char * oldBegin = m_Begin;
     char * oldEnd = m_End;
     m_Begin = (char *)ALLOC( newCapacity );
     m_End = m_Begin + ( oldEnd - oldBegin );
     m_MaxEnd = m_Begin + newCapacity;
-    memcpy( m_Begin, oldBegin, (size_t)( oldEnd - oldBegin ) );
-    FREE( oldBegin );
+    if ( oldBegin != nullptr )
+    {
+        memcpy( m_Begin, oldBegin, (size_t)( oldEnd - oldBegin ) );
+        FREE( oldBegin );
+    }
 }
 
 //------------------------------------------------------------------------------

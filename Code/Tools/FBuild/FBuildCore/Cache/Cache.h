@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "ICache.h"
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Cache/ICache.h"
+
+// Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AString.h"
 
@@ -24,12 +27,13 @@ public:
                        const AString & pluginDLLConfig ) override;
     virtual void Shutdown() override;
     virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize ) override;
-    virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize ) override;
+    virtual bool Retrieve( const AString & cacheId, void *& data, size_t & dataSize ) override;
     virtual void FreeMemory( void * data, size_t dataSize ) override;
     virtual bool OutputInfo( bool showProgress ) override;
     virtual bool Trim( bool showProgress, uint32_t sizeMiB ) override;
+
 private:
-    void GetCacheFiles( bool showProgress, Array< FileIO::FileInfo > & outInfo, uint64_t & outTotalSize ) const;
+    void GetCacheFiles( bool showProgress, Array<FileIO::FileInfo> & outInfo, uint64_t & outTotalSize ) const;
     void GetFullPathForCacheEntry( const AString & cacheId, AString & outFullPath ) const;
 
     AString m_CachePath;

@@ -8,35 +8,14 @@
 // FBuild
 #include "Tools/FBuild/FBuildCore/Graph/Dependencies.h"
 
-// TestCache
 //------------------------------------------------------------------------------
-class TestDependencies : public FBuildTest
+TEST_GROUP( TestDependencies, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Empty() const;
-    void Add() const;
-    void Clear() const;
-    void SetCapacity() const;
-    void Iteration() const;
-    void OperatorEquals() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestDependencies )
-    REGISTER_TEST( Empty )
-    REGISTER_TEST( Add )
-    REGISTER_TEST( Clear )
-    REGISTER_TEST( SetCapacity )
-    REGISTER_TEST( Iteration )
-    REGISTER_TEST( OperatorEquals )
-REGISTER_TESTS_END
-
-// Empty
-//------------------------------------------------------------------------------
-void TestDependencies::Empty() const
+TEST_CASE( TestDependencies, Empty )
 {
     // No initial capacity
     {
@@ -55,16 +34,15 @@ void TestDependencies::Empty() const
     }
 }
 
-// Add
 //------------------------------------------------------------------------------
-void TestDependencies::Add() const
+TEST_CASE( TestDependencies, Add )
 {
     Node * nodes[] = { (Node *)0x01, (Node *)0x02, (Node *)0x03 };
 
     // Node with defaults
     {
         Dependencies d;
-        d.Add( nodes[ 0 ] ); 
+        d.Add( nodes[ 0 ] );
         TEST_ASSERT( d.IsEmpty() == false );
         TEST_ASSERT( d.GetSize() == 1 );
         TEST_ASSERT( d.GetCapacity() > 0 );
@@ -129,8 +107,10 @@ void TestDependencies::Add() const
         TEST_ASSERT( d.GetCapacity() >= d.GetSize() );
 
         // Test final set is correct
+        // clang-format off
         const Node * const finalNodes[] = { (Node *)0x01, (Node *)0x02, (Node *)0x03,
                                             (Node *)0x04, (Node *)0x05, (Node *)0x06 };
+        // clang-format on
         for ( const Dependency & dep : d )
         {
             const size_t index = d.GetIndexOf( &dep );
@@ -139,9 +119,8 @@ void TestDependencies::Add() const
     }
 }
 
-// Clear
 //------------------------------------------------------------------------------
-void TestDependencies::Clear() const
+TEST_CASE( TestDependencies, Clear )
 {
     // Clear already empty
     {
@@ -164,9 +143,8 @@ void TestDependencies::Clear() const
     }
 }
 
-// SetCapacity
 //------------------------------------------------------------------------------
-void TestDependencies::SetCapacity() const
+TEST_CASE( TestDependencies, SetCapacity )
 {
     // Set on default constructed
     {
@@ -196,11 +174,22 @@ void TestDependencies::SetCapacity() const
         TEST_ASSERT( d.GetSize() == 1 ); // Item should not be lost
         TEST_ASSERT( d.GetCapacity() == 16 );
     }
+
+    // Set capacity lower than size, but not zero (which is ammortizing growth)
+    {
+        Node * node = nullptr;
+        Dependencies d;
+        d.Add( node );
+        d.Add( node );
+        d.SetCapacity( 1 );
+        TEST_ASSERT( d.IsEmpty() == false ); // Items should not be lost
+        TEST_ASSERT( d.GetSize() == 2 ); // Items should not be lost
+        TEST_ASSERT( d.GetCapacity() >= d.GetSize() ); // Capacity must not have shrunk
+    }
 }
 
-// Iteration
 //------------------------------------------------------------------------------
-void TestDependencies::Iteration() const
+TEST_CASE( TestDependencies, Iteration )
 {
     Node * nodes[] = { (Node *)0x01, (Node *)0x02, (Node *)0x03 };
 
@@ -212,7 +201,7 @@ void TestDependencies::Iteration() const
     TEST_ASSERT( d.GetSize() == 3 );
 
     // Non-const
-    PRAGMA_DISABLE_PUSH_MSVC(26496) // Don't complain about non-const 'dep' as we want that
+    PRAGMA_DISABLE_PUSH_MSVC( 26496 ) // Don't complain about non-const 'dep' as we want that
     for ( Dependency & dep : d )
     {
         const size_t index = d.GetIndexOf( &dep );
@@ -221,7 +210,7 @@ void TestDependencies::Iteration() const
     PRAGMA_DISABLE_POP_MSVC
 
     // Const
-    const Dependencies& constD( d );
+    const Dependencies & constD( d );
     for ( const Dependency & dep : constD )
     {
         const size_t index = d.GetIndexOf( &dep );
@@ -229,9 +218,8 @@ void TestDependencies::Iteration() const
     }
 }
 
-// OperatorEquals
 //------------------------------------------------------------------------------
-void TestDependencies::OperatorEquals() const
+TEST_CASE( TestDependencies, OperatorEquals )
 {
     // Empty
     {

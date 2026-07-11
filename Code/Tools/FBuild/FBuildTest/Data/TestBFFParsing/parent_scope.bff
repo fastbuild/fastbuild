@@ -1,4 +1,3 @@
-
 ; parent scope assignment
 
 .varA = 'foo'

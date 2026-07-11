@@ -44,8 +44,9 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Report::Report()
-    : m_LibraryStats( 512, true )
 {
+    m_LibraryStats.SetCapacity( 512 );
+
     // pre-allocate a large string for output
     m_Output.SetReserved( MEGABYTE );
     m_Output.SetLength( 0 );
@@ -65,7 +66,7 @@ Report::~Report()
 //------------------------------------------------------------------------------
 void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > tmp;
+    AStackString<1024> tmp;
 
     va_list args;
     va_start( args, fmtString );
@@ -104,10 +105,10 @@ void Report::GetReportDateTime( AString & outReportDateTime ) const
 //------------------------------------------------------------------------------
 void Report::FixupTimeTakenPlaceholder()
 {
-    const float timeTakenSecs =  m_Timer.GetElapsed();
+    const float timeTakenSecs = m_Timer.GetElapsed();
 
     // patch in time take
-    AStackString<> timeTakenBuffer;
+    AStackString timeTakenBuffer;
     FBuildStats::FormatTime( timeTakenSecs, timeTakenBuffer );
     m_Output.Replace( GetTimeTakenPlaceholder(), timeTakenBuffer.Get() );
 }
@@ -126,7 +127,7 @@ void Report::GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & s
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
+void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Node * node, LibraryStats * currentLib ) const
 {
     // skip nodes we've already seen
     if ( node->GetBuildPassTag() == eNodeSeen )
@@ -177,12 +178,12 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
     bool isLibrary = false;
     switch ( type )
     {
-        case Node::DLL_NODE:        isLibrary = true; break;
-        case Node::LIBRARY_NODE:    isLibrary = true; break;
+        case Node::DLL_NODE: isLibrary = true; break;
+        case Node::LIBRARY_NODE: isLibrary = true; break;
         case Node::OBJECT_LIST_NODE: isLibrary = true; break;
         case Node::CS_NODE:
         {
-            isLibrary = node->GetName().EndsWithI( ".dll" ); // TODO:C - robustify this (could have an aribtrary extension)
+            isLibrary = node->GetName().EndsWithI( ".dll" ); // TODO:C - robustify this (could have an arbitrary extension)
             break;
         }
         default: break; // not a library
@@ -219,7 +220,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
+void Report::GetLibraryStatsRecurse( Array<LibraryStats *> & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
 {
     for ( const Dependency & dep : dependencies )
     {
@@ -263,7 +264,7 @@ void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const No
     bool isHeaderInPCH = false;
     if ( parentNode->GetType() == Node::OBJECT_NODE )
     {
-        const ObjectNode * obj = parentNode->CastTo< ObjectNode >();
+        const ObjectNode * obj = parentNode->CastTo<ObjectNode>();
         isHeaderInPCH = obj->IsCreatingPCH();
     }
 
@@ -306,8 +307,8 @@ Report::IncludeStatsMap::~IncludeStatsMap()
 //------------------------------------------------------------------------------
 Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 {
-    // caculate table entry
-    const uint32_t hash = node->GetNameCRC();
+    // calculate table entry
+    const uint32_t hash = node->GetNameHash();
     const uint32_t key = ( hash & 0xFFFF );
     IncludeStats * item = m_Table[ key ];
 
@@ -329,8 +330,8 @@ Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 //------------------------------------------------------------------------------
 Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 {
-    // caculate table entry
-    const uint32_t hash = node->GetNameCRC();
+    // calculate table entry
+    const uint32_t hash = node->GetNameHash();
     const uint32_t key = ( hash & 0xFFFF );
 
     // insert new item
@@ -346,7 +347,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 
 // Flatten
 //------------------------------------------------------------------------------
-void Report::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
+void Report::IncludeStatsMap::Flatten( Array<const IncludeStats *> & stats ) const
 {
     for ( size_t i = 0; i < 65536; ++i )
     {

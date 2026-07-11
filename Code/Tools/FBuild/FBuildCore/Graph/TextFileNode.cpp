@@ -5,32 +5,34 @@
 //------------------------------------------------------------------------------
 #include "TextFileNode.h"
 
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
+#include "Core/Strings/AStackString.h"
 
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TextFileNode, Node, MetaName( "TextFileOutput" ) + MetaFile() )
-    REFLECT_ARRAY( m_TextFileInputStrings, "TextFileInputStrings", MetaNone() )
-    REFLECT( m_TextFileAlways, "TextFileAlways", MetaOptional() )
-    REFLECT( m_Hidden, "Hidden", MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_TextFileInputStrings, MetaRequired() )
+    REFLECT( m_TextFileAlways )
+    REFLECT( m_Hidden )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( TextFileNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TextFileNode::TextFileNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_TextFileAlways( false )
 {
     m_Type = TEXT_FILE_NODE;
@@ -39,13 +41,10 @@ TextFileNode::TextFileNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool TextFileNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
+/*virtual*/ bool TextFileNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     return true;
 }
@@ -57,7 +56,7 @@ TextFileNode::~TextFileNode() = default;
 // DetermineNeedToBuildStatic
 //------------------------------------------------------------------------------
 /*virtual*/ bool TextFileNode::DetermineNeedToBuildStatic() const
-{  
+{
     if ( m_TextFileAlways )
     {
         FLOG_VERBOSE( "Need to build '%s' (TextFileAlways = true)", GetName().Get() );
@@ -79,18 +78,18 @@ TextFileNode::~TextFileNode() = default;
         textFileContents += string;
 
         // It's not always safe to include a \r, such as when generating a shell script
-        #if defined( __WINDOWS__ )
-            textFileContents += "\r\n";
-        #else
-            textFileContents += '\n';
-        #endif
+#if defined( __WINDOWS__ )
+        textFileContents += "\r\n";
+#else
+        textFileContents += '\n';
+#endif
     }
 
     FileStream stream;
     if ( !stream.Open( GetName().Get(), FileStream::WRITE_ONLY ) )
     {
         FLOG_ERROR( "Could not open '%s' for writing", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
     const uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
     stream.Close();
@@ -98,28 +97,28 @@ TextFileNode::~TextFileNode() = default;
     if ( nWritten != textFileContents.GetLength() )
     {
         FLOG_ERROR( "Failed to write all to '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     Node::RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
 void TextFileNode::EmitCompilationMessage() const
 {
-    AStackString<> output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
+        AStackString output;
         output += "Txt: ";
         output += GetName();
         output += '\n';
-    }
 
-    // output all at once for contiguousness
-    FLOG_OUTPUT( output );
+        // output all at once for contiguousness
+        FLOG_OUTPUT( output );
+    }
 }
 
 //------------------------------------------------------------------------------

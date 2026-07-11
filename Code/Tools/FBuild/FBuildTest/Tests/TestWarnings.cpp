@@ -9,74 +9,63 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
-// TestWarnings
 //------------------------------------------------------------------------------
-class TestWarnings : public FBuildTest
+TEST_GROUP( TestWarnings, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    // Tests
-    void WarningsAreShown() const;
-    void ClangMacroExpansion() const;
-    void PragmaMessageWarningsAreShown() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestWarnings )
-    REGISTER_TEST( WarningsAreShown )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( PragmaMessageWarningsAreShown )
-    #endif
-    #if defined( __WINDOWS__ ) || defined( __OSX__ )
-        REGISTER_TEST( ClangMacroExpansion )
-    #endif
-REGISTER_TESTS_END
-
-// WarningsAreShown
-//------------------------------------------------------------------------------
-void TestWarnings::WarningsAreShown() const
+TEST_CASE( TestWarnings, WarningsAreShown )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestWarnings/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Warnings" ) );
+
+    // Ensure warning was emitted
+#if defined( __WINDOWS__ )
+    TEST_ASSERT( GetRecordedOutput().Find( "unreferenced local variable" ) );
+#else
+    TEST_ASSERT( GetRecordedOutput().Find( "-Wunused-variable" ) );
+#endif
 }
 
-// PragmaMessageWarningsAreShown
 //------------------------------------------------------------------------------
-void TestWarnings::PragmaMessageWarningsAreShown() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for other platforms (fix two-pass issues)
+TEST_CASE( TestWarnings, PragmaMessageWarningsAreShown )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestWarnings/fbuild.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "PragmaMessage" ) );
-}
 
-// ClangMacroExpansion
+    // Ensure message was emitted
+    TEST_ASSERT( GetRecordedOutput().Find( "Optimization force disabled" ) );
+}
+#endif
+
 //------------------------------------------------------------------------------
-void TestWarnings::ClangMacroExpansion() const
+#if defined( __WINDOWS__ ) // TODO:B Enable for other platforms (fix two-pass issues)
+TEST_CASE( TestWarnings, ClangMacroExpansion )
 {
-    #if defined( __WINDOWS__ )
-        // TODO:A Check if this is still relevant for newer versions of Clang
-        // The warning this test relies on has change and this test may need to
-        // be updated
-    #else
-        FBuildTestOptions options;
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestWarnings/ClangMacroExpansion/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestWarnings/ClangMacroExpansion/fbuild.bff";
 
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( "ClangMacroExpansion" ) );
-    #endif
+    TEST_ASSERT( fBuild.Build( "ClangMacroExpansion" ) );
+
+    // Ensure message was emitted
+    TEST_ASSERT( GetRecordedOutput().Find( "-Wtautological-unsigned-zero-compare" ) );
 }
+#endif
 
 //------------------------------------------------------------------------------

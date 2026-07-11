@@ -13,7 +13,7 @@ namespace Math
     template <class T>
     static inline T RoundUp( T value, T alignment )
     {
-        return ( value + alignment - 1) & ~( alignment - 1 );
+        return ( value + alignment - 1 ) & ~( alignment - 1 );
     }
     template <class T>
     static inline T Max( T a, T b )
@@ -35,7 +35,19 @@ namespace Math
     {
         return ( ( ( value - 1 ) & value ) == 0 );
     }
+    template <typename T>
+    static inline uint32_t PopCount( T value )
+    {
+        uint32_t count = 0;
 
-};
+        while ( value != 0 )
+        {
+            count += ( value & 1 );
+            value >>= 1;
+        }
+
+        return count;
+    }
+}
 
 //------------------------------------------------------------------------------

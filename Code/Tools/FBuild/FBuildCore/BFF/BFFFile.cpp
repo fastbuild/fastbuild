@@ -6,8 +6,8 @@
 #include "BFFFile.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Error.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -25,7 +25,7 @@ BFFFile::BFFFile( const char * fileName, const AString & fileContents )
     , m_FileContents( fileContents )
     , m_Once( false )
 {
-    m_Hash = xxHash::Calc64( m_FileContents );
+    m_Hash = xxHash3::Calc64Big( m_FileContents );
 }
 
 // DESTRUCTOR
@@ -68,7 +68,7 @@ bool BFFFile::Load( const AString & fileName, const BFFToken * token )
     m_FileContents = Move( fileContents );
     m_FileName = fileName;
     m_ModTime = FileIO::GetFileLastWriteTime( fileName );
-    m_Hash = xxHash::Calc64( m_FileContents );
+    m_Hash = xxHash3::Calc64Big( m_FileContents );
 
     return true;
 }

@@ -18,7 +18,6 @@
 //------------------------------------------------------------------------------
 ReflectionInfo::ReflectionInfo()
     : m_TypeNameCRC( 0 )
-    , m_Properties( 0, true )
     , m_SuperClass( nullptr )
     , m_Next( nullptr )
     , m_TypeName( nullptr )
@@ -34,7 +33,14 @@ ReflectionInfo::~ReflectionInfo()
 {
     for ( ReflectedProperty * property : m_Properties )
     {
-        delete property;
+        if ( property->GetType() == PT_STRUCT )
+        {
+            delete static_cast<ReflectedPropertyStruct *>( property );
+        }
+        else
+        {
+            delete property;
+        }
     }
 
     const IMetaData * md = m_MetaDataChain;
@@ -111,7 +117,7 @@ GETSET_PROPERTY( bool, bool )
 GETSET_PROPERTY( AString, const AString & )
 
 #define GETSET_PROPERTY_ARRAY( valueType ) \
-    bool ReflectionInfo::GetProperty( void * object, const char * name, Array< valueType > * value ) const \
+    bool ReflectionInfo::GetProperty( void * object, const char * name, Array<valueType> * value ) const \
     { \
         const ReflectedProperty * p = FindProperty( name ); \
         if ( p && ( p->GetType() == GetPropertyType( (valueType *)nullptr ) ) && p->IsArray() ) \
@@ -121,7 +127,7 @@ GETSET_PROPERTY( AString, const AString & )
         } \
         return false; \
     } \
-    bool ReflectionInfo::SetProperty( void * object, const char * name, const Array< valueType > & value ) const \
+    bool ReflectionInfo::SetProperty( void * object, const char * name, const Array<valueType> & value ) const \
     { \
         const ReflectedProperty * p = FindProperty( name ); \
         if ( p && ( p->GetType() == GetPropertyType( (valueType *)nullptr ) ) && p->IsArray() ) \
@@ -142,7 +148,7 @@ GETSET_PROPERTY_ARRAY( AString )
 void ReflectionInfo::SetTypeName( const char * typeName )
 {
     m_TypeName = typeName;
-    m_TypeNameCRC = xxHash::Calc32( typeName, AString::StrLen( typeName ) );
+    m_TypeNameCRC = xxHash3::Calc32( typeName, AString::StrLen( typeName ) );
 }
 
 // HasMetaDataInternal
@@ -161,36 +167,21 @@ const IMetaData * ReflectionInfo::HasMetaDataInternal( const ReflectionInfo * ri
     return m_SuperClass ? m_SuperClass->HasMetaDataInternal( ri ) : nullptr;
 }
 
-// AddProperty
 //------------------------------------------------------------------------------
-void ReflectionInfo::AddProperty( uint32_t offset, const char * memberName, PropertyType type )
+void ReflectionInfo::AddProperty( uint32_t offset,
+                                  const char * memberName,
+                                  PropertyType type,
+                                  bool isArray,
+                                  const ReflectionInfo * structInfo )
 {
-    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, false );
-    m_Properties.Append( r );
-}
-
-// AddPropertyStruct
-//------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo )
-{
-    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, offset, structInfo );
-    m_Properties.Append( r );
-}
-
-// AddPropertyArray
-//------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyArray( uint32_t offset, const char * memberName, PropertyType type )
-{
-    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, true );
-    m_Properties.Append( r );
-}
-
-// AddPropertyArrayOfStruct
-//------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyArrayOfStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo )
-{
-    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, offset, structInfo, true );
-    m_Properties.Append( r );
+    if ( structInfo )
+    {
+        m_Properties.EmplaceBack( new ReflectedPropertyStruct( memberName, offset, structInfo, isArray ) );
+    }
+    else
+    {
+        m_Properties.EmplaceBack( new ReflectedProperty( memberName, offset, type, isArray ) );
+    }
 }
 
 // AddMetaData
@@ -225,7 +216,7 @@ void ReflectionInfo::AddPropertyMetaData( IMetaData & metaDataChain )
 //------------------------------------------------------------------------------
 const ReflectedProperty * ReflectionInfo::FindProperty( const char * name ) const
 {
-    const uint32_t nameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
+    const uint32_t nameCRC = xxHash3::Calc32( name, AString::StrLen( name ) );
     return FindPropertyRecurse( nameCRC );
 }
 

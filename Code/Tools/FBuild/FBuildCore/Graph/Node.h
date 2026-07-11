@@ -16,6 +16,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFToken;
+class CompilerInfoNode;
 class CompilerNode;
 class ConstMemoryStream;
 class FileNode;
@@ -24,6 +25,7 @@ class IMetaData;
 class IOStream;
 class Job;
 class NodeGraph;
+class ObjectListNode;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -38,11 +40,28 @@ class NodeGraph;
         return nodeName::GetReflectionInfoS();                          \
     }
 
-#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
-    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
+#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, ... ) \
+    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, __VA_ARGS__ )
 
-#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
-    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, ... ) \
+    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, __VA_ARGS__ )
+
+inline constexpr PropertyType GetPropertyType( ObjectListNode * const * )
+{
+    return PT_CUSTOM_1;
+}
+inline constexpr PropertyType GetPropertyType( CompilerNode * const * )
+{
+    return PT_CUSTOM_1;
+}
+inline constexpr PropertyType GetPropertyType( CompilerInfoNode * const * )
+{
+    return PT_CUSTOM_1;
+}
+inline constexpr PropertyType GetPropertyType( Node * const * )
+{
+    return PT_CUSTOM_1;
+}
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -57,130 +76,136 @@ class Node : public Struct
 public:
     enum Type : uint8_t
     {
-        PROXY_NODE          = 0,
-        COPY_FILE_NODE      = 1,
+        PROXY_NODE = 0,
+        COPY_FILE_NODE = 1,
         DIRECTORY_LIST_NODE = 2,
-        EXEC_NODE           = 3,
-        FILE_NODE           = 4,
-        LIBRARY_NODE        = 5,
-        OBJECT_NODE         = 6,
-        ALIAS_NODE          = 7,
-        EXE_NODE            = 8,
-        UNITY_NODE          = 9,
-        CS_NODE             = 10,
-        TEST_NODE           = 11,
-        COMPILER_NODE       = 12,
-        DLL_NODE            = 13,
-        VCXPROJECT_NODE     = 14,
-        OBJECT_LIST_NODE    = 15,
-        COPY_DIR_NODE       = 16,
-        SLN_NODE            = 17,
-        REMOVE_DIR_NODE     = 18,
-        XCODEPROJECT_NODE   = 19,
-        SETTINGS_NODE       = 20,
+        EXEC_NODE = 3,
+        FILE_NODE = 4,
+        LIBRARY_NODE = 5,
+        OBJECT_NODE = 6,
+        ALIAS_NODE = 7,
+        EXE_NODE = 8,
+        UNITY_NODE = 9,
+        CS_NODE = 10,
+        TEST_NODE = 11,
+        COMPILER_NODE = 12,
+        DLL_NODE = 13,
+        VCXPROJECT_NODE = 14,
+        OBJECT_LIST_NODE = 15,
+        COPY_DIR_NODE = 16,
+        SLN_NODE = 17,
+        REMOVE_DIR_NODE = 18,
+        XCODEPROJECT_NODE = 19,
+        SETTINGS_NODE = 20,
         VSPROJEXTERNAL_NODE = 21,
-        TEXT_FILE_NODE      = 22,
+        TEXT_FILE_NODE = 22,
         LIST_DEPENDENCIES_NODE = 23,
+        COMPILER_INFO_NODE = 24,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
 
     enum ControlFlag : uint8_t
     {
-        FLAG_NONE                   = 0x00,
-        FLAG_ALWAYS_BUILD           = 0x01, // DoBuild is always performed (for e.g. directory listings)
+        FLAG_NONE = 0x00,
+        FLAG_ALWAYS_BUILD = 0x01, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag : uint16_t
     {
-        STATS_PROCESSED     = 0x01, // node was processed during the build
-        STATS_BUILT         = 0x02, // node needed building, and was built
-        STATS_CACHE_HIT     = 0x04, // needed building, was cacheable & was retrieved from the cache
-        STATS_CACHE_MISS    = 0x08, // needed building, was cacheable, but wasn't in cache
-        STATS_CACHE_STORE   = 0x10, // needed building, was cacheable & was stored to the cache
-        STATS_LIGHT_CACHE   = 0x20, // used the LightCache
-        STATS_BUILT_REMOTE  = 0x40, // node was built remotely
-        STATS_FAILED        = 0x80, // node needed building, but failed
-        STATS_FIRST_BUILD   = 0x100,// node has never been built before
+        STATS_PROCESSED = 0x01, // node was processed during the build
+        STATS_BUILT = 0x02, // node needed building, and was built
+        STATS_CACHE_HIT = 0x04, // needed building, was cacheable & was retrieved from the cache
+        STATS_CACHE_MISS = 0x08, // needed building, was cacheable, but wasn't in cache
+        STATS_CACHE_STORE = 0x10, // needed building, was cacheable & was stored to the cache
+        STATS_LIGHT_CACHE = 0x20, // used the LightCache
+        STATS_BUILT_REMOTE = 0x40, // node was built remotely
+        STATS_FAILED = 0x80, // node needed building, but failed
+        STATS_FIRST_BUILD = 0x100,// node has never been built before
     };
 
-    enum BuildResult
+    enum class BuildResult
     {
-        NODE_RESULT_FAILED      = 0,    // something went wrong building
-        NODE_RESULT_NEED_SECOND_BUILD_PASS, // needs build called again
-        NODE_RESULT_OK,                 // built ok
-        NODE_RESULT_OK_CACHE            // retrieved from the cache
+        eFailed,            // something went wrong building
+        eAborted,           // interrupted due to build termination
+        eNeedSecondPass,    // needs build called again
+        eOk,                // built ok
     };
 
     enum State : uint8_t
     {
-        NOT_PROCESSED,      // no work done (either not part of this build, or waiting on static dependencies )
-        PRE_DEPS_READY,     // pre-build deps processed
-        STATIC_DEPS_READY,  // static dependencies are uptodate - we are ready to DoDynamicDeps
-        DYNAMIC_DEPS_DONE,  // dynamic deps updated, waiting for dynamic deps to be ready
+        NOT_PROCESSED,      // no work done (either not part of this build, or not yet seen)
+        STATIC_DEPS,        // pre-build deps processed and checking static deps
+        DYNAMIC_DEPS,       // dynamic deps regenerated and being checked
         BUILDING,           // in the queue for building
         FAILED,             // failed to build
         UP_TO_DATE,         // built, or confirmed as not needing building
     };
 
-    explicit Node( const AString & name, Type type, uint8_t controlFlags );
+    explicit Node( Type type );
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
-    inline uint32_t        GetNameCRC() const { return m_NameCRC; }
-    inline Type GetType() const { return m_Type; }
-    inline const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
-    inline static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
-    template < class T >
-    inline T * CastTo() const;
+    uint32_t GetNameHash() const { return m_NameHash; }
+    Type GetType() const { return m_Type; }
+    const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
+    static const char * GetTypeName( Type t ) { return s_NodeTypeNames[ t ]; }
+    template <class T>
+    T * CastTo() const;
 
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
 
-    inline State GetState() const { return m_State; }
+    State GetState() const { return m_State; }
 
-    [[nodiscard]] inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
-    inline void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
+    [[nodiscard]] bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
+    void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
     uint32_t GetLastBuildTime() const;
-    inline uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
-    inline uint32_t GetCachingTime() const      { return m_CachingTime; }
-    inline uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
+    uint32_t GetProcessingTime() const { return m_ProcessingTime; }
+    uint32_t GetCachingTime() const { return m_CachingTime; }
+    uint32_t GetRecursiveCost() const { return m_RecursiveCost; }
 
-    inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
-    inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
+    uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
+    void SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
-    static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
-    static Node *   Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
-    static void     LoadDependencies( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
-    static void     Save( IOStream & stream, const Node * node );
-    static void     SaveDependencies( IOStream & stream, const Node * node );
-    virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
+    static void Load( NodeGraph & nodeGraph, ConstMemoryStream & stream );
+    static void LoadExtended( NodeGraph & nodeGraph, Node * node, ConstMemoryStream & stream );
+    static void Save( IOStream & stream, const Node * node );
+    static void SaveExtended( IOStream & stream, const Node * node );
+    virtual void PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
-    static Node *   LoadRemote( IOStream & stream );
-    static void     SaveRemote( IOStream & stream, const Node * node );
+    static Node * LoadRemote( IOStream & stream );
+    static void SaveRemote( IOStream & stream, const Node * node );
 
     static bool EnsurePathExistsForFile( const AString & name );
     static bool DoPreBuildFileDeletion( const AString & fileName );
 
-    inline uint64_t GetStamp() const { return m_Stamp; }
+    uint64_t GetStamp() const { return m_Stamp; }
 
     static void DumpOutput( Job * job,
                             const AString & output,
-                            const Array< AString > * exclusions = nullptr );
+                            const Array<AString> * exclusions = nullptr );
 
-    inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
-    inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
+    void SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
+    uint32_t GetBuildPassTag() const { return m_BuildPassTag; }
+
+    static void StartSecondaryTagSweep() { s_SecondaryTag++; }
+    void SetSecondaryTag() { m_SecondaryTag = s_SecondaryTag; }
+    [[nodiscard]] bool HasSecondaryTag() const { return ( m_SecondaryTag == s_SecondaryTag ); }
 
     const AString & GetName() const { return m_Name; }
 
     virtual const AString & GetPrettyName() const { return GetName(); }
 
     bool IsHidden() const { return m_Hidden; }
+    virtual uint8_t GetConcurrencyGroupIndex() const;
 
-    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
-    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+    const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
+    const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+    const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+
+    static uint32_t CalcNameHash( const AString & name );
 
     static void CleanMessageToPreventMSBuildFailure( const AString & msg, AString & outMsg );
 
@@ -197,20 +222,20 @@ protected:
     friend class WorkerThread;
     friend class CompilationDatabase;
 
-    void SetName( const AString & name );
+    void SetName( AString && name, uint32_t nameHashHint = 0 );
 
     void ReplaceDummyName( const AString & newName );
 
     virtual void SaveRemote( IOStream & stream ) const;
 
-    inline uint8_t GetControlFlags() const { return m_ControlFlags; }
+    uint8_t GetControlFlags() const { return m_ControlFlags; }
 
-    inline void SetState( State state ) { m_State = state; }
+    void SetState( State state ) { m_State = state; }
 
     // each node implements a subset of these as needed
     virtual bool DetermineNeedToBuildStatic() const;
     virtual bool DetermineNeedToBuildDynamic() const;
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph );
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
@@ -218,8 +243,8 @@ protected:
     bool DetermineNeedToBuild( const Dependencies & deps ) const;
 
     void SetLastBuildTime( uint32_t ms );
-    inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
-    inline void     AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
+    void AddProcessingTime( uint32_t ms ) { m_ProcessingTime += ms; }
+    void AddCachingTime( uint32_t ms ) { m_CachingTime += ms; }
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -229,50 +254,59 @@ protected:
 
     static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
-    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectionInfo & ri );
-    static void Deserialize( ConstMemoryStream & stream, void * base, const ReflectedProperty & property );
+    static void Deserialize( NodeGraph & nodeGraph,
+                             ConstMemoryStream & stream,
+                             void * base,
+                             const ReflectionInfo & ri );
+    static void Deserialize( NodeGraph & nodeGraph,
+                             ConstMemoryStream & stream,
+                             void * base,
+                             const ReflectedProperty & property );
 
     virtual void Migrate( const Node & oldNode );
 
-    bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
-                                                    const BFFToken * iter,
-                                                    const Function * function,
-                                                    const Array< AString > & preBuildDependencyNames );
+    bool InitializeConcurrencyGroup( NodeGraph & nodeGraph,
+                                     const BFFToken * iter,
+                                     const Function * function,
+                                     const AString & concurrencyGroupName,
+                                     uint8_t & outConcurrencyGroupIndex );
 
-    static const char * GetEnvironmentString( const Array< AString > & envVars,
-                                              const char * & inoutCachedEnvString );
+    static const char * GetEnvironmentString( const Array<AString> & envVars,
+                                              const char *& inoutCachedEnvString );
 
     void RecordStampFromBuiltFile();
 
     // Members are ordered to minimize wasted bytes due to padding.
     // Most frequently accessed members are favored for placement in the first cache line.
-    AString             m_Name;                     // Full name. **Set by constructor**
-    State               m_State = NOT_PROCESSED;    // State in the current build
-    Type                m_Type;                     // Node type. **Set by constructor**
-    mutable uint16_t    m_StatsFlags = 0;           // Stats recorded in the current build
-    mutable uint32_t    m_BuildPassTag = 0;         // Prevent multiple recursions into the same node during a single sweep
-    uint64_t            m_Stamp = 0;                // "Stamp" representing this node for dependency comparissons
-    uint8_t             m_ControlFlags;             // Control build behavior special cases - Set by constructor
-    bool                m_Hidden = false;           // Hidden from -showtargets?
+    AString m_Name; // Full name. **Set by constructor**
+    State m_State = NOT_PROCESSED; // State in the current build
+    Type m_Type; // Node type. **Set by constructor**
+    mutable uint16_t m_StatsFlags = 0; // Stats recorded in the current build
+    mutable uint32_t m_BuildPassTag = 0; // Prevent multiple recursions into the same node during a single sweep
+    uint64_t m_Stamp = 0; // "Stamp" representing this node for dependency comparisons
+    uint8_t m_ControlFlags = FLAG_NONE; // Control build behavior special cases - Set by constructor
+    bool m_Hidden = false; // Hidden from -showtargets?
     // Note: Unused 2 bytes here
-    uint32_t            m_RecursiveCost = 0;        // Recursive cost used during task ordering
-    Node *              m_Next = nullptr;           // Node map in-place linked list pointer
-    uint32_t            m_NameCRC;                  // Hash of mName. **Set by constructor**
-    uint32_t            m_LastBuildTimeMs = 0;      // Time it took to do last known full build of this node
-    uint32_t            m_ProcessingTime = 0;       // Time spent on this node during this build
-    uint32_t            m_CachingTime = 0;          // Time spent caching this node
-    mutable uint32_t    m_ProgressAccumulator = 0;  // Used to estimate build progress percentage
+    uint32_t m_RecursiveCost = 0; // Recursive cost used during task ordering
+    Node * m_Next = nullptr; // Node map in-place linked list pointer
+    uint32_t m_NameHash; // Hash of mName
+    uint32_t m_LastBuildTimeMs = 0; // Time it took to do last known full build of this node
+    uint32_t m_ProcessingTime = 0; // Time spent on this node during this build
+    uint32_t m_CachingTime = 0; // Time spent caching this node
+    mutable uint32_t m_ProgressAccumulator = 0; // Used to estimate build progress percentage
+    uint32_t m_SecondaryTag = 0;
 
-    Dependencies        m_PreBuildDependencies;
-    Dependencies        m_StaticDependencies;
-    Dependencies        m_DynamicDependencies;
+    Dependencies m_PreBuildDependencies;
+    Dependencies m_StaticDependencies;
+    Dependencies m_DynamicDependencies;
 
     // Static Data
+    static uint32_t s_SecondaryTag;
     static const char * const s_NodeTypeNames[];
 };
 
 //------------------------------------------------------------------------------
-template < class T >
+template <class T>
 inline T * Node::CastTo() const
 {
     ASSERT( T::GetTypeS() == GetType() );
@@ -281,7 +315,7 @@ inline T * Node::CastTo() const
 
 //------------------------------------------------------------------------------
 template <>
-inline FileNode * Node::CastTo< FileNode >() const
+inline FileNode * Node::CastTo<FileNode>() const
 {
     ASSERT( IsAFile() );
     return (FileNode *)this;

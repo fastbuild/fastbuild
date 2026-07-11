@@ -7,7 +7,7 @@
 
 // FileStream
 //------------------------------------------------------------------------------
-class FileStream : public IOStream
+class FileStream final : public IOStream
 {
 public:
     explicit FileStream();
@@ -15,13 +15,14 @@ public:
 
     enum FileMode
     {
-        READ_ONLY                     = 0x1,
-        WRITE_ONLY                    = 0x2,
-        TEMP                          = 0x4,
+        READ_ONLY = 0x1,
+        WRITE_ONLY = 0x2,
+        OPEN_OR_CREATE_READ_WRITE = 0x4,
+        TEMP = 0x8,
         NO_RETRY_ON_SHARING_VIOLATION = 0x80,
     };
 
-    bool Open( const char * fileName, uint32_t mode = FileStream::READ_ONLY );
+    bool Open( const char * fileName, uint32_t mode = FileStream::READ_ONLY, uint32_t timeoutMilliSecs = 2000 );
     void Close();
 
     bool IsOpen() const;
@@ -37,17 +38,21 @@ public:
     virtual uint64_t GetFileSize() const override;
 
     // file specific
-    #if defined( __WINDOWS__ )
-        // Set on already open file via handle (Windows only)
-        bool SetLastWriteTime( uint64_t lastWriteTime );
-    #endif
+#if defined( __WINDOWS__ )
+    // Set on already open file via handle (Windows only)
+    bool SetLastWriteTime( uint64_t lastWriteTime );
+#endif
+    bool Truncate();
+
+    bool ReadIntoString( AString & outString );
+    bool WriteFromString( const AString & string );
 
 private:
-    #if defined( __WINDOWS__ )
-        void * m_Handle;
-    #else
-        int32_t m_Handle;
-    #endif
+#if defined( __WINDOWS__ )
+    void * m_Handle;
+#else
+    int32_t m_Handle;
+#endif
 };
 
 //------------------------------------------------------------------------------

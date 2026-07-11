@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VSProjectExternalNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -29,45 +30,45 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( SolutionConfigBase )
-    REFLECT_ARRAY(  m_SolutionBuildProjects,                "SolutionBuildProject",                     MetaInheritFromOwner() + MetaOptional() + MetaFile() ) // "SolutionBuildProject" for backwards compat
-    REFLECT_ARRAY(  m_SolutionDeployProjects,               "SolutionDeployProjects",                   MetaInheritFromOwner() + MetaOptional() + MetaFile() )
+    REFLECT_RENAME( m_SolutionBuildProjects, "SolutionBuildProject", MetaInheritFromOwner() + MetaFile() ) // "SolutionBuildProject" for backwards compat
+    REFLECT( m_SolutionDeployProjects, MetaInheritFromOwner() + MetaFile() )
 REFLECT_END( SolutionConfigBase )
 
-REFLECT_STRUCT_BEGIN( SolutionConfig, SolutionConfigBase, MetaNone() )
-    REFLECT(        m_SolutionPlatform,                     "SolutionPlatform",                         MetaOptional() )
-    REFLECT(        m_SolutionConfig,                       "SolutionConfig",                           MetaOptional() )
-    REFLECT(        m_Platform,                             "Platform",                                 MetaNone() )
-    REFLECT(        m_Config,                               "Config",                                   MetaNone() )
+REFLECT_STRUCT_BEGIN( SolutionConfig, SolutionConfigBase )
+    REFLECT( m_SolutionPlatform )
+    REFLECT( m_SolutionConfig )
+    REFLECT( m_Platform, MetaRequired() )
+    REFLECT( m_Config, MetaRequired() )
 REFLECT_END( SolutionConfig )
 
 REFLECT_STRUCT_BEGIN_BASE( SolutionFolder )
-    REFLECT(        m_Path,                                 "Path",                                     MetaNone() )
-    REFLECT_ARRAY(  m_Projects,                             "Projects",                                 MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_Items,                                "Items",                                    MetaOptional() + MetaFile() )
+    REFLECT( m_Path, MetaRequired() )
+    REFLECT( m_Projects, MetaFile() )
+    REFLECT( m_Items, MetaFile() )
 REFLECT_END( SolutionFolder )
 
 REFLECT_STRUCT_BEGIN_BASE( SolutionDependency )
-    REFLECT_ARRAY(  m_Projects,                             "Projects",                                 MetaFile() )
-    REFLECT_ARRAY(  m_Dependencies,                         "Dependencies",                             MetaFile() )
+    REFLECT( m_Projects, MetaFile() + MetaRequired() )
+    REFLECT( m_Dependencies, MetaFile() + MetaRequired() )
 REFLECT_END( SolutionDependency )
 
 REFLECT_NODE_BEGIN( SLNNode, Node, MetaName( "SolutionOutput" ) + MetaFile() )
-    REFLECT_ARRAY(  m_SolutionProjects,                     "SolutionProjects",                         MetaOptional() + MetaFile() )
-    REFLECT(        m_SolutionVisualStudioVersion,          "SolutionVisualStudioVersion",              MetaOptional() )
-    REFLECT(        m_SolutionMinimumVisualStudioVersion,   "SolutionMinimumVisualStudioVersion",       MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_SolutionConfigs,             "SolutionConfigs",      SolutionConfig,     MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_SolutionFolders,             "SolutionFolders",      SolutionFolder,     MetaOptional() )
-    REFLECT_ARRAY_OF_STRUCT( m_SolutionDependencies,        "SolutionDependencies", SolutionDependency, MetaOptional() )
+    REFLECT( m_SolutionProjects, MetaFile() )
+    REFLECT( m_SolutionVisualStudioVersion )
+    REFLECT( m_SolutionMinimumVisualStudioVersion )
+    REFLECT( m_SolutionConfigs )
+    REFLECT( m_SolutionFolders )
+    REFLECT( m_SolutionDependencies )
 
     // Base Project Config settings
-    REFLECT_STRUCT( m_BaseSolutionConfig,                   "BaseSolutionConfig",   SolutionConfigBase, MetaEmbedMembers() )
+    REFLECT( m_BaseSolutionConfig, MetaEmbedMembers() )
 REFLECT_END( SLNNode )
 
 // VCXProjectNodeComp
 //------------------------------------------------------------------------------
 struct VCXProjectNodeComp
 {
-    bool operator ()( const VSProjectBaseNode * a, const VSProjectBaseNode * b ) const
+    bool operator()( const VSProjectBaseNode * a, const VSProjectBaseNode * b ) const
     {
         return ( a->GetName() < b->GetName() );
     }
@@ -76,8 +77,9 @@ struct VCXProjectNodeComp
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SLNNode::SLNNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
+    : FileNode()
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::SLN_NODE;
 }
@@ -127,7 +129,7 @@ SLNNode::SLNNode()
         //         but for 32 bits, Platform is "Win32" while SolutionPlatform is "x86"
         if ( solutionConfig.m_SolutionPlatform.MatchesI( "Win32" ) )
         {
-             solutionConfig.m_SolutionPlatform = "x86";
+            solutionConfig.m_SolutionPlatform = "x86";
         }
     }
 
@@ -145,7 +147,7 @@ SLNNode::SLNNode()
     }
 
     // Collapse duplicate SolutionFolders
-    Array< SolutionFolder > collapsedFolders;
+    Array<SolutionFolder> collapsedFolders;
     for ( SolutionFolder & folder : m_SolutionFolders )
     {
         // Have we already seen this folder?
@@ -163,7 +165,7 @@ SLNNode::SLNNode()
         {
             // Merge list of projects
             found->m_Projects.Append( folder.m_Projects );
-            
+
             // Merge list of items
             found->m_Items.Append( folder.m_Items );
         }
@@ -177,7 +179,8 @@ SLNNode::SLNNode()
 
     // Gather all Project references and canonicalize project names
     //------------------------------------------------------------------------------
-    Array< VSProjectBaseNode * > projects( m_SolutionProjects.GetSize(), true );
+    StackArray<VSProjectBaseNode *> projects;
+    projects.SetCapacity( m_SolutionProjects.GetSize() );
     // SolutionProjects
     if ( !GatherProjects( nodeGraph, function, iter, ".SolutionProjects", m_SolutionProjects, projects ) )
     {
@@ -244,7 +247,7 @@ SLNNode::SLNNode()
             if ( containsConfig == false )
             {
                 // TODO: specific error message "ProjectConfigNotFound"
-                AStackString<> configName;
+                AStackString configName;
                 configName.Format( "%s|%s", solutionConfig.m_Platform.Get(), solutionConfig.m_Config.Get() );
                 Error::Error_1104_TargetNotDefined( iter, function, configName.Get(), project->GetName() );
                 return false;
@@ -274,13 +277,14 @@ SLNNode::~SLNNode() = default;
     SLNGenerator sg;
 
     // projects
-    Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
+    StackArray<VSProjectBaseNode *> projects;
+    projects.SetCapacity( m_StaticDependencies.GetSize() );
     for ( const Dependency & dep : m_StaticDependencies )
     {
         const Node * node = dep.GetNode();
         VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                        ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
-                                        : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
+                                              ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
+                                              : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
 
         projects.Append( projectNode );
     }
@@ -293,89 +297,16 @@ SLNNode::~SLNNode() = default;
                                           projects,
                                           m_SolutionDependencies,
                                           m_SolutionFolders );
-    if ( Save( sln, m_Name ) == false )
+    if ( ProjectGeneratorBase::WriteIfDifferent( "SLN", sln, m_Name ) == false )
     {
-        return NODE_RESULT_FAILED; // Save will have emitted an error
+        return BuildResult::eFailed; // Save will have emitted an error
     }
 
     // Record stamp representing the contents of the files
-    m_Stamp = xxHash::Calc64( sln );
+    m_Stamp = xxHash3::Calc64Big( sln );
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
-
-// Save
-//------------------------------------------------------------------------------
-bool SLNNode::Save( const AString & content, const AString & fileName ) const
-{
-    bool needToWrite = false;
-
-    FileStream old;
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
-    {
-        needToWrite = true;
-    }
-    else if ( old.Open( fileName.Get(), FileStream::READ_ONLY ) == false )
-    {
-        needToWrite = true;
-    }
-    else
-    {
-        // files differ in size?
-        const size_t oldFileSize = (size_t)old.GetFileSize();
-        if ( oldFileSize != content.GetLength() )
-        {
-            needToWrite = true;
-        }
-        else
-        {
-            // check content
-            UniquePtr< char > mem( ( char *)ALLOC( oldFileSize ) );
-            if ( old.Read( mem.Get(), oldFileSize ) != oldFileSize )
-            {
-                FLOG_ERROR( "SLN - Failed to read '%s'", fileName.Get() );
-                return false;
-            }
-
-            // compare content
-            if ( memcmp( mem.Get(), content.Get(), oldFileSize ) != 0 )
-            {
-                needToWrite = true;
-            }
-        }
-
-        // ensure we are closed, so we can open again for write if needed
-        old.Close();
-    }
-
-    // only save if missing or ner
-    if ( needToWrite == false )
-    {
-        return true; // nothing to do.
-    }
-
-    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
-    {
-        FLOG_OUTPUT( "SLN: %s\n", fileName.Get() );
-    }
-
-    // actually write
-    FileStream f;
-    if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-    {
-        FLOG_ERROR( "SLN - Failed to open file for write. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
-    {
-        FLOG_ERROR( "SLN - Error writing file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
-    f.Close();
-
-    return true;
-}
-
 // GatherProject
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProject( NodeGraph & nodeGraph,
@@ -383,7 +314,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              const BFFToken * iter,
                              const char * propertyName,
                              const AString & projectName,
-                             Array< VSProjectBaseNode * > & inOutProjects ) const
+                             Array<VSProjectBaseNode *> & inOutProjects ) const
 {
     // Get associated project file
     const Node * node = nodeGraph.FindNode( projectName );
@@ -400,8 +331,8 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
         return false;
     }
     VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
-                                    ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
-                                    : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
+                                          ? static_cast<VSProjectBaseNode *>( node->CastTo<VCXProjectNode>() )
+                                          : static_cast<VSProjectBaseNode *>( node->CastTo<VSProjectExternalNode>() );
 
     // Add to project list if not already there
     if ( inOutProjects.Find( projectNode ) == nullptr )
@@ -418,8 +349,8 @@ bool SLNNode::GatherProjects( NodeGraph & nodeGraph,
                               const Function * function,
                               const BFFToken * iter,
                               const char * propertyName,
-                              const Array< AString > & projectNames,
-                              Array< VSProjectBaseNode * > & inOutProjects ) const
+                              const Array<AString> & projectNames,
+                              Array<VSProjectBaseNode *> & inOutProjects ) const
 {
     for ( const AString & projectName : projectNames )
     {

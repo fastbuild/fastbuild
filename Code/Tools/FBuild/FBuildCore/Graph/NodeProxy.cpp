@@ -7,9 +7,10 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-NodeProxy::NodeProxy( const AString & name )
-    : Node( name, Node::PROXY_NODE, 0 )
+NodeProxy::NodeProxy( AString && name )
+    : Node( Node::PROXY_NODE )
 {
+    SetName( Move( name ) );
 }
 
 // DESTRUCTOR
@@ -18,7 +19,7 @@ NodeProxy::~NodeProxy() = default;
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*functartIter*/, const Function * /*function*/ )
+/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ )
 {
     ASSERT( false ); // Should never get here
     return false;

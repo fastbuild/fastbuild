@@ -12,4 +12,3 @@ void Func()
 {
     std::string s( nullptr );
 }
-

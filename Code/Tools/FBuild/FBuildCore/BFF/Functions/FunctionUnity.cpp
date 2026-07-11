@@ -13,7 +13,7 @@ class UnityNode;
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionUnity::FunctionUnity()
-: Function( "Unity" )
+    : Function( "Unity" )
 {
 }
 

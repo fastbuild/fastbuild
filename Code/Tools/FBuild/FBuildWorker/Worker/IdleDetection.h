@@ -15,7 +15,7 @@
 
 // WorkerWindow
 //------------------------------------------------------------------------------
-class IdleDetection : public Singleton< IdleDetection >
+class IdleDetection : public Singleton<IdleDetection>
 {
 public:
     explicit IdleDetection();
@@ -25,21 +25,21 @@ public:
     void Update( uint32_t idleThresholdPercent );
 
     // query status
-    inline bool IsIdle() const { return m_IsIdle; }
-    inline float IsIdleFloat() const { return m_IsIdleFloat; }
+    bool IsIdle() const { return m_IsIdle; }
+    float IsIdleFloat() const { return m_IsIdleFloat; }
 
 private:
     // struct to track processes with
     struct ProcessInfo
     {
-        inline bool operator == ( uint32_t pid ) const { return m_PID == pid; }
+        bool operator==( uint32_t pid ) const { return m_PID == pid; }
 
-        uint32_t    m_PID;
-        uint32_t    m_AliveValue;
-        #if defined( __WINDOWS__ )
-            void *      m_ProcessHandle;
-        #endif
-        uint64_t    m_LastTime;
+        uint32_t m_PID;
+        uint32_t m_AliveValue;
+#if defined( __WINDOWS__ )
+        void * m_ProcessHandle;
+#endif
+        uint64_t m_LastTime;
     };
 
     bool IsIdleInternal( uint32_t idleThresholdPercent, float & idleCurrent );
@@ -51,20 +51,20 @@ private:
                                 uint64_t & outKernTime,
                                 uint64_t & outUserTime );
     void UpdateProcessList();
-    #if defined( __LINUX__ )
-        static bool GetProcessInfoString( const char * fileName,
-                                          AStackString< 1024 > & outProcessInfoString );
-    #endif
+#if defined( __LINUX__ )
+    static bool GetProcessInfoString( const char * fileName,
+                                      AStackString<1024> & outProcessInfoString );
+#endif
 
-    Timer   m_Timer;
-    float   m_CPUUsageFASTBuild;
-    float   m_CPUUsageTotal;
-    bool    m_IsIdle;
-    float   m_IsIdleFloat;
-    float   m_IsIdleCurrent;
+    Timer m_Timer;
+    float m_CPUUsageFASTBuild;
+    float m_CPUUsageTotal;
+    bool m_IsIdle;
+    float m_IsIdleFloat;
+    float m_IsIdleCurrent;
     int32_t m_IdleSmoother;
     int32_t m_IdleFloatSmoother;
-    Array< ProcessInfo > m_ProcessesInOurHierarchy;
+    Array<ProcessInfo> m_ProcessesInOurHierarchy;
     uint64_t m_LastTimeIdle;
     uint64_t m_LastTimeBusy;
 };

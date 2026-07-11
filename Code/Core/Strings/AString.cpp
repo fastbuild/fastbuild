@@ -62,7 +62,7 @@ AString::AString( AString && string )
     if ( string.MemoryMustBeFreed() == false )
     {
         // Copy
-        m_Contents = const_cast<char*>( s_EmptyString ); // cast to allow pointing to protected string
+        m_Contents = const_cast<char *>( s_EmptyString ); // cast to allow pointing to protected string
         m_Length = 0;
         m_ReservedAndFlags = 0;
         Assign( string );
@@ -76,7 +76,7 @@ AString::AString( AString && string )
     }
 
     // Clear other string
-    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Contents = const_cast<char *>( s_EmptyString );
     string.m_Length = 0;
     string.m_ReservedAndFlags = 0;
 }
@@ -119,7 +119,7 @@ AString::~AString()
         // a) NOT be pointing to the shared global string
         ASSERT( m_Contents != s_EmptyString );
         // b) NOT be pointing to an internal buffer
-        // Depending on the memory alloctor, it could be valid to have an allocation
+        // Depending on the memory allocator, it could be valid to have an allocation
         // immediately after the string itself, so we can't have an assert for this
         FREE( m_Contents );
     }
@@ -136,7 +136,7 @@ AString::~AString()
 
 // operator == (const char *)
 //------------------------------------------------------------------------------
-bool AString::operator == ( const char * other ) const
+bool AString::operator==( const char * other ) const
 {
     const char * thisPos = m_Contents;
     const char * otherPos = other;
@@ -159,7 +159,7 @@ loop:
 
 // operator == (const AString &)
 //------------------------------------------------------------------------------
-bool AString::operator == ( const AString & other ) const
+bool AString::operator==( const AString & other ) const
 {
     if ( other.GetLength() != GetLength() )
     {
@@ -187,26 +187,26 @@ int32_t AString::Compare( const char * other ) const
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const AString & other ) const
 {
-    #if defined( __WINDOWS__ )
-        return _stricmp( m_Contents, other.Get() );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return strcasecmp( m_Contents, other.Get() );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return _stricmp( m_Contents, other.Get() );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return strcasecmp( m_Contents, other.Get() );
+#else
+    #error Unknown platform
+#endif
 }
 
 // CompareI
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const char * other ) const
 {
-    #if defined( __WINDOWS__ )
-        return _stricmp( m_Contents, other );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return strcasecmp( m_Contents, other );
-    #else
-        #error Unknown platform
-    #endif
+#if defined( __WINDOWS__ )
+    return _stricmp( m_Contents, other );
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    return strcasecmp( m_Contents, other );
+#else
+    #error Unknown platform
+#endif
 }
 
 // Format
@@ -231,37 +231,41 @@ AString & AString::VFormat( const char * fmtString, va_list args )
     char * buffer = stackBuffer;
     size_t bufferSize = STACK_BUFFER_SIZE;
 
-    #if defined( __WINDOWS__ )
+#if defined( __WINDOWS__ )
 loop:
-        // attempt the formatting
-        const int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
+    // attempt the formatting
+    const int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
 
-        // did it fail to fit?
-        if ( len < 0 )
+    // did it fail to fit?
+    if ( len < 0 )
+    {
+        // free any old buffer allocations
+        if ( buffer != stackBuffer )
         {
-            // free any old buffer allocations
-            if ( buffer != stackBuffer )
-            {
-                FREE( buffer );
-            }
+            FREE( buffer );
+        }
 
-            // double the buffer and try again
-            bufferSize *= 2;
-            buffer = (char *)ALLOC( bufferSize );
-            goto loop;
-        }
-    #else
-        va_list argsCopy;
-        va_copy( argsCopy, args );
-        int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
-        va_end( argsCopy );
-        if ( len > ( (int)bufferSize - 1 ) )
-        {
-            bufferSize = len + 1;
-            buffer = (char *)ALLOC( bufferSize );
-        }
-        VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
-    #endif
+        // double the buffer and try again
+        bufferSize *= 2;
+        buffer = (char *)ALLOC( bufferSize );
+        goto loop;
+    }
+#else
+    va_list argsCopy;
+    va_copy( argsCopy, args );
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
+    int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
+    PRAGMA_DISABLE_POP_CLANG
+    va_end( argsCopy );
+    if ( len > ( (int)bufferSize - 1 ) )
+    {
+        bufferSize = static_cast<size_t>( len ) + 1;
+        buffer = (char *)ALLOC( bufferSize );
+    }
+    PRAGMA_DISABLE_PUSH_CLANG( "-Wformat-nonliteral" )
+    VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
+    PRAGMA_DISABLE_POP_CLANG
+#endif
 
     // keep the final result
     Assign( buffer, buffer + len );
@@ -277,7 +281,7 @@ loop:
 
 // Scan
 //------------------------------------------------------------------------------
-int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... )
+int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... ) const
 {
     va_list args;
     va_start( args, fmtString );
@@ -299,18 +303,16 @@ int32_t AString::Scan( MSVC_SAL_SCANF const char * fmtString, ... )
 
 // Tokenize
 //------------------------------------------------------------------------------
-void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
+void AString::Tokenize( Array<TokenRange> & outTokenRanges,
+                        char splitChar ) const
 {
-    Array< const char * > tokenStarts;
-    Array< const char * > tokenEnds;
-
     const char * pos = Get();
     const char * end = GetEnd();
-    bool lookingForStart = true;
     char quoteChar = 0;
+    TokenRange * current = nullptr;
     while ( pos < end )
     {
-        if ( lookingForStart )
+        if ( current == nullptr )
         {
             if ( *pos == splitChar )
             {
@@ -319,35 +321,44 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
             }
 
             // found the start of a new token
-            tokenStarts.Append( pos );
-            lookingForStart = false;
+            current = &outTokenRanges.EmplaceBack();
+            current->m_StartIndex = static_cast<uint32_t>( pos - Get() );
         }
 
         // hit a quote?
         const char c = *pos;
-        if ( ( c == '"' ) || ( c == '\'' ) )
+        if ( c == '"' )
         {
             if ( quoteChar == 0 )
             {
                 // opening quote
                 quoteChar = c;
             }
-            else if ( quoteChar == c )
-            {
-                // closing quote
-                quoteChar = 0;
-            }
             else
             {
-                // quote of the 'other' type - consider as part of token
+                // closing quote
+                ASSERT( quoteChar == c );
+                quoteChar = 0;
+            }
+        }
+        else if ( c == '\\' ) // Escape char
+        {
+            // skip over escaped quotes
+            if ( ( pos + 1 ) < end )
+            {
+                const char nextChar = pos[ 1 ];
+                if ( nextChar == '"' )
+                {
+                    ++pos;
+                }
             }
         }
         else if ( c == splitChar )
         {
             if ( quoteChar == 0 )
             {
-                tokenEnds.Append( pos );
-                lookingForStart = true;
+                current->m_EndIndex = static_cast<uint32_t>( pos - Get() );
+                current = nullptr;
             }
             else
             {
@@ -360,28 +371,97 @@ void AString::Tokenize( Array< AString > & tokens, char splitChar ) const
         }
         ++pos;
     }
-    ASSERT( ( tokenStarts.GetSize() == tokenEnds.GetSize() ) ||
-            ( tokenStarts.GetSize() == ( tokenEnds.GetSize() + 1 ) ) );
-    if ( tokenStarts.GetSize() > tokenEnds.GetSize() )
+
+    // Terminate last token if needed
+    if ( current != nullptr )
     {
-        tokenEnds.Append( pos );
+        ASSERT( current->m_EndIndex == 0 );
+        current->m_EndIndex = static_cast<uint32_t>( pos - Get() );
     }
-    ASSERT( tokenStarts.GetSize() == tokenEnds.GetSize() );
+}
+
+// Tokenize
+//------------------------------------------------------------------------------
+void AString::Tokenize( Array<AString> & tokens, char splitChar ) const
+{
+    // Get the bounds of the tokens
+    StackArray<TokenRange, 128> tokenRanges;
+    Tokenize( tokenRanges, splitChar );
 
     // pre-size output to avoid reallocations
     tokens.Clear();
-    const size_t numTokens( tokenStarts.GetSize() );
-    if ( tokens.GetCapacity() < numTokens )
-    {
-        tokens.SetCapacity( numTokens );
-    }
-    tokens.SetSize( numTokens );
+    tokens.SetCapacity( tokenRanges.GetSize() );
 
     // copy tokens
-    for ( size_t i = 0; i < numTokens; ++i )
+    for ( const TokenRange & tokenRange : tokenRanges )
     {
-        tokens[ i ].Assign( tokenStarts[ i ], tokenEnds[ i ] );
+        tokens.EmplaceBack( ( Get() + tokenRange.m_StartIndex ),
+                            ( Get() + tokenRange.m_EndIndex ) );
     }
+}
+
+// RemoveQuotes
+//------------------------------------------------------------------------------
+/*static*/ void AString::RemoveQuotes( Array<AString> & inoutTokens )
+{
+    for ( AString & token : inoutTokens )
+    {
+        token.RemoveQuotes();
+    }
+}
+
+// RemoveQuotes
+//------------------------------------------------------------------------------
+void AString::RemoveQuotes()
+{
+    // Remove quotes in-place
+    char * src = Get();
+    char * dst = src;
+    const char * const end = GetEnd();
+    char quoteChar = 0;
+    while ( src < end )
+    {
+        const char c = *src;
+        if ( c == '"' )
+        {
+            if ( quoteChar == 0 )
+            {
+                // opening quote - remove from output
+                quoteChar = c;
+                ++src;
+                continue;
+            }
+            else
+            {
+                // closing quote
+                ASSERT( quoteChar == c );
+                quoteChar = 0;
+                ++src;
+                continue; // Remove quote from token
+            }
+        }
+        else if ( c == '\\' ) // Escape char
+        {
+            // collapse escaped quotes
+            if ( ( src + 1 ) < end )
+            {
+                const char nextChar = src[ 1 ];
+                if ( nextChar == '"' )
+                {
+                    // Replace escaped char with quote
+                    src += 2;
+                    *dst = nextChar;
+                    ++dst;
+                    continue;
+                }
+            }
+        }
+
+        *dst = *src;
+        ++dst;
+        ++src;
+    }
+    SetLength( static_cast<uint32_t>( dst - Get() ) );
 }
 
 // Assign (const char *)
@@ -453,7 +533,7 @@ void AString::Assign( AString && string )
     }
 
     // Clear other string
-    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Contents = const_cast<char *>( s_EmptyString );
     string.m_Length = 0;
     string.m_ReservedAndFlags = 0;
 }
@@ -483,14 +563,14 @@ void AString::ClearAndFreeMemory()
         FREE( m_Contents );
 
         // Reset to new empty string state
-        m_Contents = const_cast<char*>( s_EmptyString );
+        m_Contents = const_cast<char *>( s_EmptyString );
         m_Length = 0;
         m_ReservedAndFlags = 0;
     }
     else
     {
         // Pointing to unfreeable memory so just reset state
-        if ( m_Contents != const_cast<char*>( s_EmptyString ) )
+        if ( m_Contents != const_cast<char *>( s_EmptyString ) )
         {
             m_Contents[ 0 ] = '\000';
         }
@@ -503,9 +583,18 @@ void AString::ClearAndFreeMemory()
 void AString::SetReserved( size_t capacity )
 {
     // shrinking content?
+    // TODO:C This code path seems suspect and hitting this is likely an error
+    // in the calling code
     if ( capacity < GetLength() )
     {
         SetLength( (uint32_t)capacity ); // truncate to new capacity
+        return;
+    }
+
+    // Ignore requests for capacity lower that already available
+    if ( capacity <= GetReserved() )
+    {
+        return;
     }
 
     // allocate memory of new capacity and copy existing string
@@ -535,7 +624,7 @@ void AString::SetLength( uint32_t len )
 
 // operator += (char)
 //------------------------------------------------------------------------------
-AString & AString::operator += ( char c )
+AString & AString::operator+=( char c )
 {
     // need more space?
     if ( m_Length >= GetReserved() )
@@ -550,7 +639,7 @@ AString & AString::operator += ( char c )
 
 // operator += (const char *)
 //------------------------------------------------------------------------------
-AString & AString::operator += ( const char * string )
+AString & AString::operator+=( const char * string )
 {
     const uint32_t suffixLen = (uint32_t)StrLen( string );
     if ( suffixLen )
@@ -569,7 +658,7 @@ AString & AString::operator += ( const char * string )
 
 // operator += ( const AString & )
 //------------------------------------------------------------------------------
-AString & AString::operator += ( const AString & string )
+AString & AString::operator+=( const AString & string )
 {
     const uint32_t suffixLen = string.GetLength();
     if ( suffixLen )
@@ -609,13 +698,40 @@ AString & AString::Append( const char * string, size_t len )
 //------------------------------------------------------------------------------
 AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
-    AStackString< 1024 > buffer;
+    AStackString<1024> buffer;
     va_list args;
     va_start( args, fmtString );
     buffer.VFormat( fmtString, args );
     va_end( args );
 
     Append( buffer );
+
+    return *this;
+}
+
+// AppendList
+//------------------------------------------------------------------------------
+AString & AString::AppendList( const Array<AString> & list, char separator )
+{
+    // Ignore empty lists explicitly to simplify logic below
+    if ( list.IsEmpty() )
+    {
+        return *this;
+    }
+
+    // Determine how many separators will be needed
+    size_t numSeparatorsRemaining = ( list.GetSize() - 1 );
+
+    // Append items with separators
+    for ( const AString & item : list )
+    {
+        Append( item );
+        if ( numSeparatorsRemaining > 0 )
+        {
+            Append( separator );
+            --numSeparatorsRemaining;
+        }
+    }
 
     return *this;
 }
@@ -709,7 +825,7 @@ void AString::TrimStart( char charToTrimFromStart )
     uint32_t nbrCharsToRemoveFromStart = 0;
     const char * pos = m_Contents;
     const char * end = m_Contents + m_Length;
-    for ( ; pos < end && *pos == charToTrimFromStart; ++pos, ++nbrCharsToRemoveFromStart ) 
+    for ( ; pos < end && *pos == charToTrimFromStart; ++pos, ++nbrCharsToRemoveFromStart )
     {
     }
 
@@ -723,7 +839,7 @@ void AString::TrimEnd( char charToTrimFromEnd )
     uint32_t nbrCharsToRemoveFromEnd = 0;
     const char * pos = m_Contents + m_Length - 1;
     const char * end = m_Contents;
-    for ( ; pos >= end && *pos == charToTrimFromEnd; --pos, ++nbrCharsToRemoveFromEnd ) 
+    for ( ; pos >= end && *pos == charToTrimFromEnd; --pos, ++nbrCharsToRemoveFromEnd )
     {
     }
 
@@ -741,7 +857,7 @@ uint32_t AString::Replace( const char * from, const char * to, uint32_t maxRepla
         return 0;
     }
 
-    AStackString< 2 * KILOBYTE > temp;
+    AStackString<2 * KILOBYTE> temp;
     uint32_t replaceCount = 0;
 
     // loop until the last possible position for a potential match
@@ -1254,7 +1370,10 @@ new_segment:
     if ( *pat == '*' )
     {
         star = true;
-        do { pat++; } while ( *pat == '*' );
+        do
+        {
+            pat++;
+        } while ( *pat == '*' );
     }
 
 test_match:
@@ -1265,9 +1384,18 @@ test_match:
         const char b = pat[ i ];
         if ( a != b )
         {
-            if ( !str[ i ] ) return false;
-            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) ) continue;
-            if ( !star ) return false;
+            if ( !str[ i ] )
+            {
+                return false;
+            }
+            if ( ( pat[ i ] == '?' ) && ( str[ i ] != '.' ) )
+            {
+                continue;
+            }
+            if ( !star )
+            {
+                return false;
+            }
             str++;
             goto test_match;
         }
@@ -1278,9 +1406,18 @@ test_match:
         pat += i;
         goto new_segment;
     }
-    if ( !str[ i ] ) return true;
-    if ( i && pat[ i - 1 ] == '*' ) return true;
-    if ( !star ) return false;
+    if ( !str[ i ] )
+    {
+        return true;
+    }
+    if ( i && pat[ i - 1 ] == '*' )
+    {
+        return true;
+    }
+    if ( !star )
+    {
+        return false;
+    }
     str++;
     goto test_match;
 }
@@ -1297,20 +1434,34 @@ new_segment:
     if ( *pat == '*' )
     {
         star = true;
-        do { pat++; } while ( *pat == '*' );
+        do
+        {
+            pat++;
+        } while ( *pat == '*' );
     }
 
 test_match:
     int i;
     for ( i = 0; pat[ i ] && ( pat[ i ] != '*' ); i++ )
     {
-        char a = str[ i ]; a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
-        char b = pat[ i ]; b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
+        char a = str[ i ];
+        a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
+        char b = pat[ i ];
+        b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
         if ( a != b )
         {
-            if ( !str[ i ] ) return false;
-            if ( ( pat[ i ] == '?' ) && ( str[i] != '.' ) ) continue;
-            if ( !star ) return false;
+            if ( !str[ i ] )
+            {
+                return false;
+            }
+            if ( ( pat[ i ] == '?' ) && ( str[ i ] != '.' ) )
+            {
+                continue;
+            }
+            if ( !star )
+            {
+                return false;
+            }
             str++;
             goto test_match;
         }
@@ -1321,9 +1472,18 @@ test_match:
         pat += i;
         goto new_segment;
     }
-    if ( !str[ i ] ) return true;
-    if ( i && pat[ i - 1 ] == '*' ) return true;
-    if ( !star ) return false;
+    if ( !str[ i ] )
+    {
+        return true;
+    }
+    if ( i && pat[ i - 1 ] == '*' )
+    {
+        return true;
+    }
+    if ( !star )
+    {
+        return false;
+    }
     str++;
     goto test_match;
 }
@@ -1350,7 +1510,7 @@ test_match:
 /*static*/ void AString::Copy( const char * src, char * dst, size_t len )
 {
     memmove( dst, src, len );
-    dst[len] = '\000';
+    dst[ len ] = '\000';
 }
 
 // StrLen
@@ -1433,7 +1593,7 @@ void AString::Grow( uint32_t newLength )
 {
     // allocate space, rounded up to multiple of 2
     const uint32_t amortizedReserve = ( GetReserved() * 2 );
-    const uint32_t reserve = Math::RoundUp( Math::Max( amortizedReserve, newLength ),(uint32_t)2 );
+    const uint32_t reserve = Math::RoundUp( Math::Max( amortizedReserve, newLength ), (uint32_t)2 );
     char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
 
     // transfer existing string data

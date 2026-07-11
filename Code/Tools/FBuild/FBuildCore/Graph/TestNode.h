@@ -20,34 +20,37 @@ public:
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TestNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
+    static Node::Type GetTypeS() { return Node::TEST_NODE; }
 
-    inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    const Node * GetTestExecutable() const { return m_StaticDependencies[ 0 ].GetNode(); }
     const char * GetEnvironmentString() const;
 
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph ) override;
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual uint8_t GetConcurrencyGroupIndex() const override;
 
     void EmitCompilationMessage( const char * workingDir ) const;
 
-    AString             m_TestExecutable;
-    Array< AString >    m_TestInput;
-    Array< AString >    m_TestInputPath;
-    Array< AString >    m_TestInputPattern;
-    Array< AString >    m_TestInputExcludePath;
-    Array< AString >    m_TestInputExcludedFiles;
-    Array< AString >    m_TestInputExcludePattern;
-    AString             m_TestArguments;
-    AString             m_TestWorkingDir;
-    uint32_t            m_TestTimeOut;
-    bool                m_TestAlwaysShowOutput;
-    bool                m_TestInputPathRecurse;
-    Array< AString >    m_PreBuildDependencyNames;
-    Array< AString >    m_Environment;
+    AString m_TestExecutable;
+    Array<AString> m_TestInput;
+    Array<AString> m_TestInputPath;
+    Array<AString> m_TestInputPattern;
+    Array<AString> m_TestInputExcludePath;
+    Array<AString> m_TestInputExcludedFiles;
+    Array<AString> m_TestInputExcludePattern;
+    AString m_TestArguments;
+    AString m_TestWorkingDir;
+    uint32_t m_TestTimeOut;
+    bool m_TestAlwaysShowOutput;
+    bool m_TestInputPathRecurse;
+    Array<Node *> m_PreBuildDependencyNames;
+    Array<AString> m_Environment;
+    AString m_ConcurrencyGroupName;
 
     // Internal State
-    uint32_t            m_NumTestInputFiles;
+    uint32_t m_NumTestInputFiles;
+    uint8_t m_ConcurrencyGroupIndex = 0;
     mutable const char * m_EnvironmentString;
 };
 

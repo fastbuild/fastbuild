@@ -11,8 +11,8 @@
 class FunctionPrint : public Function
 {
 public:
-    explicit        FunctionPrint();
-    inline virtual ~FunctionPrint() override = default;
+    explicit FunctionPrint();
+    virtual ~FunctionPrint() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

@@ -1,6 +1,6 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath        = '../External/LZ4/lz4-1.9.4/lib'
+.LZ4BasePath        = '../External/LZ4/lz4-1.10.0/lib'
 .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
 {
     .ProjectName        = 'LZ4'
@@ -18,14 +18,11 @@
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
+    .LZ4Options_ARM64   = [
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
+                          ]
     .LZ4Options_x64Clang= [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
-
-                            // When mixing old versions of Clang with VS2019, there are some problems with certian
-                            // bitscan intrinsics, so we disable their use here
-                            #if USING_CLANG_7 || USING_CLANG_8 || USING_CLANG_9
-                                .LZ4CompilerOptions + ' -DLZ4_FORCE_SW_BITCOUNT'
-                            #endif
                           ]
     .LZ4Options_x64Linux= [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
@@ -75,7 +72,7 @@
                                         #else
                                             - ' -O0'
                                         #endif
-                                        
+
                                         // Disable warnings if using Clang. There are too many warnings in LZ4
                                         // and they differ with every version of Clang
                                         - ' -Wall'

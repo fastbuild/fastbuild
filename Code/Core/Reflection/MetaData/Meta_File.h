@@ -15,7 +15,7 @@ public:
     explicit Meta_File( bool relative = false );
     virtual ~Meta_File() override;
 
-    inline bool IsRelative() const { return m_Relative; }
+    bool IsRelative() const { return m_Relative; }
 
 protected:
     bool m_Relative;

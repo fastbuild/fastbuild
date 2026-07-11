@@ -13,8 +13,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFMacros::BFFMacros()
-: m_Tokens(8, true)
 {
+    m_Tokens.SetCapacity( 8 );
 }
 
 // DESTRUCTOR
@@ -32,36 +32,36 @@ bool BFFMacros::IsDefined( const AString & token ) const
     }
 
     // fallback to predefined tokens
-    #if defined( __WINDOWS__ )
-        if ( token == "__WINDOWS__" )
-        {
-            return true;
-        }
-    #endif
-    #if defined( __LINUX__ )
-        if ( token == "__LINUX__" )
-        {
-            return true;
-        }
-    #endif
-    #if defined( __OSX__ )
-        if ( token == "__OSX__" )
-        {
-            return true;
-        }
-    #endif
-    #if defined( __X64__ )
-        if ( token == "__X64__" )
-        {
-            return true;
-        }
-    #endif
-    #if defined( __ARM64__ )
-        if ( token == "__ARM64__" )
-        {
-            return true;
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    if ( token == "__WINDOWS__" )
+    {
+        return true;
+    }
+#endif
+#if defined( __LINUX__ )
+    if ( token == "__LINUX__" )
+    {
+        return true;
+    }
+#endif
+#if defined( __OSX__ )
+    if ( token == "__OSX__" )
+    {
+        return true;
+    }
+#endif
+#if defined( __x86_64__ ) || defined( _M_X64 ) // X64
+    if ( token == "__X64__" )
+    {
+        return true;
+    }
+#endif
+#if defined( __aarch64__ ) || defined( _M_ARM64 ) // ARM
+    if ( token == "__ARM64__" )
+    {
+        return true;
+    }
+#endif
 
     return false;
 }
@@ -89,7 +89,7 @@ bool BFFMacros::Undefine( const AString & token )
     AString * const defined = m_Tokens.Find( token );
     if ( defined == nullptr )
     {
-        // trying to remove an unexisting or predefined token :
+        // trying to remove a non-existent or predefined token :
         return false;
     }
     else

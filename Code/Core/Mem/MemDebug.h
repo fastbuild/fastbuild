@@ -20,24 +20,24 @@
 #endif
 #if defined( MEM_DEBUG_ENABLED )
     #define MEM_FILL_NEW_ALLOCATIONS
-    #define MEM_FILL_FREED_ALLOCATIONS  // Will be applied where possible
+    #define MEM_FILL_FREED_ALLOCATIONS // Will be applied where possible
 #endif
 
 // MemDebug
 //------------------------------------------------------------------------------
 #if defined( MEM_DEBUG_ENABLED )
-    class MemDebug
-    {
-    public:
-        // Patterns used are:
-        // - Signalling floats
-        // - Unaligned
-        // - Unlikely to be valid addresses
-        static const uint64_t MEM_FILL_NEW_ALLOCATION_PATTERN = 0x7F8BAAAD7F8BAAAD;
-        static const uint64_t MEM_FILL_FREED_ALLOCATION_PATTERN = 0x7F8BDDDD7F8BDDDD;
+class MemDebug
+{
+public:
+    // Patterns used are:
+    // - Signalling floats
+    // - Unaligned
+    // - Unlikely to be valid addresses
+    static const uint64_t MEM_FILL_NEW_ALLOCATION_PATTERN = 0x7F8BAAAD7F8BAAAD;
+    static const uint64_t MEM_FILL_FREED_ALLOCATION_PATTERN = 0x7F8BDDDD7F8BDDDD;
 
-        static void FillMem( void * ptr, const size_t size, const uint64_t pattern );
-    };
+    static void FillMem( void * ptr, const size_t size, const uint64_t pattern );
+};
 #endif
 
 //------------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+//
+// Ensure args are correctly handled when response files are in use
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+Library( 'Library' )
+{
+    .LibrarianOutput = 'out/lib.lib'
+}

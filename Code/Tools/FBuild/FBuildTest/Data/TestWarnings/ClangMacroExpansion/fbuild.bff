@@ -19,6 +19,9 @@ Settings {}
     // Not testing on Linux for now - TODO:B Enable test
 #endif
 
+// Disable warnings as errors to confirm that we still see warnings
+.CompilerOptions            - '-Werror'
+
 // Common settings
 .CompilerOutputPath         = '$StandardOutputBase$/Test/TestWarnings/ClangMacroExpansion/'
 

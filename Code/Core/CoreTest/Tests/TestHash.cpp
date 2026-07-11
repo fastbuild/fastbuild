@@ -16,43 +16,43 @@
 
 #include <memory.h>
 
-// TestHash
 //------------------------------------------------------------------------------
-class TestHash : public TestGroup
+TEST_GROUP( TestHash, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void CompareHashTimes_Large() const;
-    void CompareHashTimes_Small() const;
+public:
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestHash )
-    REGISTER_TEST( CompareHashTimes_Large )
-    REGISTER_TEST( CompareHashTimes_Small )
-REGISTER_TESTS_END
+class xxHash3TestExtender : public xxHash3
+{
+public:
+    // Expose internals for testing
+    using xxHash3::Calc64Static;
+#if defined( __x86_64__ ) || defined( _M_X64 )
+    using xxHash3::Calc64Dynamic;
+#endif
+};
 
-// CompareHashTimes_Large
 //------------------------------------------------------------------------------
-void TestHash::CompareHashTimes_Large() const
+TEST_CASE( TestHash, CompareHashTimes_Large )
 {
     // use pseudo-random (but deterministic) data
     const uint32_t seed = 0xB1234567;
     Random r( seed );
 
     // fill a buffer to use for tests
-    #if defined( DEBUG )
-        const size_t dataSize( 32 * 1024 * 1024 );
-    #else
-        const size_t dataSize( 64 * 1024 * 1024 );
-    #endif
-    UniquePtr< uint64_t > data( (uint64_t *)ALLOC( dataSize ) );
+#if defined( DEBUG )
+    const size_t dataSize( 32 * MEGABYTE );
+#else
+    const size_t dataSize( 64 * MEGABYTE );
+#endif
+    UniquePtr<uint64_t, FreeDeletor> data( (uint64_t *)ALLOC( dataSize ) );
     for ( size_t i = 0; i < dataSize / sizeof( uint64_t ); ++i )
     {
         data.Get()[ i ] = ( (uint64_t)r.GetRand() << 32 ) | (uint64_t)r.GetRand();
     }
+
+    OUTPUT( "\tSize: %zu MiB\n", ( dataSize / MEGABYTE ) );
 
     // baseline - sum 64 bits
     {
@@ -104,6 +104,26 @@ void TestHash::CompareHashTimes_Large() const
         OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
     }
 
+    // xxHash3_64
+    {
+        const Timer t;
+        const uint64_t crc = xxHash3TestExtender::Calc64Static( data.Get(), dataSize );
+        const float time = t.GetElapsed();
+        const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+        OUTPUT( "xxHash3-64      : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
+    }
+
+#if defined( __x86_64__ ) || defined( _M_X64 )
+    // xxHash3_64 - Dynamic Dispatch (AVX2 if available etc)
+    {
+        const Timer t;
+        const uint64_t crc = xxHash3TestExtender::Calc64Dynamic( data.Get(), dataSize );
+        const float time = t.GetElapsed();
+        const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+        OUTPUT( "xxHash3-64 Dyn  : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
+    }
+#endif
+
     // CRC32 - 8x8 slicing
     {
         const Timer t;
@@ -134,23 +154,31 @@ void TestHash::CompareHashTimes_Large() const
     }
 }
 
-// CompareHashTimes_Small
 //------------------------------------------------------------------------------
-void TestHash::CompareHashTimes_Small() const
+TEST_CASE( TestHash, CompareHashTimes_Small )
 {
     // some different strings to hash
-    Array< AString > strings( 32, true );
-    strings.EmplaceBack( " " );
-    strings.EmplaceBack( "shOrt" );
-    strings.EmplaceBack( "MediumstringMediumstring123456789" );
-    strings.EmplaceBack( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" );
-    strings.EmplaceBack( "c:\\files\\subdir\\project\\thing\\stuff.cpp" );
-    const size_t numStrings = strings.GetSize();
-    #if defined( DEBUG )
-        const size_t numIterations = 10240;
-    #else
-        const size_t numIterations = 102400;
-    #endif
+    const size_t numStrings = 1024 * 1024;
+    Array<AString> strings;
+    strings.SetCapacity( numStrings );
+    Random r( 0x12345678 );
+    for ( size_t i = 0; i < numStrings; ++i )
+    {
+        switch ( r.GetRandIndex( 5 ) )
+        {
+            case 0: strings.EmplaceBack( " " ); break;
+            case 1: strings.EmplaceBack( "shOrt" ); break;
+            case 2: strings.EmplaceBack( "MediumstringMediumstring123456789" ); break;
+            case 3: strings.EmplaceBack( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" ); break;
+            case 4: strings.EmplaceBack( "c:\\files\\subdir\\project\\thing\\stuff.cpp" ); break;
+            default: ASSERT( false ); break; // Impossible
+        }
+    }
+#if defined( DEBUG )
+    const size_t numIterations = 1;
+#else
+    const size_t numIterations = 10;
+#endif
 
     // calc datasize
     size_t dataSize( 0 );
@@ -159,6 +187,11 @@ void TestHash::CompareHashTimes_Small() const
         dataSize += strings[ i ].GetLength();
     }
     dataSize *= numIterations;
+
+    OUTPUT( "\tNum Strings: %zu, Repeats: %zu, Total Size: %zu MiB\n",
+            numStrings,
+            numIterations,
+            ( dataSize / MEGABYTE ) );
 
     // xxHash - 32
     {
@@ -191,6 +224,40 @@ void TestHash::CompareHashTimes_Small() const
         const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
         OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
     }
+
+    // xxHash3 - 64
+    {
+        const Timer t;
+        uint64_t crc( 0 );
+        for ( size_t j = 0; j < numIterations; ++j )
+        {
+            for ( size_t i = 0; i < numStrings; ++i )
+            {
+                crc += xxHash3TestExtender::Calc64Static( strings[ i ].Get(), strings[ i ].GetLength() );
+            }
+        }
+        const float time = t.GetElapsed();
+        const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+        OUTPUT( "xxHash3-64      : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
+    }
+
+#if defined( __x86_64__ ) || defined( _M_X64 )
+    // xxHash3 - 64 Dynamic Dispatch (AVX2 if available etc)
+    {
+        const Timer t;
+        uint64_t crc( 0 );
+        for ( size_t j = 0; j < numIterations; ++j )
+        {
+            for ( size_t i = 0; i < numStrings; ++i )
+            {
+                crc += xxHash3TestExtender::Calc64Dynamic( strings[ i ].Get(), strings[ i ].GetLength() );
+            }
+        }
+        const float time = t.GetElapsed();
+        const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+        OUTPUT( "xxHash3-64 Dyn  : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
+    }
+#endif
 
     // CRC32 - 8x8 slicing
     {
@@ -242,6 +309,20 @@ void TestHash::CompareHashTimes_Small() const
         const float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
         OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestHash, Accumulator )
+{
+    const volatile uint64_t sentinel1 = 0xBAADF00D;
+    xxHash3Accumulator accumulator;
+    const volatile uint64_t sentinel2 = 0xBAADF00D;
+    accumulator.AddData( "ABCD", 4 );
+    accumulator.AddData( "0123456789", 10 );
+    TEST_ASSERT( accumulator.Finalize64() == xxHash3::Calc64( "ABCD0123456789", 14 ) );
+
+    TEST_ASSERT( sentinel1 == 0xBAADF00D );
+    TEST_ASSERT( sentinel2 == 0xBAADF00D );
 }
 
 //------------------------------------------------------------------------------

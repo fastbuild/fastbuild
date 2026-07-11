@@ -1,0 +1,139 @@
+// OSUITest
+//------------------------------------------------------------------------------
+{
+    .ProjectName        = 'OSUITest'
+    .ProjectPath        = 'OSUI/OSUITest'
+
+    // Executable
+    //--------------------------------------------------------------------------
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
+    {
+        Using( .BuildConfig )
+        .OutputBase + '\$Platform$-$BuildConfigName$'
+
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
+        }
+
+        // Library
+        //--------------------------------------------------------------------------
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        {
+            // Input (Unity)
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
+
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+        }
+
+        // Windows Manifest
+        //--------------------------------------------------------------------------
+        #if __WINDOWS__
+            .ManifestFile = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$.manifest.tmp'
+            CreateManifest( '$ProjectName$-Manifest-$Platform$-$BuildConfigName$'
+                            .ManifestFile )
+        #endif
+
+        // Executable
+        //--------------------------------------------------------------------------
+        Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
+        {
+            .Libraries                      = {
+                                                'OSUITest-Lib-$Platform$-$BuildConfigName$'
+                                                'OSUI-Lib-$Platform$-$BuildConfigName$'
+                                                'TestFrameWork-Lib-$Platform$-$BuildConfigName$'
+                                                'Core-Lib-$Platform$-$BuildConfigName$'
+                                                'LZ4-Lib-$Platform$-$BuildConfigName$'
+                                                'xxHash-Lib-$Platform$-$BuildConfigName$'
+                                              }
+            .LinkerOutput                   = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
+            #if __WINDOWS__
+                .LinkerOptions                  + ' /SUBSYSTEM:CONSOLE'
+                                                + ' Advapi32.lib'
+                                                + ' Comctl32.lib'
+                                                + ' Gdi32.lib'
+                                                + ' Iphlpapi.lib'
+                                                + ' kernel32.lib'
+                                                + ' Shell32.lib'
+                                                + ' Ws2_32.lib'
+                                                + ' User32.lib'
+                                                + .CRTLibs_Static
+
+                // Manifest
+                .LinkerAssemblyResources        = .ManifestFile
+                .LinkerOptions                  + ' /MANIFEST:EMBED'
+                                                + ' /MANIFESTINPUT:%3'
+            #endif
+            #if __OSX__
+                .LinkerOptions                  + ' -framework Cocoa'
+            #endif
+            #if __LINUX__
+                .LinkerOptions                  + ' -pthread -lrt'
+                                                + ' -Wl,--wrap=__libc_start_main' // GLIBC compat
+            #endif
+        }
+        #if __WINDOWS__
+            Copy( '$ProjectName$-Copy-$Platform$-$BuildConfigName$' )
+            {
+                .Source     = .ASanDLLs
+                .Dest       = '$OutputBase$/$ProjectPath$/'
+            }
+        #endif
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' )
+        {
+            .Targets    = {
+                            #if __WINDOWS__
+                                '$ProjectName$-Copy-$Platform$-$BuildConfigName$'
+                            #endif
+                            '$ProjectName$-Exe-$Platform$-$BuildConfigName$'
+                          }
+        }
+        ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
+
+        // Run Test
+        //--------------------------------------------------------------------------
+        Test( "$ProjectName$-RunTest-$Platform$-$BuildConfigName$" )
+        {
+            .TestExecutable                 = '$ProjectName$-Exe-$Platform$-$BuildConfigName$'
+            .TestOutput                     = "$OutputBase$/$ProjectPath$/TestOutput.txt"
+        }
+
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+    }
+
+    // Aliases
+    //--------------------------------------------------------------------------
+    CreateCommonAliases( .ProjectName )
+
+    // Visual Studio Project Generation
+    //--------------------------------------------------------------------------
+    #if __WINDOWS__
+        CreateVCXProject_Exe( .ProjectName, .ProjectPath, .ProjectConfigs )
+    #endif
+
+    // XCode Project Generation
+    //--------------------------------------------------------------------------
+    #if __OSX__
+        XCodeProject( '$ProjectName$-xcodeproj' )
+        {
+            .ProjectOutput              = '../tmp/XCode/Projects/1_Test/$ProjectName$.xcodeproj/project.pbxproj'
+            .ProjectInputPaths          = '$ProjectPath$/'
+            .ProjectBasePath            = '$ProjectPath$/'
+
+            .XCodeBuildWorkingDir       = '../../../../Code/'
+        }
+    #endif
+}

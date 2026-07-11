@@ -7,7 +7,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_File, IMetaData, MetaNone() )
+REFLECT_BEGIN( Meta_File, IMetaData )
 REFLECT_END( Meta_File )
 
 // CONSTRUCTOR

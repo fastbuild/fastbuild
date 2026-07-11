@@ -12,9 +12,12 @@ Compiler( 'Compiler-Clang8' )
     // Allow tests to activate some experimental behavior
     #if ENABLE_RELATIVE_PATHS
         .UseRelativePaths_Experimental = true
-    #endif    
+    #endif
     #if ENABLE_SOURCE_MAPPING
         .SourceMapping_Experimental = '/fastbuild-test-mapping'
+    #endif
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
     #endif
 }
 
@@ -32,7 +35,6 @@ Compiler( 'Compiler-Clang8' )
                                     + ' -m64'           // x86_64
                                     + ' -D__OSX__'      // Platform define
                                     + ' -D__APPLE__'    // Platform define
-                                    + ' -D__X64__'      // Architecture define
                                     + ' -mmacosx-version-min=10.7'
                                     + ' -stdlib=libc++'
 
@@ -48,9 +50,14 @@ Compiler( 'Compiler-Clang8' )
                                     + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
                                     + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
 
-
-    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+    .CompilerOptions                = ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
     .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header'
+                                    + ' -std=c++17 $CommonCompilerOptions$'
+                                    + ' -fno-rtti'      // No RTTI
+                                    + ' -fno-exceptions'
 
     // Librarian
     .Librarian                      = '$Clang8_BasePath$/ar'
@@ -59,15 +66,14 @@ Compiler( 'Compiler-Clang8' )
     // Linker
     .Linker                         = '$Clang8_BasePath$/clang++'
     .LinkerOptions                  = '"%1" -o "%2" -g'
-                                    + ' -mmacosx-version-min=10.7'
+                                    + ' -Wl,-fatal_warnings'
+                                    + ' -Wl,-dead_strip'
+                                    + ' -mmacosx-version-min=10.13'
                                     + ' -stdlib=libc++'
 
     // File Extensions
     .LibExtension                   = '.a'
     .ExeExtension                   = ''
-
-    // Exception Control
-    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

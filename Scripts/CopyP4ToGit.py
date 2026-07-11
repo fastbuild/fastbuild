@@ -65,6 +65,10 @@ for file in files:
     if (src_file.find("IDE") != -1) and (src_file.find("Extensions") != -1):
         continue;
 
+    # skip python temp files
+    if src_file.find('__pycache__') != -1:
+        continue
+
     # create relative source path
     dst_file = src_file.replace(os.path.join(".."),
                                 os.path.join("..", "..", "..", "git", "fastbuild"))

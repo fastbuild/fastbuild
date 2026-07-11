@@ -8,6 +8,7 @@
 // Core
 #include "Core/Containers/UniquePtr.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -16,6 +17,7 @@
 #include "Core/Math/xxHash.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
@@ -26,20 +28,20 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
-    REFLECT(        m_ToolId,                       "ToolId",                       MetaHidden() )
-    REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaHidden() )
-    REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaHidden() )
-    REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaHidden() )
-    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaHidden() )
+REFLECT_STRUCT_BEGIN( ToolManifest, Struct )
+    REFLECT( m_ToolId, MetaHidden() )
+    REFLECT( m_TimeStamp, MetaHidden() )
+    REFLECT( m_MainExecutableRootPath, MetaHidden() )
+    REFLECT( m_Files, MetaHidden() )
+    REFLECT( m_CustomEnvironmentVariables, MetaHidden() )
 REFLECT_END( ToolManifest )
 
-REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
-    REFLECT( m_Name,        "Name",         MetaHidden() )
-    REFLECT( m_TimeStamp,   "TimeStamp",    MetaHidden() )
-    REFLECT( m_Hash,        "Hash",         MetaHidden() )
-    REFLECT( m_UncompressedContentSize, "UncompressedContentSize",  MetaHidden() )
-    REFLECT( m_CompressedContentSize, "CompressedContentSize",  MetaHidden() )
+REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct )
+    REFLECT( m_Name, MetaHidden() )
+    REFLECT( m_TimeStamp, MetaHidden() )
+    REFLECT( m_Hash, MetaHidden() )
+    REFLECT( m_UncompressedContentSize, MetaHidden() )
+    REFLECT( m_CompressedContentSize, MetaHidden() )
 REFLECT_END( ToolManifestFile )
 
 // CONSTRUCTOR (ToolManifestFile)
@@ -53,7 +55,8 @@ ToolManifestFile::ToolManifestFile( const AString & name, uint64_t stamp, uint32
     , m_TimeStamp( stamp )
     , m_Hash( hash )
     , m_UncompressedContentSize( size )
-{}
+{
+}
 
 // DESTRUCTOR (ToolManifestFile)
 //------------------------------------------------------------------------------
@@ -68,7 +71,6 @@ ToolManifestFile::~ToolManifestFile()
 ToolManifest::ToolManifest()
     : m_ToolId( 0 )
     , m_TimeStamp( 0 )
-    , m_Files( 0, true )
     , m_Synchronized( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
@@ -80,7 +82,6 @@ ToolManifest::ToolManifest()
 ToolManifest::ToolManifest( uint64_t toolId )
     : m_ToolId( toolId )
     , m_TimeStamp( 0 )
-    , m_Files( 0, true )
     , m_Synchronized( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
@@ -108,7 +109,7 @@ void ToolManifestFile::StoreCompressedContent( const void * uncompressedData, co
 
 // DoBuild
 //------------------------------------------------------------------------------
-bool ToolManifestFile::DoBuild()
+bool ToolManifestFile::DoBuild( bool skipHashing )
 {
     // Name should be set
     ASSERT( m_Name.IsEmpty() == false );
@@ -117,6 +118,23 @@ bool ToolManifestFile::DoBuild()
     ASSERT( m_CompressedContent == nullptr );
     ASSERT( m_CompressedContentSize == 0 );
 
+    if ( skipHashing )
+    {
+        // Get the file's timestamp (a fast 'stat' call)
+        const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
+
+        // File missing?
+        if ( lastWriteTime == 0 )
+        {
+            FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. File not found.\n", m_Name.Get() );
+            return false;
+        }
+
+        // We hash the NAME instead of the CONTENT.
+        m_Hash = xxHash3::Calc32( m_Name );
+        m_TimeStamp = lastWriteTime;
+        return true; // We're done, skip the expensive file I/O below
+    }
     // Do we already have a hash?
     if ( m_Hash != 0 )
     {
@@ -181,7 +199,7 @@ void ToolManifest::Initialize( const AString & mainExecutableRoot, const Depende
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::DoBuild( const Dependencies & dependencies )
+bool ToolManifest::DoBuild( const Dependencies & dependencies, bool skipHashing )
 {
     ASSERT( m_Files.GetSize() == dependencies.GetSize() );
     (void)dependencies;
@@ -191,9 +209,9 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     // Get timestamps and hashes
     for ( ToolManifestFile & file : m_Files )
     {
-        if ( !file.DoBuild() )
+        if ( !file.DoBuild( skipHashing ) )
         {
-            return false; // DoBuild will have emitted an rrror
+            return false; // DoBuild will have emitted an error
         }
     }
 
@@ -202,7 +220,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
     uint32_t * mem = (uint32_t *)ALLOC( memSize );
     uint32_t * pos = mem;
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = m_Files[ i ];
 
@@ -211,16 +229,16 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
         ++pos;
 
         // file name & sub-path (relative to remote folder)
-        AStackString<> relativePath;
+        AStackString relativePath;
         GetRelativePath( m_MainExecutableRootPath, f.GetName(), relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
-    m_ToolId = xxHash::Calc64( mem, memSize );
+    m_ToolId = xxHash3::Calc64( mem, memSize );
     FREE( mem );
 
     // update time stamp (most recent file in manifest)
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = m_Files[ i ];
         ASSERT( f.GetTimeStamp() ); // should have had an error before if the file was missing
@@ -235,7 +253,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
 void ToolManifest::Migrate( const ToolManifest & oldManifest )
 {
     const size_t numFiles = m_Files.GetSize();
-    const Array< ToolManifestFile > & oldFiles = oldManifest.GetFiles();
+    const Array<ToolManifestFile> & oldFiles = oldManifest.GetFiles();
     ASSERT( numFiles == oldFiles.GetSize() );
     for ( size_t i = 0; i < numFiles; ++i )
     {
@@ -256,7 +274,7 @@ void ToolManifest::SerializeForRemote( IOStream & ms ) const
     const uint32_t numItems( (uint32_t)m_Files.GetSize() );
     ms.Write( numItems );
     const size_t numFiles( m_Files.GetSize() );
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = m_Files[ i ];
         ms.Write( f.GetName() );
@@ -283,7 +301,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     // If we ever break protocol compatibility we can simplify this code.
     // Any replacement packet integrity validation should be not specific to
     // these packets and belongs at a higher level.
-    static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
+    static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
 
     // Should not be called more than once
     ASSERT( m_Files.IsEmpty() );
@@ -291,14 +309,14 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     // Read header info
     uint64_t toolId;
-    AStackString<> mainExecutablePath;
+    AStackString mainExecutablePath;
     uint32_t numFiles( 0 );
     if ( !ms.Read( toolId ) ||
          !ms.Read( mainExecutablePath ) ||
          !ms.Read( numFiles ) ||
-        ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||         
-        ( numFiles == 0 ) ||        // Must have at least 1 file
-        ( toolId != m_ToolId ) )    // Must have correct toolId
+         ( AString::StrLen( mainExecutablePath.Get() ) != mainExecutablePath.GetLength() ) ||
+         ( numFiles == 0 ) ||        // Must have at least 1 file
+         ( toolId != m_ToolId ) )    // Must have correct toolId
     {
         return false; // Corrupt stream (likely old broken worker)
     }
@@ -306,9 +324,9 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     // Read file info
     Array<ToolManifestFile> files;
     files.SetCapacity( numFiles );
-    for ( size_t i=0; i<(size_t)numFiles; ++i )
+    for ( size_t i = 0; i < (size_t)numFiles; ++i )
     {
-        AStackString<> name;
+        AStackString name;
         uint64_t timeStamp( 0 );
         uint32_t hash( 0 );
         uint32_t uncompressedContentSize( 0 );
@@ -316,9 +334,9 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
              !ms.Read( timeStamp ) ||
              !ms.Read( hash ) ||
              !ms.Read( uncompressedContentSize ) ||
-            ( AString::StrLen( name.Get() ) != name.GetLength() ) ||
-            ( timeStamp == 0 ) ||
-            ( hash == 0 ) )
+             ( AString::StrLen( name.Get() ) != name.GetLength() ) ||
+             ( timeStamp == 0 ) ||
+             ( hash == 0 ) )
         {
             return false; // Corrupt stream (likely old broken worker)
         }
@@ -348,9 +366,9 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     // determine if any files are remaining from a previous run
     size_t numFilesAlreadySynchronized = 0;
-    for ( size_t i=0; i<(size_t)numFiles; ++i )
+    for ( size_t i = 0; i < (size_t)numFiles; ++i )
     {
-        AStackString<> localFile;
+        AStackString localFile;
         GetRemoteFilePath( (uint32_t)i, localFile );
 
         // Set modification time to now
@@ -362,7 +380,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         FileIO::SetFileLastWriteTimeToNow( localFile );
 
         // is this file already present?
-        UniquePtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
+        UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
         FileStream & f = *( fileStream.Get() );
         if ( f.Open( localFile.Get() ) == false )
         {
@@ -372,7 +390,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         {
             continue; // file is not complete
         }
-        UniquePtr< char > mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
+        UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
         if ( f.Read( mem.Get(), (size_t)f.GetFileSize() ) != f.GetFileSize() )
         {
             continue; // problem reading file
@@ -383,7 +401,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         }
 
         // file present and ok
-        m_Files[ i ].SetFileLock( fileStream.Release() ); // NOTE: keep file open to prevent deletions
+        m_Files[ i ].SetFileLock( fileStream.ReleaseOwnership() ); // NOTE: keep file open to prevent deletions
         m_Files[ i ].SetSyncState( ToolManifestFile::SYNCHRONIZED );
         numFilesAlreadySynchronized++;
     }
@@ -392,32 +410,32 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     ASSERT( m_RemoteEnvironmentString == nullptr );
 
     // PATH=
-    AStackString<> basePath;
+    AStackString basePath;
     GetRemotePath( basePath );
-    AStackString<> paths;
+    AStackString paths;
     paths.Format( "PATH=%s", basePath.Get() );
 
-    #if defined( __WINDOWS__ )
-        // TMP=
-        AStackString<> normalTmp;
-        Env::GetEnvVariable( "TMP", normalTmp );
-        AStackString<> tmp;
-        tmp.Format( "TMP=%s", normalTmp.Get() );
+#if defined( __WINDOWS__ )
+    // TMP=
+    AStackString normalTmp;
+    Env::GetEnvVariable( "TMP", normalTmp );
+    AStackString tmp;
+    tmp.Format( "TMP=%s", normalTmp.Get() );
 
-        // SystemRoot=
-        AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
-    #endif
+    // SystemRoot=
+    AStackString sysRoot( "SystemRoot=C:\\Windows" );
+#endif
 
     // Calculate the length of the full environment string
     size_t len( paths.GetLength() + 1 );
-    #if defined( __WINDOWS__ )
-        len += ( tmp.GetLength() + 1 );
-        len += ( sysRoot.GetLength() + 1 );
-    #endif
+#if defined( __WINDOWS__ )
+    len += ( tmp.GetLength() + 1 );
+    len += ( sysRoot.GetLength() + 1 );
+#endif
 
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = m_CustomEnvironmentVariables[i];
+        const AString & envVar = m_CustomEnvironmentVariables[ i ];
         if ( envVar.Find( "%1" ) )
         {
             len += envVar.GetLength() - 2 + basePath.GetLength() + 1;   // If there is a %1 it will be removed and replaced by the basePath. +1 for the null terminator.
@@ -430,7 +448,6 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
 
     len += 1; // for double null
 
-
     // Now that the environment string length is calculated, allocate and fill.
     char * mem = (char *)ALLOC( len );
     m_RemoteEnvironmentString = mem;
@@ -438,17 +455,17 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     AString::Copy( paths.Get(), mem, paths.GetLength() + 1 ); // including null
     mem += ( paths.GetLength() + 1 ); // including null
 
-    #if defined( __WINDOWS__ )
-        AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
-        mem += ( tmp.GetLength() + 1 ); // including null
+#if defined( __WINDOWS__ )
+    AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
+    mem += ( tmp.GetLength() + 1 ); // including null
 
-        AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
-        mem += ( sysRoot.GetLength() + 1 ); // including null
-    #endif
+    AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
+    mem += ( sysRoot.GetLength() + 1 ); // including null
+#endif
 
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = m_CustomEnvironmentVariables[i];
+        const AString & envVar = m_CustomEnvironmentVariables[ i ];
         const char * token = envVar.Find( "%1" );
         if ( token )
         {
@@ -466,7 +483,8 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         }
     }
 
-    *mem = 0; ++mem; // double null
+    *mem = 0;
+    ++mem; // double null
 
     // are all files already present?
     if ( numFilesAlreadySynchronized == m_Files.GetSize() )
@@ -488,15 +506,14 @@ bool ToolManifest::GetSynchronizationStatus( uint32_t & syncDone, uint32_t & syn
     MutexHolder mh( m_Mutex );
 
     // is completely synchronized?
-    const ToolManifestFile * const end = m_Files.End();
-    for ( const ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
+    for ( const ToolManifestFile & file : m_Files )
     {
-        syncTotal += it->GetUncompressedContentSize();
-        if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZED )
+        syncTotal += file.GetUncompressedContentSize();
+        if ( file.GetSyncState() == ToolManifestFile::SYNCHRONIZED )
         {
-            syncDone += it->GetUncompressedContentSize();
+            syncDone += file.GetUncompressedContentSize();
         }
-        else if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZING )
+        else if ( file.GetSyncState() == ToolManifestFile::SYNCHRONIZING )
         {
             synching = true;
         }
@@ -518,17 +535,16 @@ void ToolManifest::CancelSynchronizingFiles()
         return;
     }
 
-    // If we have syncrhonized the manifest then it should be impossible to
+    // If we have synchronized the manifest then it should be impossible to
     // get here unless we're cancelling synchronization of some files
     bool atLeastOneFileCancelled = false;
 
     // is completely synchronized?
-    const ToolManifestFile * const end = m_Files.End();
-    for ( ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
+    for ( ToolManifestFile & file : m_Files )
     {
-        if ( it->GetSyncState() == ToolManifestFile::SYNCHRONIZING )
+        if ( file.GetSyncState() == ToolManifestFile::SYNCHRONIZING )
         {
-            it->SetSyncState( ToolManifestFile::NOT_SYNCHRONIZED );
+            file.SetSyncState( ToolManifestFile::NOT_SYNCHRONIZED );
             atLeastOneFileCancelled = true;
         }
     }
@@ -606,8 +622,8 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
         // If we ever break protocol compatibility we can simplify this code.
         // Any replacement packet integrity validation should be not specific to
         // these packets and belongs at a higher level.
-        static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
-        
+        static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
+
         // When running tests we should be using latest protocols which don't
         // have the bug anymore so this should never happen
         ASSERT( false && "Corrupt file data" ); // Catch errors during development
@@ -619,11 +635,11 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     const size_t uncompressedDataSize = c.GetResultSize();
 
     // prepare name for this file
-    AStackString<> fileName;
+    AStackString fileName;
     GetRemoteFilePath( fileId, fileName );
 
     // prepare destination
-    AStackString<> pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
+    AStackString pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
     if ( !FileIO::EnsurePathExists( pathOnly ) )
     {
         return false; // FAILED
@@ -642,26 +658,25 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     fs.Close();
 
     // mark executable
-    #if defined( __LINUX__ ) || defined( __OSX__ )
-        FileIO::SetExecutable( fileName.Get() );
-    #endif
+#if defined( __LINUX__ ) || defined( __OSX__ )
+    FileIO::SetExecutable( fileName.Get() );
+#endif
 
     // open read-only
-    UniquePtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
+    UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
     if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
     {
         return false; // FAILED
     }
 
     // This file is now synchronized
-    f.SetFileLock( fileStream.Release() ); // NOTE: Keep file open to prevent deletion
+    f.SetFileLock( fileStream.ReleaseOwnership() ); // NOTE: Keep file open to prevent deletion
     f.SetSyncState( ToolManifestFile::SYNCHRONIZED );
 
     // is completely synchronized?
-    const ToolManifestFile * const end = m_Files.End();
-    for ( const ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
+    for ( const ToolManifestFile & file : m_Files )
     {
-        if ( it->GetSyncState() != ToolManifestFile::SYNCHRONIZED )
+        if ( file.GetSyncState() != ToolManifestFile::SYNCHRONIZED )
         {
             // still some files to be received
             return true; // file stored ok
@@ -693,19 +708,19 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
 // TouchFiles
 //------------------------------------------------------------------------------
 #if defined( __OSX__ ) || defined( __LINUX__ )
-    void ToolManifest::TouchFiles() const
+void ToolManifest::TouchFiles() const
+{
+    const size_t numFiles = m_Files.GetSize();
+    for ( size_t fileId = 0; fileId < numFiles; ++fileId )
     {
-        const size_t numFiles = m_Files.GetSize();
-        for ( size_t fileId = 0; fileId < numFiles; ++fileId )
-        {
-            // Get path to file
-            AStackString<> fileName;
-            GetRemoteFilePath( fileId, fileName );
-        
-            // Make modification time now
-            FileIO::SetFileLastWriteTimeToNow( fileName );
-        }
+        // Get path to file
+        AStackString fileName;
+        GetRemoteFilePath( static_cast<uint32_t>( fileId ), fileName );
+
+        // Make modification time now
+        FileIO::SetFileLastWriteTimeToNow( fileName );
     }
+}
 #endif
 
 // GetRemoteFilePath
@@ -717,7 +732,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
     ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
 
     // Get relative path for file and append
-    AStackString<> relativePath;
+    AStackString relativePath;
     GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].GetName(), relativePath );
     remotePath += relativePath;
 }
@@ -727,35 +742,35 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
 void ToolManifest::GetRemotePath( AString & path ) const
 {
     VERIFY( FBuild::GetTempDir( path ) );
-    AStackString<> subDir;
-    #if defined( __WINDOWS__ )
-        subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
-    #else
-        subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
-    #endif
+    AStackString subDir;
+#if defined( __WINDOWS__ )
+    subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
+#else
+    subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
+#endif
     path += subDir;
 }
 
 // LoadFile (ToolManifestFile)
 //------------------------------------------------------------------------------
-bool ToolManifestFile::LoadFile( void * & uncompressedContent, uint32_t & uncompressedContentSize ) const
+bool ToolManifestFile::LoadFile( void *& uncompressedContent, uint32_t & uncompressedContentSize ) const
 {
     // read the file into memory
     FileStream fs;
     if ( fs.Open( m_Name.Get(), FileStream::READ_ONLY ) == false )
     {
-        FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest\n", m_Name.Get() );
+        FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
         return false;
     }
     uncompressedContentSize = (uint32_t)fs.GetFileSize();
-    UniquePtr< void > mem( ALLOC( uncompressedContentSize ) );
+    UniquePtr<void, FreeDeletor> mem( ALLOC( uncompressedContentSize ) );
     if ( fs.Read( mem.Get(), uncompressedContentSize ) != uncompressedContentSize )
     {
-        FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest\n", m_Name.Get() );
+        FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
         return false;
     }
 
-    uncompressedContent = mem.Release();
+    uncompressedContent = mem.ReleaseOwnership();
 
     return true;
 }

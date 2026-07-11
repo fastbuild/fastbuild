@@ -115,7 +115,7 @@ void WindowOSX_StopMessageLoop()
                               modifierFlags:0
                               timestamp:0
                               windowNumber:0
-                              context:NULL
+                              context:nullptr
                               subtype:0
                               data1:0
                               data2:0]
@@ -156,7 +156,7 @@ uint32_t WindowOSX_GetPrimaryScreenWidth()
     NSArray * screenArray = [NSScreen screens];
     NSScreen * screen = [screenArray objectAtIndex: 0];
     screenRect = [screen visibleFrame];
-    return screenRect.size.width;
+    return static_cast<uint32_t>( screenRect.size.width );
 }
 
 //------------------------------------------------------------------------------

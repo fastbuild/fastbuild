@@ -12,7 +12,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionSettings::FunctionSettings()
-: Function( "Settings" )
+    : Function( "Settings" )
 {
 }
 
@@ -27,14 +27,15 @@ FunctionSettings::FunctionSettings()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionSettings::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
-    AStackString<> name( "$$Settings$$" );
-    if ( nodeGraph.FindNode( name ) )
+    AStackString name( "$$Settings$$" );
+    if ( const Node * existingNode = nodeGraph.FindNode( name ) )
     {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+        const BFFToken * existingToken = nodeGraph.FindNodeSourceToken( existingNode );
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, name, existingToken );
         return false;
     }
 
-    SettingsNode * settingsNode = nodeGraph.CreateSettingsNode( name );
+    SettingsNode * settingsNode = nodeGraph.CreateNode<SettingsNode>( name, funcStartIter );
 
     if ( !PopulateProperties( nodeGraph, funcStartIter, settingsNode ) )
     {

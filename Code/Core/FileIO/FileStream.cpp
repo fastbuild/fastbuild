@@ -9,6 +9,7 @@
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Time/Timer.h"
 
 // system
 #include <stdio.h>
@@ -25,16 +26,20 @@
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #define INVALID_HANDLE_VALUE ( -1 )
 #endif
-#define FILESTREAM_READWRITE_SIZE ( 16 * MEGABYTE )
+#if defined( __WINDOWS__ )
+    #define FILESTREAM_READWRITE_SIZE ( 16 * MEGABYTE )
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    #define FILESTREAM_READWRITE_SIZE ( 1024 * MEGABYTE ) // 1 GB
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FileStream::FileStream()
-    #if defined( __WINDOWS__ )
-        : m_Handle( (void *)INVALID_HANDLE_VALUE )
-    #else
-        : m_Handle( INVALID_HANDLE_VALUE )
-    #endif
+#if defined( __WINDOWS__ )
+    : m_Handle( (void *)INVALID_HANDLE_VALUE )
+#else
+    : m_Handle( INVALID_HANDLE_VALUE )
+#endif
 {
 }
 
@@ -50,122 +55,156 @@ FileStream::~FileStream()
 
 // Open
 //------------------------------------------------------------------------------
-bool FileStream::Open( const char * fileName, uint32_t fileMode )
+bool FileStream::Open( const char * fileName, uint32_t fileMode, uint32_t timeoutMilliSecs )
 {
     ASSERT( !IsOpen() );
 
-    #if defined( __WINDOWS__ )
-        DWORD desiredAccess( 0 );
-        DWORD shareMode( 0 );
-        DWORD creationDisposition( 0 );
-        DWORD flags( FILE_ATTRIBUTE_NORMAL );
+#if defined( __WINDOWS__ )
+    DWORD desiredAccess( 0 );
+    DWORD shareMode( 0 );
+    DWORD creationDisposition( 0 );
+    DWORD flags( FILE_ATTRIBUTE_NORMAL );
 
-        // access mode
-        if ( ( fileMode & READ_ONLY ) != 0 )
+    // access mode
+    if ( ( fileMode & READ_ONLY ) != 0 )
+    {
+        ASSERT( ( fileMode & READ_ONLY ) == fileMode ); // no extra flags allowed
+        desiredAccess |= GENERIC_READ;
+        shareMode |= FILE_SHARE_READ; // allow other readers
+        creationDisposition |= OPEN_EXISTING;
+    }
+    else if ( ( fileMode & WRITE_ONLY ) != 0 )
+    {
+        desiredAccess |= GENERIC_WRITE;
+        shareMode |= FILE_SHARE_READ; // allow other readers
+        creationDisposition |= CREATE_ALWAYS; // overwrite existing
+    }
+    else if ( ( fileMode & OPEN_OR_CREATE_READ_WRITE ) != 0 )
+    {
+        desiredAccess |= ( GENERIC_READ | GENERIC_WRITE );
+        shareMode |= FILE_SHARE_READ; // allow other readers
+        creationDisposition |= OPEN_ALWAYS; // open or create
+    }
+    else
+    {
+        ASSERT( false ); // must specify an access mode
+    }
+
+    // extra flags
+    if ( ( fileMode & TEMP ) != 0 )
+    {
+        flags |= FILE_ATTRIBUTE_TEMPORARY; // don't flush to disk if possible
+    }
+
+    // for sharing violations, we'll retry a few times as per https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/316609
+    // On Windows, we can occasionally fail to open the file with error 128(SHARING_VIOLATION) but also sometimes on 1224 (ERROR_USER_MAPPED_FILE),
+    // due to things like anti-virus etc. Simply retry if that happens
+
+    const Timer timer;
+    DWORD sleepTime = 25; // Current sleep time when retrying
+    DWORD sleepTimeBackOffNextThreshold = 500; // Next time to increase the sleep time
+    const DWORD SLEEP_TIME_BACKOFF_INCREMENT = 500; // Increase the back-off threshold by 500ms each time we increase the sleep time
+    const DWORD MAX_SLEEP_TIME = 200; // Never more than 200 ms between each retry.
+    while ( true )
+    {
+        HANDLE h = CreateFile( fileName,            // _In_     LPCTSTR lpFileName,
+                               desiredAccess,       // _In_     DWORD dwDesiredAccess,
+                               shareMode,           // _In_     DWORD dwShareMode,
+                               nullptr,             // _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+                               creationDisposition, // _In_     DWORD dwCreationDisposition,
+                               flags,               // _In_     DWORD dwFlagsAndAttributes,
+                               nullptr );           // _In_opt_ HANDLE hTemplateFile
+
+        if ( h != INVALID_HANDLE_VALUE )
         {
-            ASSERT( ( fileMode & READ_ONLY ) == fileMode ); // no extra flags allowed
-            desiredAccess       |= GENERIC_READ;
-            shareMode           |= FILE_SHARE_READ; // allow other readers
-            creationDisposition |= OPEN_EXISTING;
+            // file opened ok
+            m_Handle = (void *)h;
+            return true;
         }
-        else if ( ( fileMode & WRITE_ONLY ) != 0 )
+
+        // problem opening file...
+
+        // was it a sharing violation?
+        const DWORD errorCode = GetLastError();
+        if ( ( errorCode == ERROR_SHARING_VIOLATION ) ||
+             ( errorCode == ERROR_USER_MAPPED_FILE ) )
         {
-            desiredAccess       |= GENERIC_WRITE;
-            shareMode           |= FILE_SHARE_READ; // allow other readers
-            creationDisposition |= CREATE_ALWAYS; // overwrite existing
+            if ( ( fileMode & NO_RETRY_ON_SHARING_VIOLATION ) != 0 )
+            {
+                break; // just fail
+            }
+
+            if ( timer.GetElapsedMS() > (float)timeoutMilliSecs )
+            {
+                break;
+            }
+
+            // Adjust CPU friendly sleep time using a simple back-off algorithm when it takes a while to open the file.
+            // The idea is to attempt to give more time to anti-virus to complete its task when the scan takes more time than usual.
+            if ( sleepTime < MAX_SLEEP_TIME && timer.GetElapsedMS() > (float)sleepTimeBackOffNextThreshold )
+            {
+                sleepTime = Math::Min( sleepTime * 2, MAX_SLEEP_TIME );
+                sleepTimeBackOffNextThreshold += SLEEP_TIME_BACKOFF_INCREMENT;
+            }
+
+            // sleep and try again as per https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/316609
+            Sleep( sleepTime );
+            continue;
+        }
+
+        // some other kind of error...
+        break;
+    }
+#elif defined( __APPLE__ ) || defined( __LINUX__ )
+    (void)timeoutMilliSecs;
+
+    // Flags
+    int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
+    if ( ( fileMode & READ_ONLY ) != 0 )
+    {
+        flags |= O_RDONLY;
+    }
+    else if ( ( fileMode & WRITE_ONLY ) != 0 )
+    {
+        flags |= ( O_WRONLY | O_CREAT | O_TRUNC );
+    }
+    else if ( ( fileMode & OPEN_OR_CREATE_READ_WRITE ) != 0 )
+    {
+        flags |= ( O_RDWR | O_CREAT );
+    }
+    else
+    {
+        ASSERT( false ); // must specify an access mode
+    }
+
+    // extra flags
+    if ( ( fileMode & TEMP ) != 0 )
+    {
+        // hint flag - unsupported (we don't want the behaviour of O_TMPFILE)
+    }
+
+    m_Handle = open( fileName, flags, mode );
+    if ( m_Handle != INVALID_HANDLE_VALUE )
+    {
+        // Ensure this is not a directory
+        struct stat s;
+        if ( ( fstat( m_Handle, &s ) != 0 ) || S_ISDIR( s.st_mode ) )
+        {
+            // not a file (e.g. a directory)
+            close( m_Handle );
+
+            // fall through to setting INVALID_HANDLE_VALUE
         }
         else
         {
-            ASSERT( false ); // must specify an access mode
+            // file opened ok
+            return true;
         }
-
-        // extra flags
-        if ( ( fileMode & TEMP ) != 0 )
-        {
-            flags |= FILE_ATTRIBUTE_TEMPORARY; // don't flush to disk if possible
-        }
-
-        // for sharing violations, we'll retry a few times as per http://support.microsoft.com/kb/316609
-        size_t retryCount = 0;
-        while ( retryCount < 5 )
-        {
-            HANDLE h = CreateFile( fileName,            // _In_     LPCTSTR lpFileName,
-                                   desiredAccess,       // _In_     DWORD dwDesiredAccess,
-                                   shareMode,           // _In_     DWORD dwShareMode,
-                                   nullptr,             // _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                                   creationDisposition, // _In_     DWORD dwCreationDisposition,
-                                   flags,               // _In_     DWORD dwFlagsAndAttributes,
-                                   nullptr );           // _In_opt_ HANDLE hTemplateFile
-
-            if ( h != INVALID_HANDLE_VALUE )
-            {
-                // file opened ok
-                m_Handle = (void *)h;
-                return true;
-            }
-
-            // problem opening file...
-
-            // was it a sharing violation?
-            if ( GetLastError() == ERROR_SHARING_VIOLATION )
-            {
-                if ( ( fileMode & NO_RETRY_ON_SHARING_VIOLATION ) != 0 )
-                {
-                    break; // just fail
-                }
-
-                ++retryCount;
-                Sleep( 100 ); // sleep and
-                continue;     // try again as per http://support.microsoft.com/kb/316609
-            }
-
-            // some other kind of error...
-            break;
-        }
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        // Flags
-        int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
-        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
-        if ( ( fileMode & READ_ONLY ) != 0 )
-        {
-            flags |= O_RDONLY;
-        }
-        else if ( ( fileMode & WRITE_ONLY ) != 0 )
-        {
-            flags |= ( O_WRONLY | O_CREAT | O_TRUNC );
-        }
-        else
-        {
-            ASSERT( false ); // must specify an access mode
-        }
-
-        // extra flags
-        if ( ( fileMode & TEMP ) != 0 )
-        {
-            // hint flag - unsupported (we don't want the behaviour of O_TMPFILE)
-        }
-
-        m_Handle = open( fileName, flags, mode );
-        if ( m_Handle != INVALID_HANDLE_VALUE )
-        {
-            // Ensure this is not a directory
-            struct stat s;
-            if ( ( fstat( m_Handle, &s ) != 0 ) || S_ISDIR( s.st_mode ) )
-            {
-                // not a file (e.g. a directory)
-                close( m_Handle );
-
-                // fall through to setting INVALID_HANDLE_VALUE
-            }
-            else
-            {
-                // file opened ok
-                return true;
-            }
-        }
-    #else
-        #error Unknown platform
-    #endif
+    }
+#else
+    #error Unknown platform
+#endif
 
     m_Handle = INVALID_HANDLE_VALUE;
     return false;
@@ -201,11 +240,13 @@ bool FileStream::IsOpen() const
     ASSERT( IsOpen() );
 
     uint64_t totalBytesRead = 0;
-#if defined( __WINDOWS__ )
     do
     {
         const uint64_t remaining = ( bytesToRead - totalBytesRead );
-        const uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
+        const uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE )
+                                          ? FILESTREAM_READWRITE_SIZE
+                                          : static_cast<uint32_t>( remaining );
+#if defined( __WINDOWS__ )
         uint32_t bytesReadNow = 0;
         if ( FALSE == ReadFile( (HANDLE)m_Handle,                           // _In_         HANDLE hFile,
                                 (char *)buffer + (size_t)totalBytesRead,    // _Out_        LPVOID lpBuffer,
@@ -215,17 +256,20 @@ bool FileStream::IsOpen() const
         {
             break; // failed
         }
-        if ( bytesReadNow == 0 )
-        {
-            return totalBytesRead; // end of file
-        }
-        totalBytesRead += bytesReadNow;
-    } while ( totalBytesRead < bytesToRead );
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    totalBytesRead += read( m_Handle, buffer, bytesToRead );
+        const ssize_t readResult = read( m_Handle,
+                                         static_cast<char *>( buffer ) + totalBytesRead,
+                                         tryToReadNow );
+        if ( readResult <= 0 )
+        {
+            break;
+        }
+        const uint32_t bytesReadNow = static_cast<uint32_t>( readResult );
 #else
     #error Unknown platform
 #endif
+        totalBytesRead += bytesReadNow;
+    } while ( totalBytesRead < bytesToRead );
 
     return totalBytesRead;
 }
@@ -238,11 +282,13 @@ bool FileStream::IsOpen() const
     ASSERT( IsOpen() );
 
     uint64_t totalBytesWritten = 0;
-#if defined( __WINDOWS__ )
     do
     {
         const uint64_t remaining = ( bytesToWrite - totalBytesWritten );
-        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
+        const uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE )
+                                           ? FILESTREAM_READWRITE_SIZE
+                                           : static_cast<uint32_t>( remaining );
+#if defined( __WINDOWS__ )
         uint32_t bytesWrittenNow = 0;
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
                                  (const char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
@@ -252,13 +298,20 @@ bool FileStream::IsOpen() const
         {
             break; // failed
         }
-        totalBytesWritten += bytesWrittenNow;
-    } while ( totalBytesWritten < bytesToWrite );
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    totalBytesWritten = write( m_Handle, buffer, bytesToWrite );
+        const ssize_t writeResult = write( m_Handle,
+                                           static_cast<const char *>( buffer ) + totalBytesWritten,
+                                           tryToWriteNow );
+        if ( writeResult < 0 )
+        {
+            break;
+        }
+        const uint32_t bytesWrittenNow = static_cast<uint32_t>( writeResult );
 #else
     #error Unknown platform
 #endif
+        totalBytesWritten += bytesWrittenNow;
+    } while ( totalBytesWritten < bytesToWrite );
 
     return totalBytesWritten;
 }
@@ -289,7 +342,7 @@ bool FileStream::IsOpen() const
     VERIFY( SetFilePointerEx( (HANDLE)m_Handle, zeroPos, &newPos, FILE_CURRENT ) );
     return (uint64_t)newPos.QuadPart;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
-    return lseek( m_Handle, 0, SEEK_CUR );
+    return static_cast<uint64_t>( lseek( m_Handle, 0, SEEK_CUR ) );
 #else
     #error Unknown platform
 #endif
@@ -311,7 +364,7 @@ bool FileStream::IsOpen() const
     return true;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     ASSERT( pos <= 0xFFFFFFFF ); // only support 4GB files for seek on OSX/IOS
-    lseek( m_Handle, pos, SEEK_SET );
+    lseek( m_Handle, static_cast<off_t>( pos ), SEEK_SET );
     return true; // TODO:MAC check EOF for consistency with windows
 #else
     #error Unknown platform
@@ -324,40 +377,68 @@ bool FileStream::IsOpen() const
 {
     ASSERT( IsOpen() );
 
-    #if defined( __WINDOWS__ )
-        // seek to end
-        DWORD fileSizeHigh;
-        const DWORD fileSizeLow = ::GetFileSize( (HANDLE)m_Handle, &fileSizeHigh );
-        return ( ( uint64_t( fileSizeHigh ) << 32 ) | uint64_t( fileSizeLow ) );
-    #else
-        // record current pos to restore
-        uint64_t originalPos = Tell();
+#if defined( __WINDOWS__ )
+    // seek to end
+    DWORD fileSizeHigh;
+    const DWORD fileSizeLow = ::GetFileSize( (HANDLE)m_Handle, &fileSizeHigh );
+    return ( ( uint64_t( fileSizeHigh ) << 32 ) | uint64_t( fileSizeLow ) );
+#else
+    // record current pos to restore
+    uint64_t originalPos = Tell();
 
-        // seek to end
-        lseek( m_Handle, 0, SEEK_END );
-        uint64_t size = Tell();
+    // seek to end
+    lseek( m_Handle, 0, SEEK_END );
+    uint64_t size = Tell();
 
-        // seek back to the original pos
-        VERIFY( Seek( originalPos ) );
+    // seek back to the original pos
+    VERIFY( Seek( originalPos ) );
 
-        return size;
-    #endif
+    return size;
+#endif
 }
 
 // SetLastWriteTime
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    bool FileStream::SetLastWriteTime( uint64_t lastWriteTime )
+bool FileStream::SetLastWriteTime( uint64_t lastWriteTime )
+{
+    FILETIME ftWrite;
+    ftWrite.dwLowDateTime = (uint32_t)( lastWriteTime & 0x00000000FFFFFFFF );
+    ftWrite.dwHighDateTime = (uint32_t)( ( lastWriteTime & 0xFFFFFFFF00000000 ) >> 32 );
+    if ( !SetFileTime( (HANDLE)m_Handle, nullptr, nullptr, &ftWrite ) ) // create, access, write
     {
-        FILETIME ftWrite;
-        ftWrite.dwLowDateTime = (uint32_t)( lastWriteTime & 0x00000000FFFFFFFF );
-        ftWrite.dwHighDateTime = (uint32_t)( ( lastWriteTime & 0xFFFFFFFF00000000 ) >> 32 );
-        if ( !SetFileTime( (HANDLE)m_Handle, nullptr, nullptr, &ftWrite ) ) // create, access, write
-        {
-            return false;
-        }
-        return true;
+        return false;
     }
+    return true;
+}
 #endif
+
+// Truncate
+//------------------------------------------------------------------------------
+bool FileStream::Truncate()
+{
+#if defined( __WINDOWS__ )
+    return ( SetEndOfFile( m_Handle ) != FALSE );
+#elif defined( __APPLE__ )
+    return ( ftruncate( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
+#else
+    return ( ftruncate64( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
+#endif
+}
+
+//------------------------------------------------------------------------------
+bool FileStream::ReadIntoString( AString & outString )
+{
+    const uint64_t bytesRemaining = ( GetFileSize() - Tell() );
+    ASSERT( bytesRemaining < 0xFFFF'FFFFull );
+    outString.SetLength( static_cast<uint32_t>( bytesRemaining ) );
+    return ( ReadBuffer( outString.Get(), bytesRemaining ) == bytesRemaining );
+}
+
+//------------------------------------------------------------------------------
+bool FileStream::WriteFromString( const AString & string )
+{
+    return ( WriteBuffer( string.Get(), string.GetLength() ) == string.GetLength() );
+}
 
 //------------------------------------------------------------------------------

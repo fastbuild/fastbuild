@@ -5,18 +5,20 @@
 //------------------------------------------------------------------------------
 #include "ObjectListNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerInfoNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 
 // Core
 #include "Core/FileIO/IOStream.h"
@@ -26,58 +28,65 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
-    REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
-    REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaOptional() + MetaPath() )
-    REFLECT( m_CompilerOutputPrefix,                "CompilerOutputPrefix",             MetaOptional() )
-    REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
-    REFLECT( m_CompilerOutputKeepBaseExtension,     "CompilerOutputKeepBaseExtension",  MetaOptional() )
-    REFLECT( m_CompilerInputAllowNoFiles,           "CompilerInputAllowNoFiles",        MetaOptional() )
-    REFLECT_ARRAY( m_CompilerInputPath,             "CompilerInputPath",                MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_CompilerInputPattern,          "CompilerInputPattern",             MetaOptional() )
-    REFLECT( m_CompilerInputPathRecurse,            "CompilerInputPathRecurse",         MetaOptional() )
-    REFLECT_ARRAY( m_CompilerInputExcludePath,      "CompilerInputExcludePath",         MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_CompilerInputExcludedFiles,    "CompilerInputExcludedFiles",       MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY( m_CompilerInputExcludePattern,   "CompilerInputExcludePattern",      MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY( m_CompilerInputUnity,            "CompilerInputUnity",               MetaOptional() )
-    REFLECT_ARRAY( m_CompilerInputFiles,            "CompilerInputFiles",               MetaOptional() + MetaFile() )
-    REFLECT( m_CompilerInputFilesRoot,              "CompilerInputFilesRoot",           MetaOptional() + MetaPath() )
-    REFLECT_ARRAY( m_CompilerInputObjectLists,      "CompilerInputObjectLists",         MetaOptional() )
-    REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
-    REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
-    REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
-    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
-    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
-    REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
+REFLECT_NODE_BEGIN( ObjectListNode, Node )
+    REFLECT( m_Compiler, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_CompilerOptions, MetaRequired() )
+    REFLECT( m_CompilerOptionsDeoptimized )
+    REFLECT( m_CompilerOutputPath, MetaPath() )
+    REFLECT( m_CompilerOutputPrefix )
+    REFLECT( m_CompilerOutputExtension )
+    REFLECT( m_CompilerOutputKeepBaseExtension )
+    REFLECT( m_CompilerInputAllowNoFiles )
+    REFLECT( m_CompilerInputPath, MetaPath() )
+    REFLECT( m_CompilerInputPattern )
+    REFLECT( m_CompilerInputPathRecurse )
+    REFLECT( m_CompilerInputExcludePath, MetaPath() )
+    REFLECT( m_CompilerInputExcludedFiles, MetaFile( true ) )
+    REFLECT( m_CompilerInputExcludePattern, MetaFile( true ) )
+    REFLECT( m_CompilerInputUnity )
+    REFLECT( m_CompilerInputFiles, MetaFile() )
+    REFLECT( m_CompilerInputFilesRoot, MetaPath() )
+    REFLECT( m_CompilerInputObjectLists )
+    REFLECT( m_CompilerForceUsing, MetaFile() )
+    REFLECT( m_DeoptimizeWritableFiles )
+    REFLECT( m_DeoptimizeWritableFilesWithToken )
+    REFLECT( m_AllowDistribution )
+    REFLECT( m_AllowCaching )
+    REFLECT( m_Hidden )
     // Precompiled Headers
-    REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
-    REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
-    REFLECT( m_PCHOptions,                          "PCHOptions",                       MetaOptional() )
+    REFLECT( m_PCHInputFile, MetaFile() )
+    REFLECT( m_PCHOutputFile, MetaFile() )
+    REFLECT( m_PCHOptions )
     // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Preprocessor, MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_PreprocessorOptions )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_ConcurrencyGroupName )
 
     // Internal State
-    REFLECT( m_PrecompiledHeaderName,               "PrecompiledHeaderName",            MetaHidden() )
-    #if defined( __WINDOWS__ )
-        REFLECT( m_PrecompiledHeaderCPPFile,            "PrecompiledHeaderCPPFile",         MetaHidden() )
-    #endif
-    REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
-    REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
-    REFLECT( m_ExtraSourceDependenciesPath,         "ExtraSourceDependenciesPath",      MetaHidden() )
-    REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
-    REFLECT( m_ObjectListInputEndIndex,             "ObjectListInputEndIndex",          MetaHidden() )
-    REFLECT( m_CompilerFlags.m_Flags,               "ObjFlags",                         MetaHidden() )
-    REFLECT( m_PreprocessorFlags.m_Flags,           "ObjFlagsPreprocessor",             MetaHidden() )
+    REFLECT( m_CompilerNode, MetaHidden() )
+    REFLECT( m_PreprocessorNode, MetaHidden() )
+    REFLECT( m_CompilerInfoNode, MetaHidden() )
+    REFLECT( m_PrecompiledHeaderName, MetaHidden() )
+#if defined( __WINDOWS__ )
+    REFLECT( m_PrecompiledHeaderCPPFile, MetaHidden() )
+#endif
+    REFLECT( m_PCHObjectFileName, MetaHidden() )
+    REFLECT( m_ExtraPDBPath, MetaHidden() )
+    REFLECT( m_ExtraASMPath, MetaHidden() )
+    REFLECT( m_ExtraSourceDependenciesPath, MetaHidden() )
+    REFLECT( m_ObjectListInputStartIndex, MetaHidden() )
+    REFLECT( m_ObjectListInputEndIndex, MetaHidden() )
+    REFLECT( m_OwnerObjectListHash, MetaHidden() )
+    REFLECT_RENAME( m_CompilerFlags.m_Flags, "ObjFlags", MetaHidden() )
+    REFLECT_RENAME( m_PreprocessorFlags.m_Flags, "ObjFlagsPreprocessor", MetaHidden() )
+    REFLECT( m_ConcurrencyGroupIndex, MetaHidden() )
 REFLECT_END( ObjectListNode )
 
 // ObjectListNode
 //------------------------------------------------------------------------------
 ObjectListNode::ObjectListNode()
-: Node( AString::GetEmpty(), Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
+    : Node( Node::OBJECT_LIST_NODE )
 {
     m_LastBuildTimeMs = 10000;
 
@@ -89,31 +98,36 @@ ObjectListNode::ObjectListNode()
 /*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
+
+    // .ConcurrencyGroupName
+    if ( !InitializeConcurrencyGroup( nodeGraph,
+                                      iter,
+                                      function,
+                                      m_ConcurrencyGroupName,
+                                      m_ConcurrencyGroupIndex ) )
     {
-        return false; // InitializePreBuildDependencies will have emitted an error
+        return false; // InitializeConcurrencyGroup will have emitted an error
     }
 
     // .Compiler
-    CompilerNode * compilerNode( nullptr );
-    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compilerNode ) )
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, m_CompilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
 
     // Check for CSharp (this must use CSAssembly not ObjectList)
-    if ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CSHARP )
+    if ( m_CompilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CSHARP )
     {
         Error::Error_1503_CSharpCompilerShouldUseCSAssembly( iter, function );
         return false;
     }
 
     // .Preprocessor
-    CompilerNode * preprocessorNode( nullptr );
     if ( m_Preprocessor.IsEmpty() == false )
     {
         // get the preprocessor executable
-        if ( Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessorNode ) == false )
+        if ( Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, m_PreprocessorNode ) == false )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -131,9 +145,11 @@ ObjectListNode::ObjectListNode()
     // Check Deoptimized compiler options which are conditionally not optional
     if ( ( m_DeoptimizeWritableFiles || m_DeoptimizeWritableFilesWithToken ) && m_CompilerOptionsDeoptimized.IsEmpty() )
     {
-        Error::Error_1101_MissingProperty( iter, function, AStackString<>( ".CompilerOptionsDeoptimized" ) );
+        Error::Error_1101_MissingProperty( iter, function, AStackString( ".CompilerOptionsDeoptimized" ) );
         return false;
     }
+
+    CalculateOwnerObjectListHash();
 
     // Creating a PCH?
     const bool creatingPCH = ( m_PCHInputFile.IsEmpty() == false );
@@ -148,11 +164,10 @@ ObjectListNode::ObjectListNode()
         }
 
         // Check PCH creation command line options
-        AStackString<> pchObjectName; // TODO:A Use this
-        const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
+        const ObjectNode::CompilerFlags pchFlags = ObjectNode::DetermineFlags( m_CompilerNode, m_PCHOptions, true, false );
         if ( pchFlags.IsMSVC() || pchFlags.IsClangCl() )
         {
-            if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
+            if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Create( iter, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), m_PCHObjectFileName ) == false )
             {
                 return false; // CheckMSVCPCHFlags_Create will have emitted an error
             }
@@ -166,7 +181,13 @@ ObjectListNode::ObjectListNode()
         }
 
         // Create the PCH node
-        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, ObjectNode::CompilerFlags(), m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        precompiledHeader = CreateObjectNode( nodeGraph,
+                                              iter,
+                                              function,
+                                              pchFlags,
+                                              ObjectNode::CompilerFlags(),
+                                              m_PCHOutputFile,
+                                              m_PCHInputFile );
         if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
@@ -184,10 +205,10 @@ ObjectListNode::ObjectListNode()
         const bool usingPCH = ( m_PCHOutputFile.IsEmpty() == false );
 
         // Cache flags for compiler and preprocessor
-        m_CompilerFlags = ObjectNode::DetermineFlags( compilerNode, m_CompilerOptions, false, usingPCH );
-        if ( preprocessorNode )
+        m_CompilerFlags = ObjectNode::DetermineFlags( m_CompilerNode, m_CompilerOptions, false, usingPCH );
+        if ( m_PreprocessorNode )
         {
-            m_PreprocessorFlags = ObjectNode::DetermineFlags( preprocessorNode, m_PreprocessorOptions, false, usingPCH );
+            m_PreprocessorFlags = ObjectNode::DetermineFlags( m_PreprocessorNode, m_PreprocessorOptions, false, usingPCH );
         }
 
         // Check validity of PCH setup
@@ -196,7 +217,7 @@ ObjectListNode::ObjectListNode()
             // Check for correct PCH usage options
             if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
             {
-                if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, m_CompilerFlags ) == false )
+                if ( ( (FunctionObjectList *)function )->CheckMSVCPCHFlags_Use( iter, m_CompilerOptions, m_CompilerFlags ) == false )
                 {
                     return false; // CheckMSVCPCHFlags_Use will have emitted an error
                 }
@@ -219,12 +240,12 @@ ObjectListNode::ObjectListNode()
                     Error::Error_1104_TargetNotDefined( iter, function, "PCHOutputFile", m_PCHOutputFile );
                     return false;
                 }
-                precompiledHeader = node->CastTo< ObjectNode >();
+                precompiledHeader = node->CastTo<ObjectNode>();
             }
         }
 
         // .CompilerOptions
-        if ( ((FunctionObjectList *)function)->CheckCompilerOptions( iter, m_CompilerOptions, m_CompilerFlags ) == false )
+        if ( ( (FunctionObjectList *)function )->CheckCompilerOptions( iter, m_CompilerOptions, m_CompilerFlags ) == false )
         {
             return false; // CheckCompilerOptions will have emitted an error
         }
@@ -232,7 +253,8 @@ ObjectListNode::ObjectListNode()
         // .CompilerOutputPath is required when compiling files (not needed if only creating a PCH)
         if ( m_CompilerOutputPath.IsEmpty() )
         {
-            Error::Error_1101_MissingProperty( iter, function, AStackString<>( "CompilerOutputPath" ) );
+            Error::Error_1101_MissingProperty( iter, function, AStackString( "CompilerOutputPath" ) );
+            return false;
         }
     }
 
@@ -243,13 +265,13 @@ ObjectListNode::ObjectListNode()
 
         // Cache the CPP file associated with the PCH for MSVC (and Clang in MSVC mode)
         // so that it can be excluded from normal compilation
-        #if defined( __WINDOWS__ )
-            if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) ||
-                 ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_CL ) )
-            {
-                m_PrecompiledHeaderCPPFile = precompiledHeader->GetPrecompiledHeaderCPPFile()->GetName();
-            }
-        #endif
+#if defined( __WINDOWS__ )
+        if ( ( m_CompilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) ||
+             ( m_CompilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::CLANG_CL ) )
+        {
+            m_PrecompiledHeaderCPPFile = precompiledHeader->GetPrecompiledHeaderCPPFile()->GetName();
+        }
+#endif
     }
 
     // .CompilerInputUnity
@@ -282,6 +304,7 @@ ObjectListNode::ObjectListNode()
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_CompilerInputPattern,
                                               "CompilerInputPath",
                                               compilerInputPath ) )
@@ -310,15 +333,37 @@ ObjectListNode::ObjectListNode()
     }
 
     // Extra output paths
-    ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions,
-                                                           m_ExtraPDBPath,
-                                                           m_ExtraASMPath,
-                                                           m_ExtraSourceDependenciesPath );
+    // Currently these are MSVC only
+    if ( m_CompilerFlags.IsMSVC() || m_CompilerFlags.IsClangCl() )
+    {
+        // clang-format off
+        ( (FunctionObjectList *)function )->GetExtraOutputPaths( m_CompilerOptions,
+                                                                 m_ExtraPDBPath,
+                                                                 m_ExtraASMPath,
+                                                                 m_ExtraSourceDependenciesPath );
+        // clang-format on
+    }
+
+    // Check LightCache compatibility
+    if ( !CheckLightCacheArgs( nodeGraph,
+                               iter,
+                               function,
+                               compilingFiles,
+                               m_CompilerInfoNode ) )
+    {
+        return false;
+    }
 
     // Store dependencies
-    m_StaticDependencies.SetCapacity( compilerInputPath.GetSize() +
+    m_StaticDependencies.SetCapacity( ( m_CompilerInfoNode ? 1 : 0 ) +
+                                      compilerInputPath.GetSize() +
                                       compilerInputUnity.GetSize() +
                                       compilerInputObjectLists.GetSize() );
+    if ( m_CompilerInfoNode )
+    {
+        m_StaticDependencies.Add( m_CompilerInfoNode );
+        m_ObjectListInputStartIndex++;
+    }
     m_StaticDependencies.Add( compilerInputPath );
     m_StaticDependencies.Add( compilerInputUnity );
     m_StaticDependencies.Add( compilerInputObjectLists );
@@ -341,17 +386,21 @@ ObjectListNode::~ObjectListNode() = default;
     return false;
 }
 
+//------------------------------------------------------------------------------
+/*virtual*/ uint8_t ObjectListNode::GetConcurrencyGroupIndex() const
+{
+    return m_ConcurrencyGroupIndex;
+}
+
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph )
 {
-    (void)forceClean; // dynamic deps are always re-added here, so this is meaningless
-
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
-    // Handle converting all static inputs into dynamic onces (i.e. cpp->obj)
-    for ( size_t i=m_ObjectListInputStartIndex; i<m_ObjectListInputEndIndex; ++i )
+    // Handle converting all static inputs into dynamic ones (i.e. cpp->obj)
+    for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
     {
         const Dependency & dep = m_StaticDependencies[ i ];
 
@@ -359,18 +408,16 @@ ObjectListNode::~ObjectListNode() = default;
         if ( dep.GetNode()->GetType() == Node::DIRECTORY_LIST_NODE )
         {
             // get the list of files
-            const DirectoryListNode * dln = dep.GetNode()->CastTo< DirectoryListNode >();
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const DirectoryListNode * dln = dep.GetNode()->CastTo<DirectoryListNode>();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
-            for ( Array< FileIO::FileInfo >::Iter fIt = files.Begin();
-                    fIt != files.End();
-                    fIt++ )
+            for ( const FileIO::FileInfo & file : files )
             {
                 // Create the file node (or find an existing one)
-                Node * n = nodeGraph.FindNode( fIt->m_Name );
+                Node * n = nodeGraph.FindNode( file.m_Name );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( fIt->m_Name );
+                    n = nodeGraph.CreateNode<FileNode>( file.m_Name );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -380,12 +427,12 @@ ObjectListNode::~ObjectListNode() = default;
 
                 // ignore the precompiled header as a convenience for the user
                 // so they don't have to exclude it explicitly
-                #if defined( __WINDOWS__ )
-                    if ( n->GetName() == m_PrecompiledHeaderCPPFile )
-                    {
-                        continue;
-                    }
-                #endif
+#if defined( __WINDOWS__ )
+                if ( n->GetName() == m_PrecompiledHeaderCPPFile )
+                {
+                    continue;
+                }
+#endif
 
                 // create the object that will compile the above file
                 if ( CreateDynamicObjectNode( nodeGraph, n->GetName(), dln->GetPath() ) == false )
@@ -397,18 +444,15 @@ ObjectListNode::~ObjectListNode() = default;
         else if ( dep.GetNode()->GetType() == Node::UNITY_NODE )
         {
             // get the dir list from the unity node
-            const UnityNode * un = dep.GetNode()->CastTo< UnityNode >();
+            const UnityNode * un = dep.GetNode()->CastTo<UnityNode>();
 
             // unity files
-            const Array< AString > & unityFiles = un->GetUnityFileNames();
-            for ( Array< AString >::Iter it = unityFiles.Begin();
-                  it != unityFiles.End();
-                  it++ )
+            for ( const AString & unityFile : un->GetUnityFileNames() )
             {
-                Node * n = nodeGraph.FindNode( *it );
+                Node * n = nodeGraph.FindNode( unityFile );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( *it );
+                    n = nodeGraph.CreateNode<FileNode>( unityFile );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -429,7 +473,7 @@ ObjectListNode::~ObjectListNode() = default;
                 Node * n = nodeGraph.FindNode( isolatedFile.GetFileName() );
                 if ( n == nullptr )
                 {
-                    n = nodeGraph.CreateFileNode( isolatedFile.GetFileName() );
+                    n = nodeGraph.CreateNode<FileNode>( isolatedFile.GetFileName() );
                 }
                 else if ( n->IsAFile() == false )
                 {
@@ -447,8 +491,8 @@ ObjectListNode::~ObjectListNode() = default;
         else if ( dep.GetNode()->GetType() == Node::OBJECT_LIST_NODE )
         {
             // get the list of files from the ObjectListNode
-            const ObjectListNode * objListNode = dep.GetNode()->CastTo< ObjectListNode >();
-            Array< AString > objListFiles;
+            const ObjectListNode * objListNode = dep.GetNode()->CastTo<ObjectListNode>();
+            Array<AString> objListFiles;
             objListNode->GetInputFiles( objListFiles );
 
             // iterate all the files in the object list
@@ -512,9 +556,9 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
+/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
-    if ( GatherDynamicDependencies( nodeGraph, forceClean ) == false )
+    if ( GatherDynamicDependencies( nodeGraph ) == false )
     {
         return false; // GatherDynamicDependencies will have emitted error
     }
@@ -567,22 +611,23 @@ ObjectListNode::~ObjectListNode() = default;
     }
     else
     {
-        Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
+        StackArray<uint64_t> stamps;
+        stamps.SetCapacity( m_DynamicDependencies.GetSize() );
         for ( const Dependency & dep : m_DynamicDependencies )
         {
-            const ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
+            const ObjectNode * on = dep.GetNode()->CastTo<ObjectNode>();
             ASSERT( on->GetStamp() );
             stamps.Append( on->GetStamp() );
         }
-        m_Stamp = xxHash::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+        m_Stamp = xxHash3::Calc64( &stamps[ 0 ], ( stamps.GetSize() * sizeof( uint64_t ) ) );
     }
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const
+void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const
 {
     for ( const Dependency & dep : m_DynamicDependencies )
     {
@@ -592,22 +637,22 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
         if ( n->GetType() == Node::OBJECT_NODE )
         {
             // handle pch files - get path to matching object
-            const ObjectNode * on = n->CastTo< ObjectNode >();
+            const ObjectNode * on = n->CastTo<ObjectNode>();
             if ( on->IsCreatingPCH() )
             {
                 if ( on->IsMSVC() || on->IsClangCl() )
                 {
-                    fullArgs += pre;
-                    fullArgs += on->GetPCHObjectName();
-                    fullArgs += post;
-                    fullArgs.AddDelimiter();
-                    continue;
+                    // PCH files should only be included once
+                    if ( outInputs.Find( on->GetPCHObjectName() ) == nullptr )
+                    {
+                        outInputs.EmplaceBack( on->GetPCHObjectName() );
+                    }
                 }
                 else
                 {
                     // Clang/GCC/SNC don't have an object to link for a pch
-                    continue;
                 }
+                continue;
             }
         }
 
@@ -617,8 +662,8 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
 
             // insert all the objects in the object list
-            const ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            const ObjectListNode * oln = n->CastTo<ObjectListNode>();
+            oln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
 
@@ -628,22 +673,19 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
 
             // insert all the objects in the object list
-            const LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            const LibraryNode * ln = n->CastTo<LibraryNode>();
+            ln->GetInputFiles( objectsInsteadOfLibs, outInputs );
             continue;
         }
 
         // normal object
-        fullArgs += pre;
-        fullArgs += n->GetName();
-        fullArgs += post;
-        fullArgs.AddDelimiter();
+        outInputs.EmplaceBack( n->GetName() );
     }
 }
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( Array< AString > & files ) const
+void ObjectListNode::GetInputFiles( Array<AString> & files ) const
 {
     // only valid to call on ObjectListNode (not LibraryNode)
     ASSERT( GetType() == Node::OBJECT_LIST_NODE );
@@ -667,8 +709,8 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
     lastDot = lastDot && ( lastDot > lastSlash ) ? lastDot : fileName.GetEnd();
 
     // if source comes from a directory listing, use path relative to dirlist base
-    // to replicate the folder hierearchy in the output
-    AStackString<> subPath;
+    // to replicate the folder hierarchy in the output
+    AStackString subPath;
     if ( baseDir.IsEmpty() == false )
     {
         ASSERT( NodeGraph::IsCleanPath( baseDir ) );
@@ -687,12 +729,35 @@ void ObjectListNode::GetObjectFileName( const AString & fileName, const AString 
         }
     }
 
-    AStackString<> fileNameOnly( lastSlash, lastDot );
+    const AStackString fileNameOnly( lastSlash, lastDot );
     objFile = m_CompilerOutputPath;
     objFile += subPath;
     objFile += m_CompilerOutputPrefix;
     objFile += fileNameOnly;
     objFile += GetObjExtension();
+}
+
+//------------------------------------------------------------------------------
+void ObjectListNode::CalculateOwnerObjectListHash()
+{
+    ASSERT( m_OwnerObjectListHash == 0 ); // Should only be called once
+
+    xxHash3Accumulator accumulator;
+    for ( const AString & string : GetCompilerForceUsing() )
+    {
+        accumulator.AddData( string );
+    }
+    accumulator.AddData( GetCompilerOptions() );
+    accumulator.AddData( GetCompilerOptionsDeoptimized() );
+    accumulator.AddData( GetCompilerOptionsPCH() );
+    accumulator.AddData( GetPCHObjectFileName() );
+    accumulator.AddData( GetPrecompiledHeaderName() );
+    const uint32_t flags = ( GetDeoptimizeWritableFiles() ? 1u : 0u ) |
+                           ( GetDeoptimizeWritableFilesWithToken() ? 2u : 0u ) |
+                           ( IsCachingAllowed() ? 4u : 0u ) |
+                           ( IsDistributionAllowed() ? 8u : 0u );
+    accumulator.AddData( &flags, sizeof( flags ) );
+    m_OwnerObjectListHash = accumulator.Finalize32();
 }
 
 // CreateDynamicObjectNode
@@ -703,7 +768,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
                                               bool isUnityNode,
                                               bool isIsolatedFromUnityNode )
 {
-    AStackString<> objFile;
+    AStackString objFile;
     GetObjectFileName( inputFileName, baseDir, objFile );
 
     // Create an ObjectNode to compile the above file
@@ -723,7 +788,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
         }
 
         const BFFToken * token = nullptr;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, m_PreprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFileName, AString::GetEmpty() );
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, m_PreprocessorFlags, objFile, inputFileName );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -738,11 +803,11 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
     }
     else
     {
-        const ObjectNode * other = on->CastTo< ObjectNode >();
+        const ObjectNode * other = on->CastTo<ObjectNode>();
 
         // Check for conflicts
         const bool conflict = ( inputFileName != other->GetSourceFile()->GetName() ) ||
-                              ( m_Name != other->GetOwnerObjectList() );
+                              ( this != &other->GetOwnerObjectList() );
         if ( conflict )
         {
             FLOG_ERROR( "Conflicting objects found for: %s\n"
@@ -752,8 +817,10 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph,
                         " Source B  : %s\n"
                         " ObjectList: %s\n",
                         objFile.Get(),
-                        inputFileName.Get(), m_Name.Get(),
-                        other->GetSourceFile()->GetName().Get(), other->GetOwnerObjectList().Get() );
+                        inputFileName.Get(),
+                        m_Name.Get(),
+                        other->GetSourceFile()->GetName().Get(),
+                        other->GetOwnerObjectList().GetName().Get() );
             return false;
         }
     }
@@ -768,42 +835,17 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const Function * function,
                                                const ObjectNode::CompilerFlags flags,
                                                const ObjectNode::CompilerFlags preprocessorFlags,
-                                               const AString & compilerOptions,
-                                               const AString & compilerOptionsDeoptimized,
-                                               const AString & preprocessor,
-                                               const AString & preprocessorOptions,
                                                const AString & objectName,
-                                               const AString & objectInput,
-                                               const AString & pchObjectName )
+                                               const AString & objectInput )
 {
-    ObjectNode * node= nodeGraph.CreateObjectNode( objectName );
-    node->m_Compiler = m_Compiler;
-    node->m_CompilerOptions = compilerOptions;
-    node->m_CompilerOptionsDeoptimized = compilerOptionsDeoptimized;
+    ASSERT( m_OwnerObjectListHash );
+
+    ObjectNode * node = nodeGraph.CreateNode<ObjectNode>( objectName, iter );
     node->m_CompilerInputFile = objectInput;
-    node->m_CompilerOutputExtension = m_CompilerOutputExtension;
-    node->m_PCHObjectFileName = pchObjectName;
-    if ( flags.IsCreatingPCH() )
-    {
-        // Precompiled headers are never de-optimized
-        node->m_DeoptimizeWritableFiles = false;
-        node->m_DeoptimizeWritableFilesWithToken = false;
-    }
-    else
-    {
-        node->m_DeoptimizeWritableFiles = m_DeoptimizeWritableFiles;
-        node->m_DeoptimizeWritableFilesWithToken = m_DeoptimizeWritableFilesWithToken;
-    }
-    node->m_AllowDistribution = m_AllowDistribution;
-    node->m_AllowCaching = m_AllowCaching;
-    node->m_CompilerForceUsing = m_CompilerForceUsing;
-    node->m_PreBuildDependencyNames = m_PreBuildDependencyNames;
-    node->m_PrecompiledHeader = m_PrecompiledHeaderName;
-    node->m_Preprocessor = preprocessor;
-    node->m_PreprocessorOptions = preprocessorOptions;
     node->m_CompilerFlags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
-    node->m_OwnerObjectList = m_Name;
+    node->m_OwnerObjectList = this;
+    node->m_OwnerObjectListHash = m_OwnerObjectListHash;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {
@@ -819,18 +861,18 @@ const char * ObjectListNode::GetObjExtension() const
 {
     if ( m_CompilerOutputExtension.IsEmpty() )
     {
-        #if defined( __WINDOWS__ )
-            return ".obj";
-        #else
-            return ".o";
-        #endif
+#if defined( __WINDOWS__ )
+        return ".obj";
+#else
+        return ".o";
+#endif
     }
     return m_CompilerOutputExtension.Get();
 }
 
 // EnumerateInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+void ObjectListNode::EnumerateInputFiles( void ( *callback )( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
 {
     // Statically specified files
     for ( const AString & file : m_CompilerInputFiles )
@@ -845,9 +887,9 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
 
         if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
         {
-            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+            const DirectoryListNode * dln = node->CastTo<DirectoryListNode>();
 
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            const Array<FileIO::FileInfo> & files = dln->GetFiles();
             for ( const FileIO::FileInfo & fi : files )
             {
                 callback( fi.m_Name, dln->GetPath(), userData );
@@ -855,7 +897,7 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
         }
         else if ( node->GetType() == Node::UNITY_NODE )
         {
-            const UnityNode * un = node->CastTo< UnityNode >();
+            const UnityNode * un = node->CastTo<UnityNode>();
 
             un->EnumerateInputFiles( callback, userData );
         }
@@ -868,7 +910,70 @@ void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inpu
             ASSERT( false ); // unexpected node type
         }
     }
+}
 
+//------------------------------------------------------------------------------
+bool ObjectListNode::CheckLightCacheArgs( NodeGraph & nodeGraph,
+                                          const BFFToken * iter,
+                                          const Function * function,
+                                          bool compilingFiles,
+                                          CompilerInfoNode *& outCompilerInfoDependency ) const
+{
+    outCompilerInfoDependency = nullptr;
+
+    // If we're not compiling any files (for example in a Library()) then we
+    // don't care about compiler compatibility as the compiler is unused
+    if ( compilingFiles == false )
+    {
+        return true;
+    }
+
+    CompilerNode * compiler = m_PreprocessorNode ? m_PreprocessorNode : m_CompilerNode;
+    if ( compiler->GetUseLightCache() == false )
+    {
+        return true; // Not using the LightCache, so there can be no problems
+    }
+
+    const ObjectNode::CompilerFlags & flags = m_PreprocessorNode ? m_PreprocessorFlags
+                                                                 : m_CompilerFlags;
+
+    // MSVC?
+    if ( flags.IsMSVC() )
+    {
+        return true; // MSVC can always be used
+    }
+
+    // Clang?
+    if ( flags.IsClang() || flags.IsClangCl() || flags.IsGCC() )
+    {
+        AStackString ciNodeName;
+        ciNodeName.Format( "%s_$Info_%c%c$",
+                           compiler->GetName().Get(),
+                           flags.IsNoStdInc() ? '1' : '0',
+                           flags.IsNoStdIncPP() ? '1' : '0' );
+        CompilerInfoNode * ciNode = nullptr;
+        if ( const Node * node = nodeGraph.FindNode( ciNodeName ) )
+        {
+            ciNode = node->CastTo<CompilerInfoNode>();
+        }
+        else
+        {
+            ciNode = nodeGraph.CreateNode( Node::COMPILER_INFO_NODE,
+                                           ciNodeName,
+                                           iter )
+                         ->CastTo<CompilerInfoNode>();
+            ciNode->m_Compiler = compiler;
+            ciNode->m_NoStdInc = flags.IsNoStdInc();
+            ciNode->m_NoStdIncPP = flags.IsNoStdIncPP();
+            VERIFY( ciNode->Initialize( nodeGraph, iter, function ) ); // Failure should be impossible
+        }
+        outCompilerInfoDependency = ciNode;
+        return true;
+    }
+
+    // Unsupported Compiler
+    Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
+    return false;
 }
 
 //------------------------------------------------------------------------------

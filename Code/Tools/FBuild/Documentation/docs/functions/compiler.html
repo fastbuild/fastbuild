@@ -40,6 +40,7 @@ distribution, caching and more.
  
   // Additional Options
   .CompilerFamily               // (optional) Explicitly specify compiler type (default: auto)
+  .AllowCaching                 // (optional) Allow cached compilation (if available) (default: true)
   .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
   .ExecutableRootPath           // (optional) Override default path for executable distribution
   .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsupported "compilers" (default: false)
@@ -54,6 +55,7 @@ distribution, caching and more.
   // Temporary Options
   .UseLightCache_Experimental   // (optional) Enable experimental "light" caching mode (default: false)
   .UseRelativePaths_Experimental// (optional) Enable experimental relative path use (default: false)
+  .UseDeterministicPaths_Experimental// (optional) Enable experimental deterministic path use (default: false)
   .SourceMapping_Experimental   // (optional) Use Clang's -fdebug-source-map option to remap source files
   .ClangFixupUnity_Disable      // (optional) Disable preprocessor fixup for Unity files (default: false)
 }
@@ -154,6 +156,9 @@ Compiler( 'Test' )
     </table></p>
  
   	<p><hr></p>
+
+    <p><b>.AllowCaching</b> - Boolean - (Optional)</p>
+    <p>For compilers where caching is supported, said feature can be disabled.<p>
 
 	<p><b>.AllowDistribution</b> - Boolean - (Optional)</p>
 	<p>For compilers where distributed compilation is supported, said feature can be disabled.<p>
@@ -400,6 +405,11 @@ Compiler( 'Compiler-x64Intel' )
 
   	<p><hr></p>
 
+    <p><b>.UseDeterministicPaths_Experimental</b> - Boolean - (Optional)</p>
+    <p>When set, temporary directories created to store preprocessed sources have deterministic paths, helping ensure compiler outputs are deterministic.</p>
+
+    <p><hr></p>
+
   <p><b>.SourceMapping_Experimental</b> - String - (Optional)</p>
   <p>Provides a new root to remap source file paths to so they are recorded in the debugging information as if they were stored under the new root. For example, if $_WORKING_DIR_$ is "/path/to/original", a source file "src/main.cpp" would normally be recorded as being stored under "/path/to/original/src/main.cpp", but with .SourceMapping_Experimental='/another/root' it would be recorded as "/another/root/src/main.cpp" instead.</p>
 
@@ -424,6 +434,6 @@ Compiler( 'Compiler-x64Intel' )
 	unforeseen problems with this feature. This toggle is expected to be removed in v1.01.</p>
 </div>
 
-    </div><div class='footer'>&copy; 2012-2022 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2026 Franta Fulin</div></div></div>
 </body>
 </html>

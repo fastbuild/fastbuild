@@ -12,7 +12,7 @@
 
 // TrayIconOSX_Create
 //------------------------------------------------------------------------------
-void * TrayIconOSX_Create( void * iconData, size_t iconDataSize )
+void * TrayIconOSX_Create( const void * iconData, size_t iconDataSize )
 {
     // Create NSImage from data
     NSImage * statusImage = [[NSImage alloc] initWithData:[NSData dataWithBytes:iconData length:iconDataSize]];

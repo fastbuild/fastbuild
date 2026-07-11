@@ -18,7 +18,7 @@ public:
     WorkerBrokerageClient();
     ~WorkerBrokerageClient();
 
-    void FindWorkers( Array< AString > & outWorkerList );
+    void FindWorkers( Array<AString> & outWorkerList );
 };
 
 //------------------------------------------------------------------------------

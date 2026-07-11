@@ -7,15 +7,16 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN_ABSTRACT( VSProjectBaseNode, Node, MetaNone() )
-    REFLECT( m_ProjectGuid,     "ProjectGuid",     MetaOptional() )
+REFLECT_NODE_BEGIN_ABSTRACT( VSProjectBaseNode, Node )
+    REFLECT( m_ProjectGuid )
 REFLECT_END( VSProjectBaseNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VSProjectBaseNode::VSProjectBaseNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
+    : FileNode()
 {
+    m_ControlFlags = Node::FLAG_ALWAYS_BUILD;
     m_LastBuildTimeMs = 100; // higher default than a file node
 }
 

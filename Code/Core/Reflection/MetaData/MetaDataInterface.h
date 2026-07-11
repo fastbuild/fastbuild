@@ -1,4 +1,4 @@
-// MetaDaatInterface.h
+// MetaDataInterface.h
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -17,8 +17,9 @@ public:
     virtual ~IMetaData() override;
 
     const IMetaData * GetNext() const { return m_Next; }
+
 protected:
-    friend IMetaData & operator + ( IMetaData & a, IMetaData & b );
+    friend IMetaData & operator+( IMetaData & a, IMetaData & b );
 
     IMetaData * m_Next;
 };

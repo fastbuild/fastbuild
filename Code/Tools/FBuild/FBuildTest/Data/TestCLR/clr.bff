@@ -11,6 +11,7 @@ Library( "CLR-Target" )
 {
     .CompilerOptions    + ' /clr'
                         + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
+                        - ' /GR-' // CLR requires RTTI, so remove the disabling of it
     .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCLR/a.cpp"
     .CompilerOutputPath = "$Out$/Test/CLR/"
     .LibrarianOutput    = "$Out$/Test/CLR/clr.lib"
@@ -20,6 +21,7 @@ Library( "CLR-Parallel-Target" )
 {
     .CompilerOptions    + ' /clr'
                         + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
+                        - ' /GR-' // CLR requires RTTI, so remove the disabling of it
     .CompilerInputPath  = "Tools/FBuild/FBuildTest/Data/TestCLR/"
     .CompilerOutputPath = "$Out$/Test/CLR/"
     .LibrarianOutput    = "$Out$/Test/CLR/clrmulti.lib"
@@ -32,6 +34,7 @@ Library( 'BrigeTest-CLR' )
 {
     .CompilerOptions    + ' /clr'
                         + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
+                        - ' /GR-' // CLR requires RTTI, so remove the disabling of it
     .CompilerInputFiles = { 'Tools/FBuild/FBuildTest/Data/TestCLR/a.cpp',
                             'Tools/FBuild/FBuildTest/Data/TestCLR/b.cpp' }
     .CompilerOutputPath = '$Out$/Test/CLR/Bridge/'

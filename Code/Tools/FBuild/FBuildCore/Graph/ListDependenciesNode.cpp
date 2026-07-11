@@ -5,11 +5,13 @@
 //------------------------------------------------------------------------------
 #include "ListDependenciesNode.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
@@ -17,20 +19,21 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+// System
 #include <stdio.h>
 
 // REFLECTION
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ListDependenciesNode, Node, MetaName( "Dest" ) + MetaFile() )
-    REFLECT(        m_Source,                   "Source",                   MetaFile() + MetaAllowNonFile() )
-    REFLECT(        m_Dest,                     "Dest",                     MetaFile() )
-    REFLECT_ARRAY(  m_Patterns,                 "Patterns",                 MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Source, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_Dest, MetaFile() + MetaRequired() )
+    REFLECT( m_Patterns )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 REFLECT_END( ListDependenciesNode )
 
 // FilterFileDependencies
 //------------------------------------------------------------------------------
-static void FilterFileDependencies( Array< const AString * > * dependencyList , const Array< AString > & patterns , const Dependencies & dependencies )
+static void FilterFileDependencies( Array<const AString *> * dependencyList, const Array<AString> & patterns, const Dependencies & dependencies )
 {
     dependencyList->SetCapacity( dependencyList->GetSize() + dependencies.GetSize() );
 
@@ -74,20 +77,20 @@ static void FilterFileDependencies( Array< const AString * > * dependencyList , 
 class DependencyAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const AString * a, const AString * b ) const
+    bool operator()( const AString * a, const AString * b ) const
     {
-        #if defined( __WINDOWS__ )
-            return ( a->CompareI( *b ) < 0 );
-        #else
-            return ( a->Compare( *b ) < 0 );
-        #endif
+#if defined( __WINDOWS__ )
+        return ( a->CompareI( *b ) < 0 );
+#else
+        return ( a->Compare( *b ) < 0 );
+#endif
     }
 };
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ListDependenciesNode::ListDependenciesNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
 {
     m_Type = Node::LIST_DEPENDENCIES_NODE;
 }
@@ -97,10 +100,7 @@ ListDependenciesNode::ListDependenciesNode()
 /*virtual*/ bool ListDependenciesNode::Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, funcStartIter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // Get nodes for Source of dependency list
     if ( !Function::GetNodeList( nodeGraph, funcStartIter, function, ".Source", m_Source, m_StaticDependencies ) )
@@ -122,7 +122,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     EmitOutputMessage();
 
     // Collect all file dependencies
-    Array< const AString * > dependencyList;
+    Array<const AString *> dependencyList;
 
     for ( const Dependency & source : m_StaticDependencies )
     {
@@ -135,8 +135,8 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         {
             if ( !dep.IsWeak() )
             {
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetStaticDependencies() );
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetDynamicDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetStaticDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetDynamicDependencies() );
             }
         }
 
@@ -144,8 +144,8 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         {
             if ( !dep.IsWeak() )
             {
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetStaticDependencies() );
-                FilterFileDependencies( &dependencyList, m_Patterns , dep.GetNode()->GetDynamicDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetStaticDependencies() );
+                FilterFileDependencies( &dependencyList, m_Patterns, dep.GetNode()->GetDynamicDependencies() );
             }
         }
     }
@@ -154,7 +154,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     dependencyList.Sort( DependencyAscendingCompareIDeref{} );
 
     // Format file content
-    AStackString<> fileContents;
+    AStackString fileContents;
 
     const AString * prevDep = nullptr;
     for ( const AString * depName : dependencyList )
@@ -167,11 +167,11 @@ ListDependenciesNode::~ListDependenciesNode() = default;
         prevDep = depName;
         fileContents += *depName;
 
-        #if defined( __WINDOWS__ )
-            fileContents += "\r\n";
-        #else
-            fileContents += '\n';
-        #endif
+#if defined( __WINDOWS__ )
+        fileContents += "\r\n";
+#else
+        fileContents += '\n';
+#endif
     }
 
     // Dump to text file
@@ -179,7 +179,7 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     if ( !stream.Open( m_Name.Get(), FileStream::WRITE_ONLY ) )
     {
         FLOG_ERROR( "Could not open '%s' for write. Error: %s", GetName().Get(), LAST_ERROR_STR );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     const uint64_t nWritten = stream.WriteBuffer( fileContents.Get(), fileContents.GetLength() );
@@ -188,12 +188,12 @@ ListDependenciesNode::~ListDependenciesNode() = default;
     if ( nWritten != fileContents.GetLength() )
     {
         FLOG_ERROR( "Failed to write to '%s'. Error: %s", GetName().Get(), LAST_ERROR_STR );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     Node::RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // EmitOutputMessage

@@ -5,9 +5,11 @@
 //------------------------------------------------------------------------------
 #include "Job.h"
 
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
+// Core
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
@@ -15,25 +17,33 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+// System
 #include <stdarg.h>
 
 // Static
 //------------------------------------------------------------------------------
 static uint32_t s_LastJobId( 0 );
-/*static*/ int64_t Job::s_TotalLocalDataMemoryUsage( 0 );
+/*static*/ Atomic<int64_t> Job::s_TotalLocalDataMemoryUsage( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( Node * node )
     : m_Node( node )
+    , m_DataIsCompressed( false )
+    , m_IsLocal( true )
+    , m_AllowZstdUse( false )
 {
-    m_JobId = AtomicInc( &s_LastJobId );
+    // Constructor that assigns JobId can only be called on the main thread.
+    ASSERT( Thread::IsMainThread() );
+    m_JobId = ++s_LastJobId;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( IOStream & stream )
-    : m_IsLocal( false )
+    : m_DataIsCompressed( false )
+    , m_IsLocal( false )
+    , m_AllowZstdUse( false )
 {
     Deserialize( stream );
 }
@@ -60,7 +70,7 @@ Job::~Job()
 void Job::CancelDueToRemoteRaceWin()
 {
     ASSERT( m_IsLocal ); // Cancellation should only occur locally
-    ASSERT( m_Abort == false ); // Job must be not already be cancelled
+    ASSERT( m_Abort.Load() == false ); // Job must be not already be cancelled
 
     // TODO:B ASSERT that this thread holds the JobQueue::m_DistributedJobsMutex lock
     ASSERT( m_DistributionState == Job::DIST_RACING ); // Should only be called while racing
@@ -68,7 +78,7 @@ void Job::CancelDueToRemoteRaceWin()
 
     // Abort flag must be set last so Job sees new m_DistributionState on tear down
     // so it doesn't report an error
-    AtomicStoreRelaxed( &m_Abort, true );
+    m_Abort.Store( true );
 }
 
 // OwnData
@@ -86,8 +96,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
         // Update total memory use tracking
         if ( m_IsLocal )
         {
-            ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
-            AtomicSub( &s_TotalLocalDataMemoryUsage, (int64_t)m_DataSize );
+            VERIFY( s_TotalLocalDataMemoryUsage.Sub( static_cast<int64_t>( m_DataSize ) ) >= 0 );
         }
     }
 
@@ -99,7 +108,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
     // Update total memory use tracking
     if ( m_IsLocal )
     {
-        AtomicAdd( &s_TotalLocalDataMemoryUsage, (int64_t)m_DataSize );
+        s_TotalLocalDataMemoryUsage.Add( static_cast<int64_t>( m_DataSize ) );
     }
 }
 
@@ -107,10 +116,10 @@ void Job::OwnData( void * data, size_t size, bool compressed )
 //------------------------------------------------------------------------------
 void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
-    AStackString< 8192 > buffer;
+    AStackString<8192> buffer;
 
     va_list args;
-    va_start(args, format);
+    va_start( args, format );
     buffer.VFormat( format, args );
     va_end( args );
 
@@ -150,7 +159,7 @@ void Job::ErrorPreformatted( const char * message )
 
 // SetMessages
 //------------------------------------------------------------------------------
-void Job::SetMessages( const Array< AString > & messages )
+void Job::SetMessages( const Array<AString> & messages )
 {
     m_Messages = messages;
 }
@@ -164,7 +173,7 @@ void Job::Serialize( IOStream & stream )
     // write jobid
     stream.Write( m_JobId );
     stream.Write( m_Node->GetName() );
-    AStackString<> workingDir;
+    AStackString workingDir;
     VERIFY( FileIO::GetCurrentDir( workingDir ) );
     stream.Write( workingDir );
 
@@ -216,9 +225,9 @@ void Job::GetMessagesForLog( AString & buffer ) const
 
 // GetMessagesForLog
 //------------------------------------------------------------------------------
-/*static*/ void Job::GetMessagesForLog( const Array< AString > & messages, AString & outBuffer )
+/*static*/ void Job::GetMessagesForLog( const Array<AString> & messages, AString & outBuffer )
 {
-    // Ensure the output buffer is presized
+    // Ensure the output buffer is pre-sized
     // (errors can sometimes be very large so we want to avoid re-allocs)
     uint32_t size( 0 );
     for ( const AString & msg : messages )
@@ -227,8 +236,8 @@ void Job::GetMessagesForLog( AString & buffer ) const
     }
     outBuffer.SetReserved( size ); // Will be safely ignored if smaller than already reserved
 
-    // Concat the errors
-    for( const AString & msg : messages )
+    // Concatenate the errors
+    for ( const AString & msg : messages )
     {
         outBuffer += msg;
     }
@@ -244,15 +253,15 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
         return;
     }
 
-    // concat all messages
+    // Concatenate all messages
     GetMessagesForMonitorLog( m_Messages, buffer );
 }
 
 // GetMessagesForMonitorLog
 //------------------------------------------------------------------------------
-/*static*/ void Job::GetMessagesForMonitorLog( const Array< AString > & messages, AString & outBuffer )
+/*static*/ void Job::GetMessagesForMonitorLog( const Array<AString> & messages, AString & outBuffer )
 {
-    // concat all messages
+    // Concatenate all messages
     GetMessagesForLog( messages, outBuffer );
 
     // Escape some characters to simplify parsing in the log
@@ -266,7 +275,7 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
 //------------------------------------------------------------------------------
 /*static*/ uint64_t Job::GetTotalLocalDataMemoryUsage()
 {
-    return (uint64_t)AtomicLoadRelaxed( &s_TotalLocalDataMemoryUsage );
+    return static_cast<uint64_t>( s_TotalLocalDataMemoryUsage.Load() );
 }
 
 // SetBuildProfilerScope

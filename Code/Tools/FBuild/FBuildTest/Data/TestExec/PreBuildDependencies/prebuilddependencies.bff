@@ -1,0 +1,29 @@
+// Exec - PreBuildDependencies
+//------------------------------------------------------------------------------
+// Use the standard test environment
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+CopyDir( 'CopyDir' )
+{
+    .SourcePaths        = 'Tools/FBuild/FBuildTest/Data/TestExec/PreBuildDependencies/'
+    .Dest               = '$Out$/Test/Exec/PreBuildDependencies/'
+}
+
+Exec( 'Exec' )
+{
+    .PreBuildDependencies = { 'CopyDir' }
+
+    .ExecOutput         = '$Out$/Test/Exec/PreBuildDependencies/out.log'
+
+    // Do something
+    #if __WINDOWS__
+        .ExecExecutable     = 'c:\Windows\System32\cmd.exe'
+        .ExecArguments      = '/c'
+    #else
+        .ExecExecutable     = '/bin/bash'
+        .ExecArguments      = '-c echo'
+    #endif
+    .ExecUseStdOutAsOutput  = true
+}

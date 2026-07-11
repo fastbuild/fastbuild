@@ -4,15 +4,18 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "CSNode.h"
+
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
+// Core
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
@@ -21,28 +24,28 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
-    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() + MetaAllowNonFile() )
-    REFLECT(        m_CompilerOptions,              "CompilerOptions",              MetaNone() )
-    REFLECT(        m_CompilerOutput,               "CompilerOutput",               MetaFile() )
-    REFLECT_ARRAY(  m_CompilerInputPath,            "CompilerInputPath",            MetaOptional() + MetaPath() )
-    REFLECT(        m_CompilerInputPathRecurse,     "CompilerInputPathRecurse",     MetaOptional() )
-    REFLECT_ARRAY(  m_CompilerInputPattern,         "CompilerInputPattern",         MetaOptional() )
-    REFLECT_ARRAY(  m_CompilerInputExcludePath,     "CompilerInputExcludePath",     MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_CompilerInputExcludedFiles,   "CompilerInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_CompilerInputFiles,           "CompilerInputFiles",           MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_CompilerReferences,           "CompilerReferences",           MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,      "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Compiler, MetaFile() + MetaAllowNonFile() + MetaRequired() )
+    REFLECT( m_CompilerOptions, MetaRequired() )
+    REFLECT( m_CompilerOutput, MetaFile() + MetaRequired() )
+    REFLECT( m_CompilerInputPath, MetaPath() )
+    REFLECT( m_CompilerInputPathRecurse )
+    REFLECT( m_CompilerInputPattern )
+    REFLECT( m_CompilerInputExcludePath, MetaPath() )
+    REFLECT( m_CompilerInputExcludedFiles, MetaFile( true ) )
+    REFLECT( m_CompilerInputExcludePattern, MetaFile( true ) )
+    REFLECT( m_CompilerInputFiles, MetaFile() )
+    REFLECT( m_CompilerReferences, MetaFile() )
+    REFLECT_RENAME( m_PreBuildDependencyNames, "PreBuildDependencies", MetaFile() + MetaAllowNonFile() )
 
     // Internal State
-    REFLECT(        m_NumCompilerInputFiles,        "NumCompilerInputFiles",        MetaHidden() )
-    REFLECT(        m_NumCompilerReferences,        "NumCompilerReferences",        MetaHidden() )
+    REFLECT( m_NumCompilerInputFiles, MetaHidden() )
+    REFLECT( m_NumCompilerReferences, MetaHidden() )
 REFLECT_END( CSNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CSNode::CSNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode()
     , m_CompilerInputPathRecurse( true )
     , m_NumCompilerInputFiles( 0 )
     , m_NumCompilerReferences( 0 )
@@ -57,10 +60,7 @@ CSNode::CSNode()
 /*virtual*/ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
-    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
-    {
-        return false; // InitializePreBuildDependencies will have emitted an error
-    }
+    m_PreBuildDependencies.Add( m_PreBuildDependencyNames );
 
     // .Compiler
     CompilerNode * compilerNode( nullptr );
@@ -87,6 +87,7 @@ CSNode::CSNode()
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
                                               false, // Don't include read-only status in hash
+                                              false, // Don't include directories
                                               &m_CompilerInputPattern,
                                               "CompilerInputPath",
                                               compilerInputPath ) )
@@ -127,23 +128,23 @@ CSNode::~CSNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
+/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
 
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1; // Skip Compiler
-    const size_t endIndex =  ( 1 + m_CompilerInputPath.GetSize() );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    const size_t endIndex = ( 1 + m_CompilerInputPath.GetSize() );
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         const Node * n = m_StaticDependencies[ i ].GetNode();
 
         ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
         // get the list of files
-        const DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        const DirectoryListNode * dln = n->CastTo<DirectoryListNode>();
+        const Array<FileIO::FileInfo> & files = dln->GetFiles();
         m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
         for ( const FileIO::FileInfo & file : files )
         {
@@ -151,7 +152,7 @@ CSNode::~CSNode() = default;
             Node * sn = nodeGraph.FindNode( file.m_Name );
             if ( sn == nullptr )
             {
-                sn = nodeGraph.CreateFileNode( file.m_Name );
+                sn = nodeGraph.CreateNode<FileNode>( file.m_Name );
             }
             else if ( sn->IsAFile() == false )
             {
@@ -175,7 +176,7 @@ CSNode::~CSNode() = default;
     Args fullArgs;
     if ( !BuildArgs( fullArgs ) )
     {
-        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+        return BuildResult::eFailed; // BuildArgs will have emitted an error
     }
 
     // use the exe launch dir as the working dir
@@ -187,16 +188,18 @@ CSNode::~CSNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    if ( p.Spawn( GetCompiler()->GetExecutable().Get(), fullArgs.GetFinalArgs().Get(),
-                  workingDir, environment ) == false )
+    if ( p.Spawn( GetCompiler()->GetExecutable().Get(),
+                  fullArgs.GetFinalArgs().Get(),
+                  workingDir,
+                  environment ) == false )
     {
         if ( p.HasAborted() )
         {
-            return NODE_RESULT_FAILED;
+            return BuildResult::eAborted;
         }
 
         FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // capture all of the stdout and stderr
@@ -208,7 +211,7 @@ CSNode::~CSNode() = default;
     const int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        return NODE_RESULT_FAILED;
+        return BuildResult::eAborted;
     }
 
     const bool ok = ( result == 0 );
@@ -225,20 +228,20 @@ CSNode::~CSNode() = default;
     if ( !ok )
     {
         FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
+        return BuildResult::eFailed;
     }
 
     // record new file time
     RecordStampFromBuiltFile();
 
-    return NODE_RESULT_OK;
+    return BuildResult::eOk;
 }
 
 // GetCompiler
 //------------------------------------------------------------------------------
-CompilerNode* CSNode::GetCompiler() const
+CompilerNode * CSNode::GetCompiler() const
 {
-    return m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >();
+    return m_StaticDependencies[ 0 ].GetNode()->CastTo<CompilerNode>();
 }
 
 // EmitCompilationMessage
@@ -248,7 +251,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
     // the output
-    AStackString<> output;
+    AStackString output;
     if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "C#: ";
@@ -262,7 +265,10 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_OUTPUT( output );
+    if ( output.IsEmpty() == false )
+    {
+        FLOG_OUTPUT( output );
+    }
 }
 
 // BuildArgs
@@ -270,19 +276,17 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
 bool CSNode::BuildArgs( Args & fullArgs ) const
 {
     // split into tokens
-    Array< AString > tokens( 1024, true );
+    StackArray<AString> tokens;
     m_CompilerOptions.Tokenize( tokens );
 
-    AStackString<> quote( "\"" );
+    AStackString quote( "\"" );
 
-    const AString * const end = tokens.End();
-    for ( const AString * it = tokens.Begin(); it!=end; ++it )
+    for ( const AString & token : tokens )
     {
-        const AString & token = *it;
         if ( token.EndsWith( "%1" ) )
         {
             // handle /Option:%1 -> /Option:A /Option:B /Option:C
-            AStackString<> pre;
+            AStackString pre;
             if ( token.GetLength() > 2 )
             {
                 pre.Assign( token.Get(), token.GetEnd() - 2 );
@@ -294,7 +298,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%1\"" ) )
         {
             // handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
 
             // concatenate files, quoted
             GetInputFiles( fullArgs, pre, quote );
@@ -304,14 +308,14 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
             // handle /Option:%2 -> /Option:A
             if ( token.GetLength() > 2 )
             {
-                fullArgs += AStackString<>( token.Get(), token.GetEnd() - 2 );
+                fullArgs += AStackString( token.Get(), token.GetEnd() - 2 );
             }
             fullArgs += m_Name;
         }
         else if ( token.EndsWith( "\"%2\"" ) )
         {
             // handle /Option:"%2" -> /Option:"A"
-            AStackString<> pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
+            AStackString pre( token.Get(), token.GetEnd() - 3 ); // 3 instead of 4 to include quote
             fullArgs += pre;
             fullArgs += m_Name;
             fullArgs += '"'; // post
@@ -319,7 +323,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "%3" ) )
         {
             // handle /Option:%3 -> /Option:A,B,C
-            AStackString<> pre( token.Get(), token.GetEnd() - 2 );
+            AStackString pre( token.Get(), token.GetEnd() - 2 );
             fullArgs += pre;
 
             // concatenate files, unquoted
@@ -328,7 +332,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
         else if ( token.EndsWith( "\"%3\"" ) )
         {
             // handle /Option:"%3" -> /Option:"A","B","C"
-            AStackString<> pre( token.Get(), token.GetEnd() - 4 );
+            AStackString pre( token.Get(), token.GetEnd() - 4 );
             fullArgs += pre;
 
             // concatenate files, quoted
@@ -360,7 +364,7 @@ void CSNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString 
     // Add the explicitly listed files
     const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() ); // Skip compiler and input paths
     const size_t endIndex = ( startIndex + m_NumCompilerInputFiles );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         if ( !first )
         {
@@ -394,7 +398,7 @@ void CSNode::GetExtraRefs( Args & fullArgs, const AString & pre, const AString &
     const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles ); // Skip compiler, input paths and files
     const size_t endIndex = ( startIndex + m_NumCompilerReferences );
     ASSERT( endIndex == m_StaticDependencies.GetSize() ); // References are last
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         if ( !first )
         {

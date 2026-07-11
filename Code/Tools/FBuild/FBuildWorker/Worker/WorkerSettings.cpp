@@ -6,6 +6,7 @@
 #include "WorkerSettings.h"
 
 // Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -18,7 +19,7 @@
 
 // Other
 //------------------------------------------------------------------------------
-#define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
+#define FBUILDWORKER_SETTINGS_MIN_VERSION     ( 1 )     // Oldest compatible version
 #define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 4 ) // Current version
 
 // CONSTRUCTOR
@@ -32,13 +33,13 @@ WorkerSettings::WorkerSettings()
     , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
-    const uint32_t numCPUs = Env::GetNumProcessors();
-    m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
+    const uint32_t numCPUs = CPUInfo::Get().GetNumUsefulCores();
+    m_NumCPUsToUse = Math::Max<uint32_t>( 1, numCPUs / 2 );
 
     Load();
 
     // handle CPU downgrade
-    m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+    m_NumCPUsToUse = Math::Min( numCPUs, m_NumCPUsToUse );
 }
 
 // DESTRUCTOR
@@ -84,7 +85,7 @@ void WorkerSettings::SetMinimumFreeMemoryMiB( uint32_t value )
 //------------------------------------------------------------------------------
 void WorkerSettings::Load()
 {
-    AStackString<> settingsPath;
+    AStackString settingsPath;
     Env::GetExePath( settingsPath );
     settingsPath += ".settings";
 
@@ -122,7 +123,7 @@ void WorkerSettings::Load()
 //------------------------------------------------------------------------------
 void WorkerSettings::Save()
 {
-    AStackString<> settingsPath;
+    AStackString settingsPath;
     Env::GetExePath( settingsPath );
     settingsPath += ".settings";
 

@@ -12,6 +12,8 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
 
+// Core
+#include "Core/Env/CPUInfo.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
@@ -23,22 +25,21 @@
 //------------------------------------------------------------------------------
 #if defined( __OSX__ ) || defined( __LINUX__ )
     // Touch files every 4 hours
-    #define SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS (60.0f * 60.0f * 4.0f)
+    #define SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS ( 60.0f * 60.0f * 4.0f )
 #endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
     : m_ShouldExit( false )
-    , m_ClientList( 32, true )
 {
-    m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
+    m_ClientList.SetCapacity( 32 );
 
-    m_Thread = Thread::CreateThread( ThreadFuncStatic,
-                                     "Server",
-                                     ( 64 * KILOBYTE ),
-                                     this );
-    ASSERT( m_Thread );
+    const uint32_t numCores = numThreadsInJobQueue ? numThreadsInJobQueue
+                                                   : CPUInfo::Get().GetNumUsefulCores();
+    m_JobQueueRemote = FNEW( JobQueueRemote( numCores ) );
+
+    m_Thread.Start( ThreadFuncStatic, "Server", this );
 }
 
 // DESTRUCTOR
@@ -47,11 +48,9 @@ Server::~Server()
 {
     m_ShouldExit.Store( true );
     JobQueueRemote::Get().WakeMainThread();
-    Thread::WaitForThread( m_Thread );
+    m_Thread.Join();
 
     ShutdownAllConnections();
-
-    Thread::CloseHandle( m_Thread );
 
     FDELETE m_JobQueueRemote;
 
@@ -92,8 +91,8 @@ bool Server::IsSynchingTool( AString & statusStr ) const
             if ( synching )
             {
                 statusStr.Format( "Synchronizing Compiler %2.1f / %2.1f MiB\n",
-                                    (double)( (float)synchDone / (float)MEGABYTE ),
-                                    (double)( (float)synchTotal / (float)MEGABYTE ) );
+                                  (double)( (float)synchDone / (float)MEGABYTE ),
+                                  (double)( (float)synchTotal / (float)MEGABYTE ) );
                 return true;
             }
         }
@@ -127,7 +126,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     jqr.CancelJobsWithUserData( cs );
 
     // check if any tool chain was being sync'd from this Client
-    Array< ToolManifest * > cancelledManifests( 0, true );
+    Array<ToolManifest *> cancelledManifests;
     {
         MutexHolder manifestMH( m_ToolManifestsMutex );
         for ( ToolManifest * tm : m_Tools )
@@ -149,7 +148,8 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         // Remove from ClientList
         MutexHolder mh( m_ClientListMutex );
         const bool found = m_ClientList.FindAndErase( cs );
-        ASSERT( found ); (void)found;
+        ASSERT( found );
+        (void)found;
 
         // because we cancelled manifest synchronization, we need to check if other
         // connections are waiting for the same manifest
@@ -169,13 +169,13 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         // This is usually null here, but might need to be freed if
         // we had the connection drop between message and payload
         FREE( (void *)( cs->m_CurrentMessage ) );
-    
+
         // delete any jobs where we were waiting on Tool synchronization
         for ( Job * job : cs->m_WaitingJobs )
         {
             delete job;
         }
-    
+
         FDELETE cs;
     }
 }
@@ -195,7 +195,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     if ( cs->m_CurrentMessage == nullptr )
     {
         // message
-        cs->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
+        cs->m_CurrentMessage = static_cast<const Protocol::IMessage *>( data );
         if ( cs->m_CurrentMessage->HasPayload() )
         {
             return;
@@ -209,7 +209,6 @@ bool Server::IsSynchingTool( AString & statusStr ) const
         payloadSize = size;
     }
 
-
     // determine message type
     const Protocol::IMessage * imsg = cs->m_CurrentMessage;
     const Protocol::MessageType messageType = imsg->GetType();
@@ -220,37 +219,37 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     {
         case Protocol::MSG_CONNECTION:
         {
-            const Protocol::MsgConnection * msg = static_cast< const Protocol::MsgConnection * >( imsg );
+            const Protocol::MsgConnection * msg = static_cast<const Protocol::MsgConnection *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_STATUS:
         {
-            const Protocol::MsgStatus * msg = static_cast< const Protocol::MsgStatus * >( imsg );
+            const Protocol::MsgStatus * msg = static_cast<const Protocol::MsgStatus *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_NO_JOB_AVAILABLE:
         {
-            const Protocol::MsgNoJobAvailable * msg = static_cast< const Protocol::MsgNoJobAvailable * >( imsg );
+            const Protocol::MsgNoJobAvailable * msg = static_cast<const Protocol::MsgNoJobAvailable *>( imsg );
             Process( connection, msg );
             break;
         }
         case Protocol::MSG_JOB:
         {
-            const Protocol::MsgJob * msg = static_cast< const Protocol::MsgJob * >( imsg );
+            const Protocol::MsgJob * msg = static_cast<const Protocol::MsgJob *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
         case Protocol::MSG_MANIFEST:
         {
-            const Protocol::MsgManifest * msg = static_cast< const Protocol::MsgManifest * >( imsg );
+            const Protocol::MsgManifest * msg = static_cast<const Protocol::MsgManifest *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
         case Protocol::MSG_FILE:
         {
-            const Protocol::MsgFile * msg = static_cast< const Protocol::MsgFile * >( imsg );
+            const Protocol::MsgFile * msg = static_cast<const Protocol::MsgFile *>( imsg );
             Process( connection, msg, payload, payloadSize );
             break;
         }
@@ -274,9 +273,9 @@ bool Server::IsSynchingTool( AString & statusStr ) const
 void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConnection * msg )
 {
     // check for valid/supported protocol version
-    if ( msg->GetProtocolVersion() != Protocol::PROTOCOL_VERSION_MAJOR )
+    if ( msg->GetProtocolVersion() != Protocol::kVersionMajor )
     {
-        AStackString<> remoteAddr;
+        AStackString remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
         FLOG_WARN( "Disconnecting '%s' due to bad protocol version\n", remoteAddr.Get() );
         Disconnect( connection );
@@ -284,9 +283,9 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     }
 
     // Check for matching platform
-    if (msg->GetPlatform() != Env::GetPlatform())
+    if ( msg->GetPlatform() != Env::GetPlatform() )
     {
-        AStackString<> remoteAddr;
+        AStackString remoteAddr;
         TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
         FLOG_WARN( "Disconnecting '%s' (%s) due to mismatched platform\n", remoteAddr.Get(), msg->GetHostName() );
         Disconnect( connection );
@@ -296,9 +295,17 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
     // take note of initial status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
     MutexHolder mh( cs->m_Mutex );
-    cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
+    cs->m_NumJobsAvailable.Store( msg->GetNumJobsAvailable() );
     cs->m_ProtocolVersionMinor = msg->GetProtocolVersionMinor();
     cs->m_HostName = msg->GetHostName();
+
+    // If Client is new enough, send an ack message
+    if ( msg->GetProtocolVersionMinor() >= 3 )
+    {
+        // Send Ack to client
+        const Protocol::MsgConnectionAck ack;
+        ack.Send( connection );
+    }
 }
 
 // Process( MsgStatus )
@@ -307,8 +314,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgStat
 {
     // take note of latest status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
-    MutexHolder mh( cs->m_Mutex );
-    cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
+    cs->m_NumJobsAvailable.Store( msg->GetNumJobsAvailable() );
 
     // Wake main thread to request jobs
     JobQueueRemote::Get().WakeMainThread();
@@ -320,9 +326,8 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgNoJo
 {
     // We requested a job, but the client didn't have any left
     ClientState * cs = (ClientState *)connection->GetUserData();
-    MutexHolder mh( cs->m_Mutex );
-    ASSERT( cs->m_NumJobsRequested > 0 );
-    cs->m_NumJobsRequested--;
+    ASSERT( cs->m_NumJobsRequested.Load() > 0 );
+    cs->m_NumJobsRequested.Decrement();
 }
 
 // Process( MsgJob )
@@ -331,22 +336,27 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
 {
     ClientState * cs = (ClientState *)connection->GetUserData();
     {
+        ASSERT( cs->m_NumJobsRequested.Load() > 0 );
+        cs->m_NumJobsRequested.Decrement();
+        cs->m_NumJobsActive.Increment();
+
         MutexHolder mh( cs->m_Mutex );
-        ASSERT( cs->m_NumJobsRequested > 0 );
-        cs->m_NumJobsRequested--;
-        cs->m_NumJobsActive++;
-    
+
         // deserialize job
         ConstMemoryStream ms( payload, payloadSize );
-    
+
         Job * job = FNEW( Job( ms ) );
         job->SetUserData( cs );
-        job->SetResultCompressionLevel( msg->GetResultCompressionLevel() );
-    
+
+        // Take not of client support requirements
+        // - Zstd suport can become unconditional if protocol compatibility is broken
+        static_assert( Protocol::kVersionMajor == 22 );
+        const bool allowZstdUse = ( cs->m_ProtocolVersionMinor >= 4 );
+        job->SetResultCompressionLevel( msg->GetResultCompressionLevel(), allowZstdUse );
+
         // Get ToolId
         const uint64_t toolId = msg->GetToolId();
         ASSERT( toolId );
-
 
         {
             // Find or create the manifest
@@ -372,13 +382,13 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                 const bool isSynchronizing = ( manifest->GetUserData() != nullptr );
                 if ( isSynchronizing )
                 {
-                    // We just need to wait for syncrhonization to complete
+                    // We just need to wait for synchronization to complete
                 }
                 else
                 {
                     // Take ownership of toolchain
-                    manifest->SetUserData( (void *)connection );                    
-                    
+                    manifest->SetUserData( (void *)connection );
+
                     const bool hasManifest = ( manifest->GetFiles().IsEmpty() == false );
                     if ( hasManifest )
                     {
@@ -389,7 +399,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgJob 
                     {
                         // Manifest was not sync'd. This can happen if disconnection
                         // occurs before the manifest was received.
-                   
+
                         // request manifest
                         const Protocol::MsgRequestManifest reqMsg( toolId );
                         reqMsg.Send( connection );
@@ -441,20 +451,20 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
             //       The bug has been fixed so should not happen with latest code (only
             //       when dealing with backwards compatibility with old workers)
             // If we ever break protocol compatibility, we can remove special handling
-            static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
-            
+            static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
+
             // This should not happen with latest code so we want to catch that when
             // debugging
             ASSERT( false && "MsgManifest corrupt" );
 
             // Disconnect to handle old workers misbehaving
             ClientState * cs = (ClientState *)connection->GetUserData();
-            AStackString<> remoteAddr;
+            AStackString remoteAddr;
             TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
             FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgManifest (Client protocol %u.%u)\n",
                        remoteAddr.Get(),
                        cs->m_HostName.Get(),
-                       Protocol::PROTOCOL_VERSION_MAJOR,
+                       Protocol::kVersionMajor,
                        cs->m_ProtocolVersionMinor );
             Disconnect( connection );
             return;
@@ -488,7 +498,8 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
         ToolManifest ** found = m_Tools.FindDeref( toolId );
         ASSERT( found );
         manifest = *found;
-        ASSERT( manifest->GetUserData() == connection ); (void)connection;
+        ASSERT( manifest->GetUserData() == connection );
+        (void)connection;
 
         bool corruptData = false;
         if ( manifest->ReceiveFileData( fileId, payload, payloadSize, corruptData ) == false )
@@ -502,26 +513,32 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
                 //       The bug has been fixed so should not happen with latest code (only
                 //       when dealing with backwards compatibility with old workers)
                 // If we ever break protocol compatibility, we can remove special handling
-                static_assert( Protocol::PROTOCOL_VERSION_MAJOR == 22, "Remove backwards compat shims" );
-            
+                static_assert( Protocol::kVersionMajor == 22, "Remove backwards compat shims" );
+
                 // This should not happen with latest code so we want to catch that when
                 // debugging
                 ASSERT( false && "MsgFile corrupt" );
 
                 // Disconnect to handle old workers misbehaving
                 ClientState * cs = (ClientState *)connection->GetUserData();
-                AStackString<> remoteAddr;
+                AStackString remoteAddr;
                 TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
                 FLOG_WARN( "Disconnecting '%s' (%s) due to corrupt MsgFile (Client protocol %u.%u)\n",
                            remoteAddr.Get(),
                            cs->m_HostName.Get(),
-                           Protocol::PROTOCOL_VERSION_MAJOR,
+                           Protocol::kVersionMajor,
                            cs->m_ProtocolVersionMinor );
             }
             else
             {
                 // something went wrong storing the file
-                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n", fileId, toolId );
+                AStackString fileName;
+                manifest->GetRemoteFilePath( fileId, fileName );
+                FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n"
+                           " - %s\n",
+                           fileId,
+                           toolId,
+                           fileName.Get() );
             }
 
             Disconnect( connection );
@@ -546,9 +563,9 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
 void Server::CheckWaitingJobs( const ToolManifest * manifest )
 {
     // queue for start any jobs that may now be ready
-    #ifdef ASSERTS_ENABLED
-        bool atLeastOneJobStarted = false;
-    #endif
+#ifdef ASSERTS_ENABLED
+    bool atLeastOneJobStarted = false;
+#endif
 
     {
         MutexHolder mhC( m_ClientListMutex );
@@ -559,7 +576,7 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 
             // .. check all jobs waiting for ToolManifests
             const int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
-            for ( int32_t i=( numJobs -1 ); i >= 0; --i )
+            for ( int32_t i = ( numJobs - 1 ); i >= 0; --i )
             {
                 Job * job = cs->m_WaitingJobs[ (size_t)i ];
                 const ToolManifest * manifestForThisJob = job->GetToolManifest();
@@ -569,9 +586,9 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
                     cs->m_WaitingJobs.EraseIndex( (size_t)i );
                     JobQueueRemote::Get().QueueJob( job );
                     PROTOCOL_DEBUG( "Server: Job %x can now be started\n", job );
-                    #ifdef ASSERTS_ENABLED
-                        atLeastOneJobStarted = true;
-                    #endif
+#ifdef ASSERTS_ENABLED
+                    atLeastOneJobStarted = true;
+#endif
                 }
             }
         }
@@ -581,7 +598,6 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
     // so at least 1 job should have been waiting for it
     ASSERT( atLeastOneJobStarted );
 }
-
 
 // ThreadFuncStatic
 //------------------------------------------------------------------------------
@@ -603,7 +619,7 @@ void Server::ThreadFunc()
         FinalizeCompletedJobs();
 
         FindNeedyClients();
-        
+
         TouchToolchains();
 
         JobQueueRemote::Get().MainThreadWait( 100 );
@@ -621,23 +637,24 @@ void Server::FindNeedyClients()
 
     PROFILE_FUNCTION;
 
+    // determine job availability
+    int32_t availableJobs = (int32_t)WorkerThreadRemote::GetNumCPUsToUse();
+    if ( availableJobs == 0 )
+    {
+        return;
+    }
+    ++availableJobs; // over request to parallelize building/network transfers
+
     {
         MutexHolder mh( m_ClientListMutex );
 
-        // determine job availability
-        int availableJobs = (int)WorkerThreadRemote::GetNumCPUsToUse();
-        if ( availableJobs == 0 )
+        // determine if all available job slots are in use
+        for ( const ClientState * cs : m_ClientList )
         {
-            return;
-        }
-        ++availableJobs; // over request to parallelize building/network transfers
-
-        for ( ClientState * cs : m_ClientList )
-        {
-            MutexHolder mh2( cs->m_Mutex );
-
             // any jobs requested or in progress reduce the available count
-            const int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
+            const uint32_t jobsRequested = cs->m_NumJobsRequested.Load();
+            const uint32_t jobsActive = cs->m_NumJobsActive.Load();
+            const int32_t reservedJobs = static_cast<int32_t>( jobsRequested + jobsActive );
             availableJobs -= reservedJobs;
             if ( availableJobs <= 0 )
             {
@@ -658,20 +675,32 @@ void Server::FindNeedyClients()
 
             for ( ClientState * cs : m_ClientList )
             {
-                MutexHolder mh2( cs->m_Mutex );
+                const uint32_t reservedJobs = cs->m_NumJobsRequested.Load();
 
-                const size_t reservedJobs = cs->m_NumJobsRequested;
-
-                if ( reservedJobs >= cs->m_NumJobsAvailable )
+                if ( reservedJobs >= cs->m_NumJobsAvailable.Load() )
                 {
                     continue; // we've maxed out the requests to this worker
                 }
 
                 // request job from this client
-                msg.Send( cs->m_Connection );
-                cs->m_NumJobsRequested++;
+                {
+                    // Acquire the lock but don't wait if unavailable
+                    TryMutexHolder tryLock( cs->m_Mutex );
+                    if ( tryLock.IsLocked() == false )
+                    {
+                        continue; // Skip this worker for now
+                    }
+                    cs->m_NumJobsRequested.Increment(); // Must be before Send() to ensure consistent counts
+                    msg.Send( cs->m_Connection );
+                }
                 availableJobs--;
                 anyJobsRequested = true;
+
+                // Have we consumed all of our requests?
+                if ( availableJobs == 0 )
+                {
+                    break;
+                }
             }
 
             // if we did a pass and couldn't request any more jobs, then bail out
@@ -690,24 +719,25 @@ void Server::FinalizeCompletedJobs()
     PROFILE_FUNCTION;
 
     JobQueueRemote & jcr = JobQueueRemote::Get();
-    while ( Job * job = jcr.GetCompletedJob() )
+    Node::BuildResult result;
+    while ( Job * job = jcr.GetCompletedJob( result ) )
     {
-        // get associated connection
-        ClientState * cs = (ClientState *)job->GetUserData();
-
+        // Jobs that ended in a useful state are reported to the Client
+        // Other jobs (like those that were cancelled) are not
+        if ( ( result == Node::BuildResult::eOk ) || ( result == Node::BuildResult::eFailed ) )
         {
+            // get associated connection
+            ClientState * cs = (ClientState *)job->GetUserData();
+
             MutexHolder mh( m_ClientListMutex );
 
             const bool connectionStillActive = ( m_ClientList.Find( cs ) != nullptr );
             if ( connectionStillActive )
             {
-                const Node::State result = job->GetNode()->GetState();
-                ASSERT( ( result == Node::UP_TO_DATE ) || ( result == Node::FAILED ) );
-
                 MemoryStream ms;
                 ms.Write( job->GetJobId() );
                 ms.Write( job->GetNode()->GetName() );
-                ms.Write( result == Node::UP_TO_DATE );
+                ms.Write( result == Node::BuildResult::eOk );
                 ms.Write( job->GetSystemErrorCount() > 0 );
                 ms.Write( job->GetMessages() );
                 ms.Write( job->GetNode()->GetLastBuildTime() );
@@ -718,10 +748,11 @@ void Server::FinalizeCompletedJobs()
                 ms.WriteBuffer( job->GetData(), job->GetDataSize() );
 
                 {
+                    ASSERT( cs->m_NumJobsActive.Load() > 0 );
+                    cs->m_NumJobsActive.Decrement();
+
                     MutexHolder mh2( cs->m_Mutex );
-                    ASSERT( cs->m_NumJobsActive );
-                    cs->m_NumJobsActive--;
-    
+
                     if ( job->GetResultCompressionLevel() == 0 )
                     {
                         // Uncompressed
@@ -751,21 +782,21 @@ void Server::FinalizeCompletedJobs()
 //------------------------------------------------------------------------------
 void Server::TouchToolchains()
 {
-    #if defined( __OSX__ ) || defined( __LINUX__)
-        if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
-        {
-            return;
-        }
-        m_TouchToolchainTimer.Start();
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    if ( m_TouchToolchainTimer.GetElapsed() < SERVER_TOOLCHAIN_TIMESTAMP_REFRESH_INTERVAL_SECS )
+    {
+        return;
+    }
+    m_TouchToolchainTimer.Restart();
 
-        MutexHolder manifestMH( m_ToolManifestsMutex );
-        for ( const ToolManifest * toolManifest : m_Tools )
-        {
-            toolManifest->TouchFiles();
-        }
-    #else
-        // TODO:C we could update Windows timestamps too
-    #endif
+    MutexHolder manifestMH( m_ToolManifestsMutex );
+    for ( const ToolManifest * toolManifest : m_Tools )
+    {
+        toolManifest->TouchFiles();
+    }
+#else
+    // TODO:C we could update Windows timestamps too
+#endif
 }
 
 // RequestMissingFiles
@@ -774,9 +805,9 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
 {
     MutexHolder manifestMH( m_ToolManifestsMutex );
 
-    const Array< ToolManifestFile > & files = manifest->GetFiles();
+    const Array<ToolManifestFile> & files = manifest->GetFiles();
     const size_t numFiles = files.GetSize();
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         const ToolManifestFile & f = files[ i ];
         if ( f.GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED )

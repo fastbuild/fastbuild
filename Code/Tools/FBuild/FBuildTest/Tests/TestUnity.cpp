@@ -16,66 +16,23 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestUnity
 //------------------------------------------------------------------------------
-class TestUnity : public FBuildTest
+TEST_GROUP( TestUnity, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
+public:
     // Helpers
     FBuildStats BuildGenerate( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestGenerateDBFileName() const { return "../tmp/Test/Unity/generate.fdb"; }
+    const char * GetTestGenerateDBFileName() const
+    {
+        return "../tmp/Test/Unity/generate.fdb";
+    }
     FBuildStats BuildCompile( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
-    const char * GetTestCompileDBFileName() const { return "../tmp/Test/Unity/compile.fdb"; }
-
-    // Tests
-    void TestGenerate() const;
-    void TestGenerate_NoRebuild() const;
-    void TestGenerate_NoRebuild_BFFChange() const;
-    void DetectDeletedUnityFiles() const;
-    void TestCompile() const;
-    void TestCompile_NoRebuild() const;
-    void TestCompile_NoRebuild_BFFChange() const;
-    void TestGenerateFromExplicitList() const;
-    void TestExcludedFiles() const;
-    void IsolateFromUnity_Regression() const;
-    void UnityInputIsolatedFiles() const;
-    void IsolateListFile() const;
-    void ClangStaticAnalysis() const;
-    void ClangStaticAnalysis_InjectHeader() const;
-    void LinkMultiple() const;
-    void LinkMultiple_InputFiles() const;
-    void SortFiles() const;
-    void CacheUsingRelativePaths() const;
-    void NoUnityCommandLineOption() const;
+    const char * GetTestCompileDBFileName() const
+    {
+        return "../tmp/Test/Unity/compile.fdb";
+    }
 };
 
-// Register Tests
-//------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestUnity )
-    REGISTER_TEST( TestGenerate )           // clean build of unity files
-    REGISTER_TEST( TestGenerate_NoRebuild ) // check nothing rebuilds
-    REGISTER_TEST( TestGenerate_NoRebuild_BFFChange ) // check nothing rebuilds after a BFF change
-    REGISTER_TEST( DetectDeletedUnityFiles )
-    REGISTER_TEST( TestCompile )            // compile a library using unity inputs
-    REGISTER_TEST( TestCompile_NoRebuild )  // check nothing rebuilds
-    REGISTER_TEST( TestCompile_NoRebuild_BFFChange )  // check nothing rebuilds after a BFF change
-    REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
-    REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
-    REGISTER_TEST( IsolateFromUnity_Regression )
-    REGISTER_TEST( UnityInputIsolatedFiles )
-    REGISTER_TEST( IsolateListFile )
-    REGISTER_TEST( ClangStaticAnalysis )
-    REGISTER_TEST( ClangStaticAnalysis_InjectHeader )
-    REGISTER_TEST( LinkMultiple )
-    REGISTER_TEST( LinkMultiple_InputFiles )
-    REGISTER_TEST( SortFiles )
-    REGISTER_TEST( CacheUsingRelativePaths )
-    REGISTER_TEST( NoUnityCommandLineOption )
-REGISTER_TESTS_END
-
-// BuildGenerate
 //------------------------------------------------------------------------------
 FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, bool forceMigration ) const
 {
@@ -83,7 +40,7 @@ FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, boo
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = forceMigration;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestGenerateDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
@@ -93,9 +50,8 @@ FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, boo
     return fBuild.GetStats();
 }
 
-// TestGenerate
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerate() const
+TEST_CASE( TestUnity, TestGenerate )
 {
     FBuildTestOptions options;
     options.m_ShowSummary = true; // required to generate stats for node count checks
@@ -109,19 +65,17 @@ void TestUnity::TestGenerate() const
     EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
     EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 2 );
 }
 
-// TestGenerate_NoRebuild
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerate_NoRebuild() const
+TEST_CASE( TestUnity, TestGenerate_NoRebuild )
 {
-    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
-    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
+    AStackString unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString unity2( "../tmp/Test/Unity/Unity2.cpp" );
 
     EnsureFileExists( unity1 );
     EnsureFileExists( unity2 );
@@ -133,13 +87,13 @@ void TestUnity::TestGenerate_NoRebuild() const
 
     // NTFS file resolution is 100ns, so sleep long enough to ensure
     // an invalid write would modify the time
-    #if defined( __WINDOWS__ )
-        Thread::Sleep( 1 ); // 1ms
-    #elif defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
-    #endif
+#if defined( __WINDOWS__ )
+    Thread::Sleep( 1 ); // 1ms
+#elif defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#elif defined( __LINUX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
+#endif
 
     FBuildStats stats = BuildGenerate();
 
@@ -147,19 +101,17 @@ void TestUnity::TestGenerate_NoRebuild() const
     TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( unity1 ) );
     TEST_ASSERT( dateTime2 == FileIO::GetFileLastWriteTime( unity2 ) );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      1 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 1 );
 }
 
-// TestGenerate_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerate_NoRebuild_BFFChange() const
+TEST_CASE( TestUnity, TestGenerate_NoRebuild_BFFChange )
 {
-    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
-    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
+    AStackString unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString unity2( "../tmp/Test/Unity/Unity2.cpp" );
 
     EnsureFileExists( unity1 );
     EnsureFileExists( unity2 );
@@ -182,27 +134,25 @@ void TestUnity::TestGenerate_NoRebuild_BFFChange() const
     TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( unity1 ) );
     TEST_ASSERT( dateTime2 == FileIO::GetFileLastWriteTime( unity2 ) );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      1 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 1 );
 }
 
-// DetectDeletedUnityFiles
 //------------------------------------------------------------------------------
-void TestUnity::DetectDeletedUnityFiles() const
+TEST_CASE( TestUnity, DetectDeletedUnityFiles )
 {
     // Ensure that a generated Unity file that has been deleted is
     // detected and regenerated
-    
+
     EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity1.cpp" );
     EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity2.cpp" );
 
     // Build
     FBuildTestOptions options;
     options.m_ShowBuildReason = true;
-    BuildGenerate( options, false ); // don't laod DB
+    BuildGenerate( options, false ); // don't load DB
 
     EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
     EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
@@ -221,11 +171,10 @@ void TestUnity::DetectDeletedUnityFiles() const
                  GetRecordedOutput().Find( "(Output" ) &&
                  GetRecordedOutput().Find( "missing)" ) );
 
-    // Check stats
-    //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsTotal( stats, 2,      2 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2, 2 );
 }
 
 // BuildCompile
@@ -236,7 +185,7 @@ FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceDBMigration_Debug = forceMigration;
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestCompileDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
@@ -246,9 +195,8 @@ FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool
     return fBuild.GetStats();
 }
 
-// TestCompile
 //------------------------------------------------------------------------------
-void TestUnity::TestCompile() const
+TEST_CASE( TestUnity, TestCompile )
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -260,126 +208,117 @@ void TestUnity::TestCompile() const
 
     EnsureFileExists( "../tmp/Test/Unity/Unity.lib" );
 
-    // Check stats
-    //                      Seen,   Built,  Type
+    // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   4,      Node::FILE_NODE ); // pch + 2x generated unity files built
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
-    CheckStatsNode ( stats, 3,      3,      Node::OBJECT_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 12 );
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 1, Node::UNITY_NODE );
+    CheckStatsNode( stats, numF, 4, Node::FILE_NODE ); // pch + 2x generated unity files built
+    CheckStatsNode( stats, 1, 1, Node::COMPILER_NODE );
+    CheckStatsNode( stats, 3, 3, Node::OBJECT_NODE );
+    CheckStatsNode( stats, 1, 1, Node::LIBRARY_NODE );
+    CheckStatsNode( stats, 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8 + numF, 12 );
 }
 
-// TestCompile_NoRebuild
 //------------------------------------------------------------------------------
-void TestUnity::TestCompile_NoRebuild() const
+TEST_CASE( TestUnity, TestCompile_NoRebuild )
 {
     FBuildStats stats = BuildCompile();
 
-    // Check stats
-    //                      Seen,   Built,  Type
+    // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
-    CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 2+numF );
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsNode( stats, numF, numF, Node::FILE_NODE );
+    CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( stats, 3, 0, Node::OBJECT_NODE );
+    CheckStatsNode( stats, 1, 0, Node::LIBRARY_NODE );
+    CheckStatsNode( stats, 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8 + numF, 2 + numF );
 }
 
-// TestCompile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
-void TestUnity::TestCompile_NoRebuild_BFFChange() const
+TEST_CASE( TestUnity, TestCompile_NoRebuild_BFFChange )
 {
     FBuildTestOptions options;
     const bool useDB = true;
     const bool forceMigration = true;
     FBuildStats stats = BuildCompile( options, useDB, forceMigration );
 
-    // Check stats
-    //                      Seen,   Built,  Type
+    // Check stats: Seen, Built, Type
     uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files
-    #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
-    #endif
-    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
-    CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
-    CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 2+numF );
+#if defined( __WINDOWS__ )
+    numF++; // pch.cpp
+#endif
+    CheckStatsNode( stats, 1, 1, Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode( stats, 1, 0, Node::UNITY_NODE );
+    CheckStatsNode( stats, numF, numF, Node::FILE_NODE );
+    CheckStatsNode( stats, 1, 0, Node::COMPILER_NODE );
+    CheckStatsNode( stats, 3, 0, Node::OBJECT_NODE );
+    CheckStatsNode( stats, 1, 0, Node::LIBRARY_NODE );
+    CheckStatsNode( stats, 1, 1, Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8 + numF, 2 + numF );
 }
 
-// TestGenerateFromExplicitList
 //------------------------------------------------------------------------------
-void TestUnity::TestGenerateFromExplicitList() const
+TEST_CASE( TestUnity, TestGenerateFromExplicitList )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/unity.bff";
 
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( "Unity-Explicit-Files" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-    CheckStatsTotal( 4,     4 );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::UNITY_NODE );
+    CheckStatsTotal( 4, 4 );
 }
 
-// TestExcludedFiles
 //------------------------------------------------------------------------------
-void TestUnity::TestExcludedFiles() const
+TEST_CASE( TestUnity, TestExcludedFiles )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/Exclusions/fbuild.bff";
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
     }
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
     }
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
     }
 
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
     }
 }
 
-// IsolateFromUnity_Regression
 //------------------------------------------------------------------------------
-void TestUnity::IsolateFromUnity_Regression() const
+TEST_CASE( TestUnity, IsolateFromUnity_Regression )
 {
     // There was a crash when a Unity was:
     // - Using an explicit list of files
@@ -388,55 +327,50 @@ void TestUnity::IsolateFromUnity_Regression() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateFromUnity/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 }
 
-// UnityInputIsolatedFiles
 //------------------------------------------------------------------------------
-void TestUnity::UnityInputIsolatedFiles() const
+TEST_CASE( TestUnity, UnityInputIsolatedFiles )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::UNITY_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 }
 
-// IsolateListFile
 //------------------------------------------------------------------------------
-void TestUnity::IsolateListFile() const
+TEST_CASE( TestUnity, IsolateListFile )
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateListFile/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
 
-    // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+    // Check stats: Seen, Built, Type
+    CheckStatsNode( 1, 1, Node::UNITY_NODE );
+    CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+    CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
 }
 
-// ClangStaticAnalysis
 //------------------------------------------------------------------------------
-void TestUnity::ClangStaticAnalysis() const
+TEST_CASE( TestUnity, ClangStaticAnalysis )
 {
     //
     // Ensure that use of Unity doesn't suppress static analysis warnings with Clang
     //
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) ); // Success, regardless of warnings
 
@@ -445,16 +379,15 @@ void TestUnity::ClangStaticAnalysis() const
     TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
 }
 
-// ClangStaticAnalysis_InjectHeader
 //------------------------------------------------------------------------------
-void TestUnity::ClangStaticAnalysis_InjectHeader() const
+TEST_CASE( TestUnity, ClangStaticAnalysis_InjectHeader )
 {
     //
     // Ensure headers injected with -include don't prevent fixup from working
     //
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile-InjectHeader" ) ); // Success, regardless of warnings
 
@@ -463,23 +396,22 @@ void TestUnity::ClangStaticAnalysis_InjectHeader() const
     TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
 }
 
-// LinkMultiple
 //------------------------------------------------------------------------------
-void TestUnity::LinkMultiple() const
+TEST_CASE( TestUnity, LinkMultiple )
 {
     // Test multiple Unity items with an additional loose file.
     // Ensure that builds occur as expected when items are isolated, and
     // that linker is passed correct objects can links successfully.
 
     // Code files generated/used by this test
-    const char* fileA = "../tmp/Test/Unity/LinkMultiple/Generated/A/a.cpp";
-    const char* fileB = "../tmp/Test/Unity/LinkMultiple/Generated/B/b.cpp";
-    const char* main = "../tmp/Test/Unity/LinkMultiple/Generated/main.cpp";
-    const char* fileAContents = "void FunctionA() {}\n";
-    const char* fileBContents = "void FunctionB() {}\n";
-    const char* mainContents = "extern void FunctionA();\n"
-                               "extern void FunctionB();\n"
-                               "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
+    const char * fileA = "../tmp/Test/Unity/LinkMultiple/Generated/A/a.cpp";
+    const char * fileB = "../tmp/Test/Unity/LinkMultiple/Generated/B/b.cpp";
+    const char * main = "../tmp/Test/Unity/LinkMultiple/Generated/main.cpp";
+    const char * fileAContents = "void FunctionA() {}\n";
+    const char * fileBContents = "void FunctionB() {}\n";
+    const char * mainContents = "extern void FunctionA();\n"
+                                "extern void FunctionB();\n"
+                                "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
 
     // Cleanup from previous runs (if files exist)
     FileIO::SetReadOnly( fileA, false );
@@ -505,66 +437,63 @@ void TestUnity::LinkMultiple() const
 
     // Compile
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 3, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Isolate one of the files
     {
         // Make file writeable so it is isolated
         FileIO::SetReadOnly( fileA, false );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 1, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // De-Isolate one of the files
     {
         // Make file read-only so it is put back in Unity
         FileIO::SetReadOnly( fileA, true );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 1, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Force a DB migration and modify state to ensure internal property
     // migration works correctly
@@ -576,35 +505,33 @@ void TestUnity::LinkMultiple() const
         FBuildOptions optionsCopy( options );
         optionsCopy.m_ForceDBMigration_Debug = true;
 
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 1, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 }
 
-// LinkMultiple_InputFiles
 //------------------------------------------------------------------------------
-void TestUnity::LinkMultiple_InputFiles() const
+TEST_CASE( TestUnity, LinkMultiple_InputFiles )
 {
-    // Same as LinkMultiple but with files explicitily specified instead o
+    // Same as LinkMultiple but with files explicitly specified instead o
     // discovering them via directory listings
 
     // Code files generated/used by this test
-    const char* fileA = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/A/a.cpp";
-    const char* fileB = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/B/b.cpp";
-    const char* main = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/main.cpp";
-    const char* fileAContents = "void FunctionA() {}\n";
-    const char* fileBContents = "void FunctionB() {}\n";
-    const char* mainContents = "extern void FunctionA();\n"
-                               "extern void FunctionB();\n"
-                               "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
+    const char * fileA = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/A/a.cpp";
+    const char * fileB = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/B/b.cpp";
+    const char * main = "../tmp/Test/Unity/LinkMultiple_InputFiles/Generated/main.cpp";
+    const char * fileAContents = "void FunctionA() {}\n";
+    const char * fileBContents = "void FunctionB() {}\n";
+    const char * mainContents = "extern void FunctionA();\n"
+                                "extern void FunctionB();\n"
+                                "int main(int, char *[]) { FunctionA(); FunctionB(); return 0; }\n";
 
     // Cleanup from previous runs (if files exist)
     FileIO::SetReadOnly( fileA, false );
@@ -628,70 +555,65 @@ void TestUnity::LinkMultiple_InputFiles() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/LinkMultiple_InputFiles/fbuild.bff";
     const char * dbFile = "../tmp/Test/Unity/LinkMultiple_InputFiles/fbuild.fdb";
 
-    options.m_NumWorkerThreads = 1; // DO NOT SUBMIT
-
     // Compile
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 3, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Isolate one of the files
     {
         // Make file writeable so it is isolated
         FileIO::SetReadOnly( fileA, false );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // De-Isolate one of the files
     {
         // Make file read-only so it is put back in Unity
         FileIO::SetReadOnly( fileA, true );
 
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #endif
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Force a DB migration and modify state to ensure internal property
     // migration works correctly
@@ -703,22 +625,20 @@ void TestUnity::LinkMultiple_InputFiles() const
         FBuildOptions optionsCopy( options );
         optionsCopy.m_ForceDBMigration_Debug = true;
 
-        FBuild fBuild( optionsCopy );
+        FBuildForTest fBuild( optionsCopy );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "Exe" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 2,     2,      Node::UNITY_NODE );
-        CheckStatsNode ( 3,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 2, 2, Node::UNITY_NODE );
+        CheckStatsNode( 3, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 1, 1, Node::EXE_NODE );
     }
 }
 
-// SortFiles
 //------------------------------------------------------------------------------
-void TestUnity::SortFiles() const
+TEST_CASE( TestUnity, SortFiles )
 {
     // Ensure sorting logic works as expected:
     //  - case insensitive (consistent regardless of file system or OS)
@@ -741,9 +661,9 @@ void TestUnity::SortFiles() const
             // Create dummy FileIO::FileInfo structure
             FileIO::FileInfo * info = FNEW( FileIO::FileInfo );
             info->m_Name = fileName; // Only the name is important
-            #if defined( __WINDOWS__ )
-                info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
-            #endif
+#if defined( __WINDOWS__ )
+            info->m_Name.Replace( '/', '\\' ); // Allow test to specify unix style slashes
+#endif
             m_HelperFileInfos.Append( info );
 
             // Add entry
@@ -753,23 +673,24 @@ void TestUnity::SortFiles() const
         void Sort()
         {
             m_HelperFiles.Sort();
-            #if defined( __WINDOWS__ )
-                for ( FileIO::FileInfo * info : m_HelperFileInfos )
-                {
-                    info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
-                }
-            #endif
+#if defined( __WINDOWS__ )
+            for ( FileIO::FileInfo * info : m_HelperFileInfos )
+            {
+                info->m_Name.Replace( '\\', '/' ); // Allow test to specify unix style slashes
+            }
+#endif
         }
 
-        const AString & operator[] ( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
+        const AString & operator[]( size_t index ) const { return m_HelperFiles[ index ].GetName(); }
 
-        Array< UnityNode::UnityFileAndOrigin >  m_HelperFiles;
-        Array< FileIO::FileInfo * >             m_HelperFileInfos;
+        Array<UnityNode::UnityFileAndOrigin> m_HelperFiles;
+        Array<FileIO::FileInfo *> m_HelperFileInfos;
     };
 
-    // Helper marcos to reduce boilerplate code
-    #define SORT( ... )                                                         \
-    do {                                                                           \
+    // Helper macros to reduce boilerplate code
+#define SORT( ... )                                                         \
+    do                                                                          \
+    {                                                                           \
         const char * const inputs[] = { __VA_ARGS__ };                          \
         Helper h;                                                               \
         for ( const char * input : inputs )                                     \
@@ -778,13 +699,14 @@ void TestUnity::SortFiles() const
         }                                                                       \
         h.Sort()
 
-    #define TEST( ... )                                                         \
+#define TEST( ... )                                                         \
         const char * const outputs[] = { __VA_ARGS__ };                         \
-        for ( size_t i = 0; i < (sizeof(outputs) / sizeof(const char *)); ++i ) \
+        for ( size_t i = 0; i < ( sizeof( outputs ) / sizeof( const char * ) ); ++i ) \
         {                                                                       \
             TEST_ASSERTM( h[ i ] == outputs[ i ], "Mismatch @ index %u: %s != %s", (uint32_t)i, h[ i ].Get(), outputs[ i ] ); \
         }                                                                       \
-    } while( false )
+    }                                                                           \
+    while ( false )
 
     // Basic sanity check
     SORT( "a.cpp", "b.cpp" );
@@ -799,6 +721,10 @@ void TestUnity::SortFiles() const
 
     SORT( "b.cpp", "A.cpp" );
     TEST( "A.cpp", "b.cpp" );
+
+    // Files whose paths are each other's substrings are sorted
+    SORT( "a/a.cpp", "a/a.c", "a/a.cp" );
+    TEST( "a/a.c", "a/a.cp", "a/a.cpp" );
 
     // Files in same dir
     SORT( "a/B.cpp", "a/a.cpp" );
@@ -815,32 +741,32 @@ void TestUnity::SortFiles() const
     TEST( "a/a.cpp", "B/a.cpp" );
 
     // Subdirs come after dirs
-    SORT( "a/a.cpp",    "z.cpp" );
-    TEST( "z.cpp",      "a/a.cpp" );
+    SORT( "a/a.cpp", "z.cpp" );
+    TEST( "z.cpp", "a/a.cpp" );
 
-    SORT( "A/A.cpp",    "z.cpp" );
-    TEST( "z.cpp",      "A/A.cpp" );
+    SORT( "A/A.cpp", "z.cpp" );
+    TEST( "z.cpp", "A/A.cpp" );
 
-    SORT( "Z/A.cpp",    "a.cpp" );
-    TEST( "a.cpp",      "Z/A.cpp" );
+    SORT( "Z/A.cpp", "a.cpp" );
+    TEST( "a.cpp", "Z/A.cpp" );
 
     SORT( "a.cpp", "bbb/a.cpp", "c.cpp" );
-    TEST( "a.cpp", "c.cpp",     "bbb/a.cpp" );
+    TEST( "a.cpp", "c.cpp", "bbb/a.cpp" );
 
     // subdirs that match filename come after all files
-    SORT( "a.cpp/a.cpp",    "a.cpp",    "b.cpp" );
-    TEST( "a.cpp",          "b.cpp",    "a.cpp/a.cpp" );
+    SORT( "a.cpp/a.cpp", "a.cpp", "b.cpp" );
+    TEST( "a.cpp", "b.cpp", "a.cpp/a.cpp" );
 
-    SORT( "aaa", "aba/a",   "aba" );
-    TEST( "aaa", "aba",     "aba/a" );
+    SORT( "aaa", "aba/a", "aba" );
+    TEST( "aaa", "aba", "aba/a" );
 
     // subdirs that are partial matches
-    SORT( "aa/a",   "a/a" );
-    TEST( "a/a",    "aa/a" );
+    SORT( "aa/a", "a/a" );
+    TEST( "a/a", "aa/a" );
 
     // differing depths
-    SORT( "Folder/SubDir/a.cpp",    "Folder/z.cpp" );
-    TEST( "Folder/z.cpp",           "Folder/SubDir/a.cpp" );
+    SORT( "Folder/SubDir/a.cpp", "Folder/z.cpp" );
+    TEST( "Folder/z.cpp", "Folder/SubDir/a.cpp" );
 
     // same depth but different dirs
     SORT( "Folder/BBB/a.cpp", "Folder/AAA/z.cpp" );
@@ -856,13 +782,12 @@ void TestUnity::SortFiles() const
           "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Cache/ICache.cpp",
           "C:/p4/depot/Code/Tools/FBuild/FBuildCore/Graph/CopyDirNode.cpp" );
 
-    #undef SORT
-    #undef CHECK
+#undef SORT
+#undef CHECK
 }
 
-// CacheUsingRelativePaths
 //------------------------------------------------------------------------------
-void TestUnity::CacheUsingRelativePaths() const
+TEST_CASE( TestUnity, CacheUsingRelativePaths )
 {
     // Source files
     const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestUnity/CacheUsingRelativePaths/";
@@ -876,18 +801,19 @@ void TestUnity::CacheUsingRelativePaths() const
     const char * dstPathB = "../tmp/Test/Unity/CacheUsingRelativePaths/B/Code";
     const char * dstPaths[] = { dstPathA, dstPathB };
 
-    #if defined( __WINDOWS__ )
-        const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.obj";
-    #else
-        const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.o";
-    #endif
+#if defined( __WINDOWS__ )
+    const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.obj";
+#else
+    const char * objFileA = "../tmp/Test/Unity/CacheUsingRelativePaths/A/out/Unity1.o";
+#endif
 
     // Copy file structure to both destinations
     for ( const char * dstPath : dstPaths )
     {
         for ( const char * file : files )
         {
-            AStackString<> src, dst;
+            AStackString src;
+            AStackString dst;
             src.Format( "%s/%s", srcPath, file );
             dst.Format( "%s/%s", dstPath, file );
             TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
@@ -901,12 +827,12 @@ void TestUnity::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheWrite = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/A/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -924,16 +850,18 @@ void TestUnity::CacheUsingRelativePaths() const
             TEST_ASSERT( f.Open( objFileA ) );
             buffer.SetLength( (uint32_t)f.GetFileSize() );
             TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
-            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+            buffer.Replace( (char)0, ' ' ); // Make string searches simpler
         }
 
         // Check __FILE__ paths are relative
+#if defined( __WINDOWS__ )
+        TEST_ASSERT(
+            buffer.Find( "FILE_MACRO_START_1(..\\out\\..\\Code\\Subdir/Header.h)FILE_MACRO_END_1" ) );
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(..\\out\\..\\Code\\File.cpp)FILE_MACRO_END_2" ) );
+#else
         TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) );
-        #if defined( __WINDOWS__ )
-            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(.\\File.cpp)FILE_MACRO_END_2" ) );
-        #else
-            TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(./File.cpp)FILE_MACRO_END_2" ) );
-        #endif
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(../out/../Code/File.cpp)FILE_MACRO_END_2" ) );
+#endif
     }
 
     // Build in path B, reading from the cache
@@ -942,12 +870,12 @@ void TestUnity::CacheUsingRelativePaths() const
         FBuildTestOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.m_UseCacheRead = true;
-        AStackString<> codeDir;
+        AStackString codeDir;
         GetCodeDir( codeDir );
         codeDir.Trim( 0, 5 ); // Remove Code/
         codeDir += "tmp/Test/Unity/CacheUsingRelativePaths/B/Code/";
         options.SetWorkingDir( codeDir );
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
@@ -955,12 +883,10 @@ void TestUnity::CacheUsingRelativePaths() const
 
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
     }
-
 }
 
-// NoUnityCommandLineOption
 //------------------------------------------------------------------------------
-void TestUnity::NoUnityCommandLineOption() const
+TEST_CASE( TestUnity, NoUnityCommandLineOption )
 {
     //
     // Ensure toggling -nounity results in expected rebuilding
@@ -971,16 +897,15 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build normally
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 1, 1, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Switch on -nounity
@@ -989,7 +914,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -997,11 +922,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( GetRecordedOutput().Find( "(-nounity was added)" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Remove -nounity
@@ -1009,7 +933,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -1017,11 +941,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( GetRecordedOutput().Find( "(-nounity was removed)" ) );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Switch on -nounity again
@@ -1029,7 +952,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -1037,11 +960,10 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( AString( GetRecordedOutput() ).Replace( "(-nounity was added)", "" ) == 2 );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 2,     0,      Node::OBJECT_NODE ); // NOTE: Isolated object files can be re-used
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE ); // NOTE: Isolated object files can be re-used
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
     }
 
     // Remove -nounity again
@@ -1049,7 +971,7 @@ void TestUnity::NoUnityCommandLineOption() const
 
     // Build again
     {
-        FBuild fBuild( options );
+        FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile ) );
         TEST_ASSERT( fBuild.Build( "NoUnityCommandLineOption" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
@@ -1057,11 +979,72 @@ void TestUnity::NoUnityCommandLineOption() const
         // Ensure rebuild was caused by specific build reason
         TEST_ASSERT( AString( GetRecordedOutput() ).Replace( "(-nounity was removed)", "" ) == 2 );
 
-        // Check stats
-        //               Seen,  Built,  Type
-        CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
-        CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
-        CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 1, 0, Node::OBJECT_NODE ); // NOTE: Unity object files can be re-used
+        CheckStatsNode( 1, 1, Node::LIBRARY_NODE );
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestUnity, NoUnityCache )
+{
+    // Files isolated from Unity don't get caching, but when -nounity is used
+    // they should behave as if they are being compiled via an ObjectList
+    // without unity, which is cached.
+    const char * const dbFile = "../tmp/Test/Unity/NoUnityCache/fbuild.fdb";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/NoUnityCache/fbuild.bff";
+
+    // Allow writing to cache. We'll check below it only occurs when expected
+    options.m_UseCacheWrite = true;
+
+    // Build normally
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+
+        // Isolated files should not be written to cache
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 0 );
+    }
+
+    // Switch on -nounity
+    options.m_NoUnity = true;
+
+    // Build again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 2, Node::OBJECT_NODE );
+
+        // Isolated files should not be cached
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 2 );
+    }
+
+    // Allow reading
+    options.m_UseCacheRead = true;
+
+    // Build again
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "NoUnityCache" ) );
+
+        // Check stats: Seen, Built, Type
+        CheckStatsNode( 1, 1, Node::UNITY_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+
+        // Isolated files should not be cached
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 2 );
     }
 }
 

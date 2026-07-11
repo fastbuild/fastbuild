@@ -10,7 +10,7 @@ Settings {} // use Standard Environment
 
 ObjectList( 'ObjectList' )
 {
-    .CompilerInputFiles = { 
+    .CompilerInputFiles = {
                             '$TestRoot$/Data/TestCache/LightCache_IncludeUsingMacro2/file.1.cpp'
                             '$TestRoot$/Data/TestCache/LightCache_IncludeUsingMacro2/file.2.cpp'
                           }

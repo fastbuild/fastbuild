@@ -3,10 +3,10 @@
 //
 #if defined( __WINDOWS__ )
     #if defined( DLL_A_EXPORT )
-        __declspec(dllexport) int FunctionA();
+__declspec( dllexport ) int FunctionA();
     #else
-        __declspec(dllimport) int FunctionA();
+__declspec( dllimport ) int FunctionA();
     #endif
 #else
-    int FunctionA();
+int FunctionA();
 #endif

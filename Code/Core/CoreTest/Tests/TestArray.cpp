@@ -6,72 +6,14 @@
 #include "TestFramework/TestGroup.h"
 
 #include "Core/Containers/Array.h"
+#include "Core/Math/Random.h"
 #include "Core/Strings/AString.h"
+#include "Core/Tracing/Tracing.h"
 
-// TestArray
 //------------------------------------------------------------------------------
-class TestArray : public TestGroup
+TEST_GROUP( TestArray, TestGroupTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Construct_Empty() const;
-    void Construct_OtherArray() const;
-    void Construct_Range() const;
-    void Construct_WithCapacity() const;
-
-    void Destruct() const;
-
-    void BeginAndEnd() const;
-
-    void IndexOperator() const;
-    void GetIndexOf() const;
-    void Top() const;
-
-    void RangeBasedForLoop() const;
-
-    void SetCapacity() const;
-    void SetSize() const;
-    void Clear() const;
-    void Swap() const;
-
-    void Sort() const;
-    void SortDeref() const;
-
-    void Find() const;
-    void FindDeref() const;
-    void FindAndErase() const;
-    void FindDerefAndErase() const;
-
-    void Append_Item() const;
-    void Append_OtherArray() const;
-    void Append_Range() const;
-
-    void Pop() const;
-    void PopFront() const;
-    void Erase() const;
-    void EraseIndex() const;
-    void EmplaceBack() const;
-
-    void AssignmentOperator_OtherArray() const;
-
-    void IsAtCapacity() const;
-    void GetCapacity() const;
-    void GetSize() const;
-    void IsEmpty() const;
-
-    void Alignment() const;
-
-    void MoveConstructor() const;
-    void MoveAssignment() const;
-    void MoveWhenGrowing() const;
-    void MoveAppend() const;
-    void MoveSetCapacity() const;
-    void MovePopFront() const;
-    void MoveErase() const;
-
-    void StackArrayOverflowToHeap() const;
-
+public:
     // Helper functions
     template <typename T>
     void CheckConsistency( const Array<T> & array ) const;
@@ -81,70 +23,8 @@ private:
     void MoveAssignmentHelper( const ELEM & value ) const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestArray )
-    REGISTER_TEST( Construct_Empty )
-    REGISTER_TEST( Construct_OtherArray )
-    REGISTER_TEST( Construct_Range )
-    REGISTER_TEST( Construct_WithCapacity )
-
-    REGISTER_TEST( Destruct )
-
-    REGISTER_TEST( BeginAndEnd )
-
-    REGISTER_TEST( IndexOperator )
-    REGISTER_TEST( GetIndexOf )
-    REGISTER_TEST( Top )
-
-    REGISTER_TEST( RangeBasedForLoop )
-
-    REGISTER_TEST( SetCapacity )
-    REGISTER_TEST( SetSize )
-    REGISTER_TEST( Clear )
-    REGISTER_TEST( Swap )
-
-    REGISTER_TEST( Sort )
-    REGISTER_TEST( SortDeref )
-
-    REGISTER_TEST( Find )
-    REGISTER_TEST( FindDeref )
-    REGISTER_TEST( FindAndErase )
-    REGISTER_TEST( FindDerefAndErase )
-
-    REGISTER_TEST( Append_Item )
-    REGISTER_TEST( Append_OtherArray )
-    REGISTER_TEST( Append_Range )
-
-    REGISTER_TEST( Pop )
-    REGISTER_TEST( PopFront )
-    REGISTER_TEST( Erase )
-    REGISTER_TEST( EraseIndex )
-    REGISTER_TEST( EmplaceBack )
-
-    REGISTER_TEST( AssignmentOperator_OtherArray )
-
-    REGISTER_TEST( IsAtCapacity )
-    REGISTER_TEST( GetCapacity )
-    REGISTER_TEST( GetSize )
-    REGISTER_TEST( IsEmpty )
-
-    REGISTER_TEST( Alignment )
-
-    REGISTER_TEST( MoveConstructor )
-    REGISTER_TEST( MoveAssignment )
-    REGISTER_TEST( MoveWhenGrowing )
-    REGISTER_TEST( MoveAppend )
-    REGISTER_TEST( MoveSetCapacity )
-    REGISTER_TEST( MovePopFront )
-    REGISTER_TEST( MoveErase )
-
-    REGISTER_TEST( StackArrayOverflowToHeap )
-REGISTER_TESTS_END
-
-// Construct_Empty
-//------------------------------------------------------------------------------
-void TestArray::Construct_Empty() const
+TEST_CASE( TestArray, Construct_Empty )
 {
     {
         Array<uint32_t> array;
@@ -156,9 +36,8 @@ void TestArray::Construct_Empty() const
     }
 }
 
-// Construct_OtherArray
 //------------------------------------------------------------------------------
-void TestArray::Construct_OtherArray() const
+TEST_CASE( TestArray, Construct_OtherArray )
 {
     {
         Array<uint32_t> array1;
@@ -190,9 +69,8 @@ void TestArray::Construct_OtherArray() const
     }
 }
 
-// Construct_Range
 //------------------------------------------------------------------------------
-void TestArray::Construct_Range() const
+TEST_CASE( TestArray, Construct_Range )
 {
     {
         const uint32_t u32s[ 4 ] = { 1, 2, 3, 4 };
@@ -221,32 +99,8 @@ void TestArray::Construct_Range() const
     }
 }
 
-// Construct_WithCapacity
 //------------------------------------------------------------------------------
-void TestArray::Construct_WithCapacity() const
-{
-    {
-        Array<uint32_t> array( 3, true ); // resizable
-        CheckConsistency( array );
-        TEST_ASSERT( array.GetSize() == 0 );
-        TEST_ASSERT( array.GetCapacity() == 3 );
-        TEST_ASSERT( array.IsEmpty() );
-        TEST_ASSERT( array.IsAtCapacity() == false );
-    }
-
-    {
-        Array<uint32_t> array( 3, false ); // fixed capacity
-        CheckConsistency( array );
-        TEST_ASSERT( array.GetSize() == 0 );
-        TEST_ASSERT( array.GetCapacity() == 3 );
-        TEST_ASSERT( array.IsEmpty() );
-        TEST_ASSERT( array.IsAtCapacity() == false );
-    }
-}
-
-// Destruct
-//------------------------------------------------------------------------------
-void TestArray::Destruct() const
+TEST_CASE( TestArray, Destruct )
 {
     // POD
     {
@@ -287,9 +141,8 @@ void TestArray::Destruct() const
     }
 }
 
-//  BeginAndEnd
 //------------------------------------------------------------------------------
-void TestArray::BeginAndEnd() const
+TEST_CASE( TestArray, BeginAndEnd )
 {
     // POD
     {
@@ -303,7 +156,8 @@ void TestArray::BeginAndEnd() const
     }
     {
         // Non-empty
-        Array<uint32_t> array( 2 );
+        Array<uint32_t> array;
+        array.SetCapacity( 2 );
         TEST_ASSERT( array.Begin() != nullptr );
         TEST_ASSERT( array.End() != nullptr );
         TEST_ASSERT( array.Begin() == array.End() );
@@ -329,7 +183,8 @@ void TestArray::BeginAndEnd() const
     }
     {
         // Non-empty
-        Array<AString> array( 2 );
+        Array<AString> array;
+        array.SetCapacity( 2 );
         TEST_ASSERT( array.Begin() != nullptr );
         TEST_ASSERT( array.End() != nullptr );
         TEST_ASSERT( array.Begin() == array.End() );
@@ -344,13 +199,12 @@ void TestArray::BeginAndEnd() const
     }
 }
 
-// IndexOperator
 //------------------------------------------------------------------------------
-void TestArray::IndexOperator() const
+TEST_CASE( TestArray, IndexOperator )
 {
     // POD
     {
-        Array<uint32_t> array( 2 );
+        StackArray<uint32_t> array;
         array.Append( 1 );
         array.Append( 2 );
         TEST_ASSERT( array[ 0 ] == 1 );
@@ -360,22 +214,21 @@ void TestArray::IndexOperator() const
 
     // Complex Type
     {
-        Array<AString> array( 2 );
-        array.Append( AString( "string1" ) );
-        array.Append( AString( "string2" ) );
+        StackArray<AString> array;
+        array.EmplaceBack( "string1" );
+        array.EmplaceBack( "string2" );
         TEST_ASSERT( array[ 0 ] == "string1" );
         TEST_ASSERT( array[ 1 ] == "string2" );
         CheckConsistency( array );
     }
 }
 
-// GetIndexOf
 //------------------------------------------------------------------------------
-void TestArray::GetIndexOf() const
+TEST_CASE( TestArray, GetIndexOf )
 {
     // POD
     {
-        Array<uint32_t> array( 2 );
+        StackArray<uint32_t> array;
         array.Append( 1 );
         array.Append( 2 );
         TEST_ASSERT( array.GetIndexOf( &array[ 0 ] ) == 0 );
@@ -384,21 +237,20 @@ void TestArray::GetIndexOf() const
 
     // Complex Type
     {
-        Array<AString> array( 2 );
-        array.Append( AString( "string1" ) );
-        array.Append( AString( "string2" ) );
+        StackArray<AString> array;
+        array.EmplaceBack( "string1" );
+        array.EmplaceBack( "string2" );
         TEST_ASSERT( array.GetIndexOf( &array[ 0 ] ) == 0 );
         TEST_ASSERT( array.GetIndexOf( &array[ 1 ] ) == 1 );
     }
 }
 
-// Top
 //------------------------------------------------------------------------------
-void TestArray::Top() const
+TEST_CASE( TestArray, Top )
 {
     // POD
     {
-        Array<uint32_t> array( 2 );
+        StackArray<uint32_t> array;
         array.Append( 1 );
         array.Append( 2 );
         TEST_ASSERT( array.Top() == 2 );
@@ -407,21 +259,20 @@ void TestArray::Top() const
 
     // Complex Type
     {
-        Array<AString> array( 2 );
-        array.Append( AString( "string1" ) );
-        array.Append( AString( "string2" ) );
+        StackArray<AString> array;
+        array.EmplaceBack( "string1" );
+        array.EmplaceBack( "string2" );
         TEST_ASSERT( array.Top() == "string2" );
         CheckConsistency( array );
     }
 }
 
-// RangeBasedForLoop
 //------------------------------------------------------------------------------
-void TestArray::RangeBasedForLoop() const
+TEST_CASE( TestArray, RangeBasedForLoop )
 {
     // POD
     {
-        Array<uint32_t> array( 2 );
+        StackArray<uint32_t> array;
         array.Append( 1 );
         array.Append( 2 );
         uint32_t total = 0;
@@ -430,7 +281,7 @@ void TestArray::RangeBasedForLoop() const
             total += u;
         }
         TEST_ASSERT( total == 3 );
-        for ( const uint32_t& u : array ) // by reference
+        for ( const uint32_t & u : array ) // by reference
         {
             total += u;
         }
@@ -440,9 +291,9 @@ void TestArray::RangeBasedForLoop() const
 
     // Complex Type
     {
-        Array<AString> array( 2 );
-        array.Append( AString( "string1" ) );
-        array.Append( AString( "string2" ) );
+        StackArray<AString> array;
+        array.EmplaceBack( "string1" );
+        array.EmplaceBack( "string2" );
         AString result;
         for ( const AString & s : array ) // by reference
         {
@@ -458,9 +309,8 @@ void TestArray::RangeBasedForLoop() const
     }
 }
 
-// SetCapacity
 //------------------------------------------------------------------------------
-void TestArray::SetCapacity() const
+TEST_CASE( TestArray, SetCapacity )
 {
     // POD
     {
@@ -480,9 +330,8 @@ void TestArray::SetCapacity() const
     }
 }
 
-// SetSize
 //------------------------------------------------------------------------------
-void TestArray::SetSize() const
+TEST_CASE( TestArray, SetSize )
 {
     // POD
     {
@@ -504,9 +353,8 @@ void TestArray::SetSize() const
     }
 }
 
-// Clear
 //------------------------------------------------------------------------------
-void TestArray::Clear() const
+TEST_CASE( TestArray, Clear )
 {
     // POD
     {
@@ -547,9 +395,8 @@ void TestArray::Clear() const
     }
 }
 
-// Swap
 //------------------------------------------------------------------------------
-void TestArray::Swap() const
+TEST_CASE( TestArray, Swap )
 {
     // POD
     {
@@ -599,9 +446,8 @@ void TestArray::Swap() const
     }
 }
 
-// Sort
 //------------------------------------------------------------------------------
-void TestArray::Sort() const
+TEST_CASE( TestArray, Sort )
 {
     // POD
     {
@@ -660,9 +506,8 @@ void TestArray::Sort() const
     }
 }
 
-// SortDeref
 //------------------------------------------------------------------------------
-void TestArray::SortDeref() const
+TEST_CASE( TestArray, SortDeref )
 {
     // POD
     {
@@ -729,9 +574,76 @@ void TestArray::SortDeref() const
     }
 }
 
-// Find
 //------------------------------------------------------------------------------
-void TestArray::Find() const
+TEST_CASE( TestArray, SortBig )
+{
+    Random r;
+
+    const uint32_t numItems = 1024 * 1024;
+
+    // Ints
+    {
+        // Generate a set of random integers
+        Array<uint32_t> bigArray;
+        bigArray.SetSize( numItems );
+        for ( uint32_t & element : bigArray )
+        {
+            element = r.GetRand();
+        }
+
+        // Sort
+        const Timer t;
+        bigArray.Sort();
+        const float t1 = t.GetElapsed();
+        CheckConsistency( bigArray );
+        OUTPUT( "SortBig 1, %2.3fs, %u\n", static_cast<double>( t1 ), numItems );
+
+        // Validate ordering
+        for ( uint32_t j = 1; j < bigArray.GetSize(); ++j )
+        {
+            TEST_ASSERT( bigArray[ j - 1 ] <= bigArray[ j ] );
+        }
+    }
+
+    // AString
+    {
+        // Generate a set of random strings
+        Array<AString> bigArray;
+        bigArray.SetSize( numItems );
+        for ( AString & element : bigArray )
+        {
+            element.SetReserved( 4 );
+            element.SetLength( r.GetRandIndex( 16 ) );
+            for ( char & c : element )
+            {
+                c = static_cast<char>( 32 + r.GetRandIndex( 127 - 32 ) );
+            }
+        }
+
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        // Sort
+        const Timer t;
+        bigArray.Sort();
+        const float t1 = t.GetElapsed();
+        CheckConsistency( bigArray );
+
+        // Validate that no allocations were performed
+        // (all strings should have been moved)
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
+
+        OUTPUT( "SortBig 2, %2.3fs, %u\n", static_cast<double>( t1 ), numItems );
+
+        // Validate ordering
+        for ( uint32_t j = 1; j < bigArray.GetSize(); ++j )
+        {
+            TEST_ASSERT( bigArray[ j - 1 ].Compare( bigArray[ j ] ) <= 0 );
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestArray, Find )
 {
     // POD
     {
@@ -774,9 +686,8 @@ void TestArray::Find() const
     }
 }
 
-// FindDeref
 //------------------------------------------------------------------------------
-void TestArray::FindDeref() const
+TEST_CASE( TestArray, FindDeref )
 {
     // POD
     {
@@ -825,9 +736,8 @@ void TestArray::FindDeref() const
     }
 }
 
-// FindAndErase
 //------------------------------------------------------------------------------
-void TestArray::FindAndErase() const
+TEST_CASE( TestArray, FindAndErase )
 {
     // POD
     {
@@ -876,14 +786,13 @@ void TestArray::FindAndErase() const
     }
 }
 
-// FindDerefAndErase
 //------------------------------------------------------------------------------
-void TestArray::FindDerefAndErase() const
+TEST_CASE( TestArray, FindDerefAndErase )
 {
     // POD
     {
         // Empty
-        Array<uint32_t*> array;
+        Array<uint32_t *> array;
         TEST_ASSERT( array.FindDerefAndErase( (uint32_t)1 ) == false );
         CheckConsistency( array );
     }
@@ -892,7 +801,7 @@ void TestArray::FindDerefAndErase() const
         const uint32_t u32_1 = 1;
         const uint32_t u32_2 = 2;
         const uint32_t u32_3 = 3;
-        Array<const uint32_t*> array;
+        Array<const uint32_t *> array;
         array.Append( &u32_1 );
         array.Append( &u32_2 );
         array.Append( &u32_3 );
@@ -909,7 +818,7 @@ void TestArray::FindDerefAndErase() const
     // Complex type
     {
         // Empty
-        Array<AString*> array;
+        Array<AString *> array;
         TEST_ASSERT( array.FindDerefAndErase( "string1" ) == false );
         CheckConsistency( array );
     }
@@ -918,7 +827,7 @@ void TestArray::FindDerefAndErase() const
         const AString string1( "string1" );
         const AString string2( "string2" );
         const AString string3( "string3" );
-        Array<const AString*> array;
+        Array<const AString *> array;
         array.Append( &string1 );
         array.Append( &string2 );
         array.Append( &string3 );
@@ -933,9 +842,8 @@ void TestArray::FindDerefAndErase() const
     }
 }
 
-// Append_Item
 //------------------------------------------------------------------------------
-void TestArray::Append_Item() const
+TEST_CASE( TestArray, Append_Item )
 {
     // POD
     {
@@ -990,9 +898,8 @@ void TestArray::Append_Item() const
     }
 }
 
-// Append_OtherArray
 //------------------------------------------------------------------------------
-void TestArray::Append_OtherArray() const
+TEST_CASE( TestArray, Append_OtherArray )
 {
     // POD
     {
@@ -1049,9 +956,8 @@ void TestArray::Append_OtherArray() const
     }
 }
 
-// Append_Range
 //------------------------------------------------------------------------------
-void TestArray::Append_Range() const
+TEST_CASE( TestArray, Append_Range )
 {
     // POD
     {
@@ -1105,9 +1011,8 @@ void TestArray::Append_Range() const
     }
 }
 
-// Pop
 //------------------------------------------------------------------------------
-void TestArray::Pop() const
+TEST_CASE( TestArray, Pop )
 {
     // POD
     {
@@ -1161,9 +1066,8 @@ void TestArray::Pop() const
     }
 }
 
-// PopFront
 //------------------------------------------------------------------------------
-void TestArray::PopFront() const
+TEST_CASE( TestArray, PopFront )
 {
     // POD
     {
@@ -1217,9 +1121,8 @@ void TestArray::PopFront() const
     }
 }
 
-// Erase
 //------------------------------------------------------------------------------
-void TestArray::Erase() const
+TEST_CASE( TestArray, Erase )
 {
     // POD
     {
@@ -1273,9 +1176,8 @@ void TestArray::Erase() const
     }
 }
 
-// EraseIndex
 //------------------------------------------------------------------------------
-void TestArray::EraseIndex() const
+TEST_CASE( TestArray, EraseIndex )
 {
     // POD
     {
@@ -1329,9 +1231,8 @@ void TestArray::EraseIndex() const
     }
 }
 
-// EmplaceBack
 //------------------------------------------------------------------------------
-void TestArray::EmplaceBack() const
+TEST_CASE( TestArray, EmplaceBack )
 {
     // POD
     {
@@ -1361,13 +1262,14 @@ void TestArray::EmplaceBack() const
     // Complex Type
     {
         // Emplace one item
-        Array<AString> array( 1 );
+        Array<AString> array;
+        array.SetCapacity( 1 );
 
         TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
 
         TEST_ASSERT( array.EmplaceBack( "string1" ) == "string1" );
 
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u ) // Check expected amount of allocs occurred
 
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
@@ -1377,13 +1279,14 @@ void TestArray::EmplaceBack() const
     }
     {
         // Emplace one item (Move)
-        Array<AString> array( 1 );
+        Array<AString> array;
+        array.SetCapacity( 1 );
 
         TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
 
         TEST_ASSERT( array.EmplaceBack( Move( AString( "string1" ) ) ) == "string1" );
 
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u ) // Check expected amount of allocs occurred
 
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
@@ -1393,7 +1296,8 @@ void TestArray::EmplaceBack() const
     }
     {
         // Emplace several items
-        Array<AString> array( 3 );
+        Array<AString> array;
+        array.SetCapacity( 3 );
 
         TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
 
@@ -1401,7 +1305,7 @@ void TestArray::EmplaceBack() const
         TEST_ASSERT( array.EmplaceBack( "string2" ) == "string2" );
         TEST_ASSERT( array.EmplaceBack( "string3" ) == "string3" );
 
-        TEST_EXPECT_ALLOCATION_EVENTS( s1, 3 ) // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 3u ) // Check expected amount of allocs occurred
 
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
@@ -1412,9 +1316,8 @@ void TestArray::EmplaceBack() const
     }
 }
 
-// AssignmentOperator_OtherArray
 //------------------------------------------------------------------------------
-void TestArray::AssignmentOperator_OtherArray() const
+TEST_CASE( TestArray, AssignmentOperator_OtherArray )
 {
     // POD
     {
@@ -1437,7 +1340,7 @@ void TestArray::AssignmentOperator_OtherArray() const
         CheckConsistency( array1 );
         CheckConsistency( array2 );
         TEST_ASSERT( array2.GetSize() == array1.GetSize() );
-        TEST_ASSERT( array1.IsEmpty() == false);
+        TEST_ASSERT( array1.IsEmpty() == false );
         TEST_ASSERT( array2.IsEmpty() == false );
         TEST_ASSERT( array2[ 0 ] == 1 );
         TEST_ASSERT( array2[ 0 ] == array1[ 0 ] );
@@ -1527,9 +1430,8 @@ void TestArray::AssignmentOperator_OtherArray() const
     }
 }
 
-// IsAtCapacity
 //------------------------------------------------------------------------------
-void TestArray::IsAtCapacity() const
+TEST_CASE( TestArray, IsAtCapacity )
 {
     // POD
     {
@@ -1540,20 +1442,23 @@ void TestArray::IsAtCapacity() const
     }
     {
         // Empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.IsAtCapacity() == false );
         CheckConsistency( array );
     }
     {
         // Non-empty, no extra capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         array.Append( 1 );
         TEST_ASSERT( array.IsAtCapacity() );
         CheckConsistency( array );
     }
     {
         // Non-empty, with extra capacity
-        Array<uint32_t> array( 2 );
+        Array<uint32_t> array;
+        array.SetCapacity( 2 );
         array.Append( 1 );
         TEST_ASSERT( array.IsAtCapacity() == false );
         CheckConsistency( array );
@@ -1568,29 +1473,31 @@ void TestArray::IsAtCapacity() const
     }
     {
         // Empty, with capacity
-        Array<AString> array( 1 );
+        Array<AString> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.IsAtCapacity() == false );
         CheckConsistency( array );
     }
     {
         // Non-empty, no extra capacity
-        Array<AString> array( 1 );
-        array.Append( AString( "string1" ) );
+        Array<AString> array;
+        array.SetCapacity( 1 );
+        array.EmplaceBack( "string1" );
         TEST_ASSERT( array.IsAtCapacity() );
         CheckConsistency( array );
     }
     {
         // Non-empty, with extra capacity
-        Array<AString> array( 2 );
-        array.Append( AString( "string1" ) );
+        Array<AString> array;
+        array.SetCapacity( 2 );
+        array.EmplaceBack( "string1" );
         TEST_ASSERT( array.IsAtCapacity() == false );
         CheckConsistency( array );
     }
 }
 
-// GetCapacity
 //------------------------------------------------------------------------------
-void TestArray::GetCapacity() const
+TEST_CASE( TestArray, GetCapacity )
 {
     // POD
     {
@@ -1601,13 +1508,15 @@ void TestArray::GetCapacity() const
     }
     {
         // Empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.GetCapacity() == 1 );
         CheckConsistency( array );
     }
     {
         // Non-empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         array.Append( 1 );
         TEST_ASSERT( array.GetCapacity() == 1 );
         CheckConsistency( array );
@@ -1622,22 +1531,23 @@ void TestArray::GetCapacity() const
     }
     {
         // Empty, with capacity
-        Array<AString> array( 1 );
+        Array<AString> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.GetCapacity() == 1 );
         CheckConsistency( array );
     }
     {
         // Non-empty, with capacity
-        Array<AString> array( 1 );
-        array.Append( AString( "string1" ) );
+        Array<AString> array;
+        array.SetCapacity( 1 );
+        array.EmplaceBack( "string1" );
         TEST_ASSERT( array.GetCapacity() == 1 );
         CheckConsistency( array );
     }
 }
 
-// GetSize
 //------------------------------------------------------------------------------
-void TestArray::GetSize() const
+TEST_CASE( TestArray, GetSize )
 {
     // POD
     {
@@ -1648,13 +1558,15 @@ void TestArray::GetSize() const
     }
     {
         // Empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.GetSize() == 0 );
         CheckConsistency( array );
     }
     {
         // Non-empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         array.Append( 1 );
         TEST_ASSERT( array.GetSize() == 1 );
         CheckConsistency( array );
@@ -1669,22 +1581,23 @@ void TestArray::GetSize() const
     }
     {
         // Empty, with capacity
-        Array<AString> array( 1 );
+        Array<AString> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.GetSize() == 0 );
         CheckConsistency( array );
     }
     {
         // Non-empty, with capacity
-        Array<AString> array( 1 );
-        array.Append( AString( "string1" ) );
+        Array<AString> array;
+        array.SetCapacity( 1 );
+        array.EmplaceBack( "string1" );
         TEST_ASSERT( array.GetSize() == 1 );
         CheckConsistency( array );
     }
 }
 
-// IsEmpty
 //------------------------------------------------------------------------------
-void TestArray::IsEmpty() const
+TEST_CASE( TestArray, IsEmpty )
 {
     // POD
     {
@@ -1695,13 +1608,15 @@ void TestArray::IsEmpty() const
     }
     {
         // Empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.IsEmpty() );
         CheckConsistency( array );
     }
     {
         // Non-empty, with capacity
-        Array<uint32_t> array( 1 );
+        Array<uint32_t> array;
+        array.SetCapacity( 1 );
         array.Append( 1 );
         TEST_ASSERT( array.IsEmpty() == false );
         CheckConsistency( array );
@@ -1716,22 +1631,23 @@ void TestArray::IsEmpty() const
     }
     {
         // Empty, with capacity
-        Array<AString> array( 1 );
+        Array<AString> array;
+        array.SetCapacity( 1 );
         TEST_ASSERT( array.IsEmpty() );
         CheckConsistency( array );
     }
     {
         // Non-empty, with capacity
-        Array<AString> array( 1 );
-        array.Append( AString( "string1" ) );
+        Array<AString> array;
+        array.SetCapacity( 1 );
+        array.EmplaceBack( "string1" );
         TEST_ASSERT( array.IsEmpty() == false );
         CheckConsistency( array );
     }
 }
 
-// Alignment
 //------------------------------------------------------------------------------
-void TestArray::Alignment() const
+TEST_CASE( TestArray, Alignment )
 {
     // Small
     {
@@ -1841,7 +1757,6 @@ void TestArray::Alignment() const
     }
 }
 
-// MoveConstructorHelper
 //------------------------------------------------------------------------------
 template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST>
 void TestArray::MoveConstructorHelper() const
@@ -1855,13 +1770,13 @@ void TestArray::MoveConstructorHelper() const
 
     // Move construct destination. SRC_CAST allows us to check Array/StackArray
     // behave the same
-    DST arrayB( Move( (SRC_CAST&)( arrayA ) ) );
+    DST arrayB( Move( (SRC_CAST &)( arrayA ) ) );
 
     // Check expected amount of allocs occurred
     TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
     // Source string should be empty
-    PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+    PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
     TEST_ASSERT( arrayA.IsEmpty() );
     PRAGMA_DISABLE_POP_MSVC
 
@@ -1869,42 +1784,41 @@ void TestArray::MoveConstructorHelper() const
     CheckConsistency( arrayB );
 }
 
-// MoveConstructor
 //------------------------------------------------------------------------------
-void TestArray::MoveConstructor() const
+TEST_CASE( TestArray, MoveConstructor )
 {
     // POD Data
     {
-        //                    Src                   Dest                    Allocs    SrcCast
-        //------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, SrcCast
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveConstructorHelper<Array<uint32_t>,      Array<uint32_t>,        0                      >();
-        MoveConstructorHelper<Array<uint32_t>,      StackArray<uint32_t>,   0                      >();
+        MoveConstructorHelper<Array<uint32_t>, Array<uint32_t>, 0>();
+        MoveConstructorHelper<Array<uint32_t>, StackArray<uint32_t>, 0>();
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0                      >();
-        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0,      Array<uint32_t>>(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0>();
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, Array<uint32_t>>(); // Src as Array, behave the same
 
         // Moves from stack to heap need re-allocation and copy
-        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1                      >();
-        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1,      Array<uint32_t>>(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>, 1>();
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>, 1, Array<uint32_t>>(); // Src as Array, behave the same
     }
 
     // Complex Types
     {
-        //                    Src                   Dest                    Allocs    SrcCast
-        //------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, SrcCast
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveConstructorHelper<Array<AString>,       Array<AString>,         0                      >();
-        MoveConstructorHelper<Array<AString>,       StackArray<AString>,    0                      >();
+        MoveConstructorHelper<Array<AString>, Array<AString>, 0>();
+        MoveConstructorHelper<Array<AString>, StackArray<AString>, 0>();
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0                      >();
-        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0,      Array<AString> >(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<AString>, StackArray<AString>, 0>();
+        MoveConstructorHelper<StackArray<AString>, StackArray<AString>, 0, Array<AString>>(); // Src as Array, behave the same
 
         // Moves from stack to heap need Array reallocated, but items can be moved
-        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1                      >();
-        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1,      Array<AString> >(); // Src as Array, behave the same
+        MoveConstructorHelper<StackArray<AString>, Array<AString>, 1>();
+        MoveConstructorHelper<StackArray<AString>, Array<AString>, 1, Array<AString>>(); // Src as Array, behave the same
     }
 }
 
@@ -1931,13 +1845,13 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
 
         // Move construct destination. SRC_CAST allows us to check Array/StackArray
         // behave the same
-        arrayB = Move( (SRC_CAST&)( arrayA ) );
+        arrayB = Move( (SRC_CAST &)( arrayA ) );
 
         // Check expected amount of allocs occurred
         TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
 
         // Source string should be empty
-        PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+        PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
         TEST_ASSERT( arrayA.IsEmpty() );
         PRAGMA_DISABLE_POP_MSVC
 
@@ -1968,10 +1882,10 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
 
             // Move construct destination. SRC_CAST allows us to check Array/StackArray
             // behave the same
-            arrayB = Move( (SRC_CAST&)( arrayA ) );
+            arrayB = Move( (SRC_CAST &)( arrayA ) );
 
             // Source string should be empty
-            PRAGMA_DISABLE_PUSH_MSVC(26800) // Use of a moved from object here is deliberate
+            PRAGMA_DISABLE_PUSH_MSVC( 26800 ) // Use of a moved from object here is deliberate
             TEST_ASSERT( arrayA.IsEmpty() );
             PRAGMA_DISABLE_POP_MSVC
 
@@ -1980,55 +1894,53 @@ void TestArray::MoveAssignmentHelper( const ELEM & value ) const
         }
 
         // Check should be no more active allocs in total, even if some allocs occurred
-        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0u )
     }
 }
 
-
-// MoveAssignment
 //------------------------------------------------------------------------------
-void TestArray::MoveAssignment() const
+TEST_CASE( TestArray, MoveAssignment )
 {
     // POD Data
     {
-        //                  Src                     Dest                    Allocs  Elem        SrcCast
-        //---------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, Elem
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveAssignmentHelper<Array<uint32_t>,       Array<uint32_t>,        0,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<Array<uint32_t>,       StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
+        MoveAssignmentHelper<Array<uint32_t>, Array<uint32_t>, 0, uint32_t>( 99 );
+        MoveAssignmentHelper<Array<uint32_t>, StackArray<uint32_t>, 0, uint32_t>( 99 );
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, uint32_t>( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>, StackArray<uint32_t>, 0, uint32_t, Array<uint32_t>>( 99 ); // Src as Array, behave the same
 
         // Moves from stack to heap need re-allocation and copy
-        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t                   >( 99 );
-        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<uint32_t>, Array<uint32_t>, 1, uint32_t>( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>, Array<uint32_t>, 1, uint32_t, Array<uint32_t>>( 99 ); // Src as Array, behave the same
     }
 
     // Complex Types
     {
-        //                   Src                    Dest                    Allocs  Elem            SrcCast
-        //-----------------------------------------------------------------------------------------------
+        //                    Src, Dest, Allocs, Elem
+        //----------------------------------------------------------------------
         // Moves from heap can be performed
-        MoveAssignmentHelper<Array<AString>,        Array<AString>,         0,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<Array<AString>,        StackArray<AString>,    0,      AString                   >( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>, Array<AString>, 0, AString>( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>, StackArray<AString>, 0, AString>( AString( "string" ) );
 
         // Moves from stack to stack are copies, but avoid memory allocation
-        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<AString>, StackArray<AString>, 0, AString>( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>, StackArray<AString>, 0, AString, Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
 
         // Moves from stack to heap need Array reallocated, but items can be moved
-        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString                   >( AString( "string" ) );
-        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+        MoveAssignmentHelper<StackArray<AString>, Array<AString>, 1, AString>( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>, Array<AString>, 1, AString, Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
     }
 }
 
-// MoveWhenGrowing
 //------------------------------------------------------------------------------
-void TestArray::MoveWhenGrowing() const
+TEST_CASE( TestArray, MoveWhenGrowing )
 {
-    Array<AString> array( 4, true );
+    Array<AString> array;
+    array.SetCapacity( 4 );
     array.Append( AString( "string1" ) );
     array.Append( AString( "string2" ) );
     array.Append( AString( "string3" ) );
@@ -2044,17 +1956,17 @@ void TestArray::MoveWhenGrowing() const
 
     // Should be 2 allocs: one for resize and one for new string
     // but existing strings should have been moved
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2u )
 
     CheckConsistency( array );
 }
 
-// MoveAppend
 //------------------------------------------------------------------------------
-void TestArray::MoveAppend() const
+TEST_CASE( TestArray, MoveAppend )
 {
     AString string( "string4" );
-    Array<AString> array( 1, false );
+    Array<AString> array;
+    array.SetCapacity( 1 );
 
     // Take note of memory state before
     TEST_MEMORY_SNAPSHOT( s1 );
@@ -2062,18 +1974,18 @@ void TestArray::MoveAppend() const
     array.Append( Move( string ) );
 
     // Should be no allocations
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
     CheckConsistency( array );
 }
 
-// MoveSetCapacity
 //------------------------------------------------------------------------------
-void TestArray::MoveSetCapacity() const
+TEST_CASE( TestArray, MoveSetCapacity )
 {
     // Create array with something in it
-    Array<AString> array( 1, true );
-    array.Append( AString( "string1" ) );
+    Array<AString> array;
+    array.SetCapacity( 1 );
+    array.EmplaceBack( "string1" );
 
     // Take note of memory state before
     TEST_MEMORY_SNAPSHOT( s1 );
@@ -2081,19 +1993,19 @@ void TestArray::MoveSetCapacity() const
     array.SetCapacity( 8 );
 
     // Should be 1 allocation for resize (element should be moved)
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1u )
 
     CheckConsistency( array );
 }
 
-// MovePopFront
 //------------------------------------------------------------------------------
-void TestArray::MovePopFront() const
+TEST_CASE( TestArray, MovePopFront )
 {
     // Create array with something in it
-    Array<AString> array( 2, false );
-    array.Append( AString( "string1" ) );
-    array.Append( AString( "string2string2" ) ); // Larger than string 1
+    Array<AString> array;
+    array.SetCapacity( 2 );
+    array.EmplaceBack( "string1" );
+    array.EmplaceBack( "string2string2" ); // Larger than string 1
 
     // Take note of memory state before
     TEST_MEMORY_SNAPSHOT( s1 );
@@ -2101,19 +2013,19 @@ void TestArray::MovePopFront() const
     array.PopFront();
 
     // Should be no allocations (element should be moved)
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
     CheckConsistency( array );
 }
 
-// MoveErase
 //------------------------------------------------------------------------------
-void TestArray::MoveErase() const
+TEST_CASE( TestArray, MoveErase )
 {
     // Create array with something in it
-    Array<AString> array( 2, false );
-    array.Append( AString( "string1" ) );
-    array.Append( AString( "string2string2" ) ); // Larger than string 1
+    Array<AString> array;
+    array.SetCapacity( 2 );
+    array.EmplaceBack( "string1" );
+    array.EmplaceBack( "string2string2" ); // Larger than string 1
 
     // Take note of memory state before
     TEST_MEMORY_SNAPSHOT( s1 );
@@ -2121,14 +2033,13 @@ void TestArray::MoveErase() const
     array.Erase( array.Begin() );
 
     // Should be no allocations (element should be moved)
-    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0u )
 
     CheckConsistency( array );
 }
 
-// StackArrayOverflowToHeap
 //------------------------------------------------------------------------------
-void TestArray::StackArrayOverflowToHeap() const
+TEST_CASE( TestArray, StackArrayOverflowToHeap )
 {
     // POD
     {
@@ -2191,7 +2102,6 @@ void TestArray::StackArrayOverflowToHeap() const
     }
 }
 
-// CheckConsistency
 //------------------------------------------------------------------------------
 template <typename T>
 void TestArray::CheckConsistency( const Array<T> & array ) const

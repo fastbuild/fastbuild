@@ -15,7 +15,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionXCodeProject::FunctionXCodeProject()
-: Function( "XCodeProject" )
+    : Function( "XCodeProject" )
 {
 }
 

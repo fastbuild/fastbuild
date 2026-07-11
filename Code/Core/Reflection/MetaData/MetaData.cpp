@@ -7,13 +7,13 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
 #include "Core/Reflection/MetaData/Meta_Hidden.h"
-#include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/MetaData/Meta_Range.h"
+#include "Core/Reflection/MetaData/Meta_Required.h"
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( IMetaData, Object, MetaNone() )
+REFLECT_BEGIN( IMetaData, Object )
 REFLECT_END( IMetaData )
 
 // CONSTRUCTOR
@@ -29,7 +29,7 @@ IMetaData::~IMetaData() = default;
 
 // Chaining operator for reflection macros
 //------------------------------------------------------------------------------
-IMetaData & operator + ( IMetaData & a, IMetaData & b )
+IMetaData & operator+( IMetaData & a, IMetaData & b )
 {
     b.m_Next = a.m_Next;
     a.m_Next = &b;
@@ -53,13 +53,6 @@ IMetaData & MetaHidden()
     return *FNEW( Meta_Hidden() );
 }
 
-// MetaOptional
-//------------------------------------------------------------------------------
-IMetaData & MetaOptional()
-{
-    return *FNEW( Meta_Optional() );
-}
-
 // MetaPath
 //------------------------------------------------------------------------------
 IMetaData & MetaPath( bool relative )
@@ -72,6 +65,12 @@ IMetaData & MetaPath( bool relative )
 IMetaData & MetaRange( int32_t minVal, int32_t maxVal )
 {
     return *FNEW( Meta_Range( minVal, maxVal ) );
+}
+
+//------------------------------------------------------------------------------
+IMetaData & MetaRequired()
+{
+    return *FNEW( Meta_Required() );
 }
 
 //------------------------------------------------------------------------------

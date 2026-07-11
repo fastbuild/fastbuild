@@ -28,6 +28,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
+#include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -40,32 +41,23 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( const AString & args, bool consoleMode )
+Worker::Worker( const AString & args, bool consoleMode, bool periodicRestart )
     : m_ConsoleMode( consoleMode )
-    , m_MainWindow( nullptr )
-    , m_ConnectionPool( nullptr )
-    , m_NetworkStartupHelper( nullptr )
+    , m_PeriodicRestart( periodicRestart )
     , m_BaseArgs( args )
-    , m_LastWriteTime( 0 )
-    , m_WantToQuit( false )
-    , m_RestartNeeded( false )
-    #if defined( __WINDOWS__ )
-        , m_LastDiskSpaceResult( -1 )
-        , m_LastMemoryCheckResult( -1 )
-    #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
     m_ConnectionPool = FNEW( Server );
 
     Env::GetExePath( m_BaseExeName );
-    #if defined( __WINDOWS__ )
-        if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
-        {
-            m_BaseExeName.Clear(); // not running from copy, disable restart detection
-        }
-        m_BaseArgs.Replace( "-subprocess", "" );
-    #endif
+#if defined( __WINDOWS__ )
+    if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
+    {
+        m_BaseExeName.Clear(); // not running from copy, disable restart detection
+    }
+    m_BaseArgs.Replace( "-subprocess", "" );
+#endif
 }
 
 // DESTRUCTOR
@@ -113,14 +105,14 @@ int32_t Worker::Work()
     // Open GUI or setup console
     if ( InConsoleMode() )
     {
-        #if __WINDOWS__
-            VERIFY( ::AllocConsole() );
-            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'freopen' is deprecated: This function or variable may be unsafe...
-            VERIFY( freopen( "CONOUT$", "w", stdout ) ); // TODO:C consider using freopen_s
-            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
-            PRAGMA_DISABLE_POP_MSVC // 4996
-        #endif
+#if defined( __WINDOWS__ )
+        VERIFY( ::AllocConsole() );
+        PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wdeprecated-declarations" ) // 'freopen' is deprecated: This function or variable may be unsafe...
+        VERIFY( freopen( "CONOUT$", "w", stdout ) ); // TODO:C consider using freopen_s
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wdeprecated-declarations
+        PRAGMA_DISABLE_POP_MSVC // 4996
+#endif
 
         // TODO: Block until Ctrl+C
     }
@@ -128,15 +120,12 @@ int32_t Worker::Work()
     {
         // Create UI
         m_MainWindow = FNEW( WorkerWindow() );
-        m_MainWindow->SetStatus( m_WorkerBrokerage.GetHostName(), AStackString<>( "Idle" ) );
+        m_MainWindow->SetStatus( m_WorkerBrokerage.GetHostName(), AStackString( "Idle" ) );
     }
 
     // spawn work thread
-    m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
-                                         "WorkerThread",
-                                         ( 256 * KILOBYTE ),
-                                         this );
-    ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
+    Thread workThread;
+    workThread.Start( &WorkThreadWrapper, "WorkerThread", this, ( 256 * KILOBYTE ) );
 
     // Run the UI message loop if we're not in console mode
     if ( m_MainWindow )
@@ -145,7 +134,7 @@ int32_t Worker::Work()
     }
 
     // Join work thread and get exit code
-    return Thread::WaitForThread( m_WorkThread );
+    return static_cast<int32_t>( workThread.Join() );
 }
 
 // WorkThreadWrapper
@@ -165,36 +154,40 @@ uint32_t Worker::WorkThread()
     PROFILE_FUNCTION;
 
     // Initial status message
-    StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
+    StatusMessage( "FBuildWorker %s", GetVersionString() );
 
     // start listening
-    StatusMessage( "Listening on port %u\n", Protocol::PROTOCOL_PORT );
-    if ( m_ConnectionPool->Listen( Protocol::PROTOCOL_PORT ) == false )
+    StatusMessage( "Listening on port %u\n", Protocol::kPort );
+    if ( m_ConnectionPool->Listen( Protocol::kPort ) == false )
     {
-        ErrorMessage( "Failed to listen on port %u.  Check port is not in use.", Protocol::PROTOCOL_PORT );
+        ErrorMessage( "Failed to listen on port %u.  Check port is not in use.", Protocol::kPort );
         return (uint32_t)-1;
     }
 
     // Special folder for Orbis Clang
     // We just create this folder whether it's needed or not
     {
-        AStackString<> tmpPath;
+        AStackString tmpPath;
         VERIFY( FBuild::GetTempDir( tmpPath ) );
-        #if defined( __WINDOWS__ )
-            tmpPath += ".fbuild.tmp\\target\\include";
-        #else
-            tmpPath += "_fbuild.tmp/target/include";
-        #endif
+#if defined( __WINDOWS__ )
+        tmpPath += ".fbuild.tmp\\target\\include";
+#else
+        tmpPath += "_fbuild.tmp/target/include";
+#endif
         if ( !FileIO::EnsurePathExists( tmpPath ) )
         {
-            ErrorMessage( "Failed to initialize tmp folder. Error: %s", LAST_ERROR_STR );
+            ErrorMessage( "Failed to initialize tmp folder.\n"
+                          " - Path : %s\n"
+                          " - Error: %s",
+                          tmpPath.Get(),
+                          LAST_ERROR_STR );
             return (uint32_t)-2;
         }
-        #if defined( __WINDOWS__ )
-            tmpPath += "\\.lock";
-        #else
-            tmpPath += "/_lock";
-        #endif
+#if defined( __WINDOWS__ )
+        tmpPath += "\\.lock";
+#else
+        tmpPath += "/_lock";
+#endif
         if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
         {
             ErrorMessage( "Failed to lock tmp folder. Error: %s", LAST_ERROR_STR );
@@ -209,9 +202,9 @@ uint32_t Worker::WorkThread()
 
         UpdateUI();
 
-        CheckForExeUpdate();
+        CheckIfRestartNeeded();
 
-        PROFILE_SYNCHRONIZE
+        PROFILE_SYNCHRONIZE;
 
         // Check if we want to exit
         if ( m_WantToQuit )
@@ -223,7 +216,10 @@ uint32_t Worker::WorkThread()
     }
 
     // Now that we will no longer interact with the UI, we can stop the message pump
-    m_MainWindow->StopMessagePump();
+    if ( m_MainWindow )
+    {
+        m_MainWindow->StopMessagePump();
+    }
 
     m_WorkerBrokerage.SetAvailability( false );
 
@@ -234,77 +230,77 @@ uint32_t Worker::WorkThread()
 //------------------------------------------------------------------------------
 bool Worker::HasEnoughDiskSpace()
 {
-    #if defined( __WINDOWS__ )
-        // Only check disk space every few seconds
-        const float elapsedTime = m_TimerLastDiskSpaceCheck.GetElapsedMS();
-        if ( ( elapsedTime < 15000.0f ) && ( m_LastDiskSpaceResult != -1 ) )
-        {
-            return ( m_LastDiskSpaceResult != 0 );
-        }
-        m_TimerLastDiskSpaceCheck.Start();
+#if defined( __WINDOWS__ )
+    // Only check disk space every few seconds
+    const float elapsedTime = m_TimerLastDiskSpaceCheck.GetElapsedMS();
+    if ( ( elapsedTime < 15000.0f ) && ( m_LastDiskSpaceResult != -1 ) )
+    {
+        return ( m_LastDiskSpaceResult != 0 );
+    }
+    m_TimerLastDiskSpaceCheck.Restart();
 
-        constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
+    constexpr uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB
 
-        uint64_t freeBytesAvailable = 0;
-        uint64_t totalNumberOfBytes = 0;
-        uint64_t totalNumberOfFreeBytes = 0;
+    uint64_t freeBytesAvailable = 0;
+    uint64_t totalNumberOfBytes = 0;
+    uint64_t totalNumberOfFreeBytes = 0;
 
-        // Check available disk space of temp path
-        AStackString<> tmpPath;
-        VERIFY( FBuild::GetTempDir( tmpPath ) );
-        const BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
-        if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
-        {
-            m_LastDiskSpaceResult = 1;
-            return true;
-        }
+    // Check available disk space of temp path
+    AStackString tmpPath;
+    VERIFY( FBuild::GetTempDir( tmpPath ) );
+    const BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
+    if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
+    {
+        m_LastDiskSpaceResult = 1;
+        return true;
+    }
 
-        // The drive doesn't have enough free space or could not be queried. Exclude this machine from worker pool.
-        m_LastDiskSpaceResult = 0;
-        return false;
-    #else
-        return true; // TODO:MAC TODO:LINUX Implement disk space checks
-    #endif
+    // The drive doesn't have enough free space or could not be queried. Exclude this machine from worker pool.
+    m_LastDiskSpaceResult = 0;
+    return false;
+#else
+    return true; // TODO:MAC TODO:LINUX Implement disk space checks
+#endif
 }
 
 // HasEnoughMemory
 //------------------------------------------------------------------------------
 bool Worker::HasEnoughMemory()
 {
-    #if defined( __WINDOWS__ )
-        // Only check free memory every few seconds
-        const float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
-        if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
+#if defined( __WINDOWS__ )
+    // Only check free memory every few seconds
+    const float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
+    if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
+    {
+        return ( m_LastMemoryCheckResult != 0 );
+    }
+    m_TimerLastMemoryCheck.Restart();
+
+    PERFORMANCE_INFORMATION memInfo;
+    memInfo.cb = sizeof( memInfo );
+    if ( GetPerformanceInfo( &memInfo, sizeof( memInfo ) ) )
+    {
+        const uint64_t limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
+        const uint64_t currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
+
+        // Calculate the free memory in MiB.
+        const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
+
+        // Check if the free memory is high enough
+        const WorkerSettings & ws = WorkerSettings::Get();
+        if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
         {
-            return ( m_LastMemoryCheckResult != 0 );
+            m_LastMemoryCheckResult = 1;
+            return true;
         }
-        m_TimerLastMemoryCheck.Start();
-    
-        PERFORMANCE_INFORMATION memInfo;
-        memInfo.cb = sizeof( memInfo );
-        if ( GetPerformanceInfo( &memInfo, sizeof( memInfo ) ) )
-        {
-            const uint64_t limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
-            const uint64_t currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
-    
-            // Calculate the free memory in MiB.
-            const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
-    
-            // Check if the free memory is high enough
-            const WorkerSettings & ws = WorkerSettings::Get();
-            if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
-            {
-                m_LastMemoryCheckResult = 1;
-                return true;
-            }
-        }
-    
-        // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
-        m_LastMemoryCheckResult = 0;
-        return false;
-    #else
-        return true; // TODO:LINUX TODO:OSX Implement
-    #endif
+    }
+
+    // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
+    m_LastMemoryCheckResult = 0;
+    return false;
+#else
+    return true; // TODO:LINUX TODO:OSX Implement
+#endif
 }
 
 // UpdateAvailability
@@ -322,7 +318,7 @@ void Worker::UpdateAvailability()
     m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
 
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
-    switch( ws.GetMode() )
+    switch ( ws.GetMode() )
     {
         case WorkerSettings::WHEN_IDLE:
         {
@@ -380,18 +376,18 @@ void Worker::UpdateUI()
 
     // title bar
     const size_t numConnections = m_ConnectionPool->GetNumConnections();
-    AStackString<> status;
+    AStackString status;
     status.Format( "%u Connections", (uint32_t)numConnections );
     if ( m_RestartNeeded )
     {
         status += " (Restart Pending)";
     }
-    #if defined( __WINDOWS__ )
-        if ( m_LastDiskSpaceResult == 0 )
-        {
-            status += " (Low Disk Space)";
-        }
-    #endif
+#if defined( __WINDOWS__ )
+    if ( m_LastDiskSpaceResult == 0 )
+    {
+        status += " (Low Disk Space)";
+    }
+#endif
     if ( InConsoleMode() )
     {
         status += '\n';
@@ -410,15 +406,15 @@ void Worker::UpdateUI()
         for ( size_t i = 0; i < numWorkers; ++i )
         {
             // get status of worker
-            AStackString<> workerStatus;
-            AStackString<> hostName;
+            AStackString workerStatus;
+            AStackString hostName;
             bool isIdle;
             jqr.GetWorkerStatus( i, hostName, workerStatus, isIdle );
 
             // are we syncing tools?
             if ( isIdle )
             {
-                AStackString<> statusStr;
+                AStackString statusStr;
                 if ( m_ConnectionPool->IsSynchingTool( statusStr ) )
                 {
                     // show status of synchronization
@@ -431,12 +427,12 @@ void Worker::UpdateUI()
         }
     }
 
-    m_UIUpdateTimer.Start();
+    m_UIUpdateTimer.Restart();
 }
 
-// CheckForExeUpdate
+// CheckIfRestartNeeded
 //------------------------------------------------------------------------------
-void Worker::CheckForExeUpdate()
+void Worker::CheckIfRestartNeeded()
 {
     PROFILE_FUNCTION;
 
@@ -455,6 +451,18 @@ void Worker::CheckForExeUpdate()
     if ( m_BaseExeName.IsEmpty() )
     {
         return; // not running as a copy to allow restarts
+    }
+
+    // Check if periodic restart time has been reached
+    if ( m_PeriodicRestart )
+    {
+        const float periodicRestartSecs = ( 4.0f * 60.0f * 60.0f ); // 4 hours
+        if ( m_PeriodicRestartTimer.GetElapsed() > periodicRestartSecs )
+        {
+            m_RestartNeeded = true;
+            JobQueueRemote::Get().SignalStopWorkers();
+            return;
+        }
     }
 
     // get the current last write time
@@ -492,7 +500,7 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
         return;
     }
 
-    AStackString<> buffer;
+    AStackString buffer;
 
     va_list args;
     va_start( args, fmtString );
@@ -518,7 +526,7 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 {
-    AStackString<> buffer;
+    AStackString buffer;
 
     va_list args;
     va_start( args, fmtString );

@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Env/Types.h"
+#include "Core/FileIO/MemoryStream.h"
 
 #include <memory.h> // for memcpy
 
@@ -15,13 +16,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-ConstMemoryStream::ConstMemoryStream()
-    : m_Buffer( nullptr )
-    , m_Size( 0 )
-    , m_CurrentPos( 0 )
-    , m_OwnsMemory( false )
-{
-}
+ConstMemoryStream::ConstMemoryStream() = default;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -33,13 +28,32 @@ ConstMemoryStream::ConstMemoryStream( const void * data, size_t size )
 {
 }
 
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+ConstMemoryStream::ConstMemoryStream( MemoryStream && other )
+{
+    const size_t size = other.GetSize(); // Must be before Release()
+    m_Buffer = other.Release(); // Transfer ownership of memory
+    m_Size = size;
+    m_CurrentPos = 0;
+    m_OwnsMemory = true;
+}
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+ConstMemoryStream::ConstMemoryStream( ConstMemoryStream && other )
+    : ConstMemoryStream()
+{
+    operator=( Move( other ) );
+}
+
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 ConstMemoryStream::~ConstMemoryStream()
 {
     if ( m_OwnsMemory )
     {
-        FREE( const_cast< void * >( m_Buffer ) );
+        FREE( const_cast<void *>( m_Buffer ) );
     }
 }
 
@@ -51,6 +65,20 @@ void ConstMemoryStream::Replace( const void * data, size_t size, bool ownsMemory
     m_Size = size;
     m_CurrentPos = 0;
     m_OwnsMemory = ownsMemory;
+}
+
+// operator=(&&)
+//------------------------------------------------------------------------------
+void ConstMemoryStream::operator=( ConstMemoryStream && other )
+{
+    m_Buffer = other.m_Buffer;
+    m_Size = other.m_Size;
+    m_CurrentPos = other.m_CurrentPos;
+    m_OwnsMemory = other.m_OwnsMemory;
+    other.m_Buffer = nullptr;
+    other.m_Size = 0;
+    other.m_CurrentPos = 0;
+    other.m_OwnsMemory = false;
 }
 
 // Read

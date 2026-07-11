@@ -20,15 +20,14 @@ public:
 
     void Init( uint32_t size, const char * fontFamily );
 
-    #if defined( __WINDOWS__ )
-        inline void * GetFont() { return m_Font; }
-    #endif
+#if defined( __WINDOWS__ )
+    void * GetFont() { return m_Font; }
+#endif
 
 protected:
-    #if defined( __WINDOWS__ )
-        void * m_Font;
-    #endif
+#if defined( __WINDOWS__ )
+    void * m_Font = nullptr;
+#endif
 };
 
 //------------------------------------------------------------------------------
-

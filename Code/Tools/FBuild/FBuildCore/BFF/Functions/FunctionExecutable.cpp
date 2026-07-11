@@ -9,7 +9,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionExecutable::FunctionExecutable()
-: Function( "Executable" )
+    : Function( "Executable" )
 {
 }
 

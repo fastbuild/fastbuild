@@ -5,7 +5,7 @@
 // Include for the DLL
 #include "a.h"
 
-int main(int, char**)
+int main( int, char ** )
 {
     return FunctionA();
 }

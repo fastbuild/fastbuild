@@ -11,17 +11,18 @@
 class FileNode : public Node
 {
 public:
-    explicit FileNode( const AString & fileName, uint8_t controlFlags );
+    FileNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) override;
     virtual ~FileNode() override;
 
-    static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
+    static Node::Type GetTypeS() { return Node::FILE_NODE; }
 
     virtual bool IsAFile() const override { return true; }
 
     static void HandleWarningsMSVC( Job * job, const AString & name, const AString & data );
     static void HandleWarningsClangCl( Job * job, const AString & name, const AString & data );
     static void HandleWarningsClangGCC( Job * job, const AString & name, const AString & data );
+
 protected:
     friend class ObjectNode;
     virtual BuildResult DoBuild( Job * job ) override;

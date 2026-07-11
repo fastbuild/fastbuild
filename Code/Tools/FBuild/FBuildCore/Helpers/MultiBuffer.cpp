@@ -41,20 +41,20 @@ MultiBuffer::~MultiBuffer()
 
 // SerializeFromFiles
 //------------------------------------------------------------------------------
-bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * outproblemFileIndex )
+bool MultiBuffer::CreateFromFiles( const Array<AString> & fileNames, size_t * outproblemFileIndex )
 {
-    ASSERT( fileNames.GetSize() <= MAX_FILES );
+    ASSERT( fileNames.GetSize() <= kMaxFiles );
     ASSERT( ( m_ReadStream == nullptr ) && ( m_WriteStream == nullptr ) );
 
-    uint64_t fileSizes[ MAX_FILES ];
-    FileStream fileStreams[ MAX_FILES ];
+    uint64_t fileSizes[ kMaxFiles ];
+    FileStream fileStreams[ kMaxFiles ];
     const size_t numFiles = fileNames.GetSize();
 
     // Open all the files and determine their size
     uint64_t memSize = sizeof( uint32_t ); // write number of files
-    for ( size_t i = 0; i <numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
-        FileStream& fs = fileStreams[ i ];
+        FileStream & fs = fileStreams[ i ];
         if ( fs.Open( fileNames[ i ].Get(), FileStream::READ_ONLY ) == false )
         {
             if ( outproblemFileIndex )
@@ -75,13 +75,13 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
     m_WriteStream->Write( (uint32_t)numFiles );
 
     // Write size of each file
-    for ( size_t i = 0; i <numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         m_WriteStream->Write( (uint64_t)fileSizes[ i ] );
     }
 
     // Read data for each file
-    for ( size_t i = 0; i <numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         FileStream & fs = fileStreams[ i ];
         if ( m_WriteStream->WriteBuffer( fs, fileSizes[ i ] ) != fileSizes[ i ] )
@@ -94,14 +94,14 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames, size_t * 
         }
     }
 
-    // Check we wrote as much as we originaly calculated
+    // Check we wrote as much as we originally calculated
     ASSERT( m_WriteStream->GetSize() == memSize );
     return true;
 }
 
 // ExtractFile
 //------------------------------------------------------------------------------
-bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
+bool MultiBuffer::ExtractFile( size_t index, const AString & fileName ) const
 {
     ASSERT( m_ReadStream );
 
@@ -117,7 +117,7 @@ bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
 
     // work out data offset from file sizes
     uint64_t offset = sizeof( uint32_t ) + ( sizeof( uint64_t ) * numFiles );
-    for ( size_t i=0; i<index; ++i )
+    for ( size_t i = 0; i < index; ++i )
     {
         uint64_t fileSize;
         m_ReadStream->Read( fileSize );
@@ -132,20 +132,14 @@ bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
     m_ReadStream->Seek( offset );
     const void * fileData = (void *)( (size_t)m_ReadStream->GetData() + offset );
 
-    FileStream fs;
-    if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-    {
-        // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
-        // things like anti-virus etc. Simply retry if that happens
-        // Also, when a <LOCAL RACE> occurs, the local compilation process might not have exited at this point
-        // (we call ::TerminateProcess, which is async),which can cause failure below, because the file is still locked.
-        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName, FileStream::WRITE_ONLY, 15 ); // 15 secs max wait
+    // On Windows, work around issues caused by security software locking files
+    // by having an extended retry period
+    const uint32_t extendedRetryTimeMS = 15'000;
 
-        // Try again
-        if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-        {
-            return false;
-        }
+    FileStream fs;
+    if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY, extendedRetryTimeMS ) )
+    {
+        return false;
     }
     if ( fs.WriteBuffer( fileData, fileSize ) != fileSize )
     {
@@ -157,13 +151,20 @@ bool MultiBuffer::ExtractFile( size_t index, const AString& fileName ) const
 
 // Compress
 //------------------------------------------------------------------------------
-void MultiBuffer::Compress( int32_t compressionLevel )
+void MultiBuffer::Compress( int32_t compressionLevel, bool allowZstdUse )
 {
     ASSERT( m_WriteStream ); // Data needs to be populated
 
     // Compress the data
     Compressor c;
-    c.Compress( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+    if ( allowZstdUse )
+    {
+        c.CompressZstd( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+    }
+    else
+    {
+        c.Compress( m_WriteStream->GetData(), m_WriteStream->GetSize(), compressionLevel );
+    }
 
     // Transfer compressed results
     const size_t compressedSize = c.GetResultSize();

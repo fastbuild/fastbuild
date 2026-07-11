@@ -12,10 +12,10 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionDLL::FunctionDLL()
-: FunctionExecutable()
+    : FunctionExecutable()
 {
     // override name set by FunctionExecutable base class
-    m_Name =  "DLL";
+    m_Name = "DLL";
 }
 
 // CreateNode

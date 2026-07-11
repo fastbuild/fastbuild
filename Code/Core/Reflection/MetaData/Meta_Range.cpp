@@ -7,7 +7,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_Range, IMetaData, MetaNone() )
+REFLECT_BEGIN( Meta_Range, IMetaData )
 REFLECT_END( Meta_Range )
 
 // CONSTRUCTOR

@@ -7,28 +7,126 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
+#include "Core/Math/Conversions.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
-// TestFastCancel
 //------------------------------------------------------------------------------
-class TestFastCancel : public FBuildTest
+TEST_GROUP( TestFastCancel, FBuildTest )
 {
-private:
-    DECLARE_TESTS
-
-    void Cancel() const;
+public:
+    template <uint32_t SEED>
+    void BuildFailure() const;
 };
 
-// Register Tests
 //------------------------------------------------------------------------------
-REGISTER_TESTS_BEGIN( TestFastCancel )
-    #if defined( __WINDOWS__ )
-        // TODO:LINUX TODO:OSX - Fix and enable this test
-        REGISTER_TEST( Cancel )
-    #endif
-REGISTER_TESTS_END
+template <uint32_t SEED>
+void TestFastCancel::BuildFailure() const
+{
+    // Check that builds with failures are finalized correctly
+    // under a variety of conditions
+
+    // Derive individual settings from the seed
+    const bool allowFastCancel = ( ( SEED & 0x1 ) != 0 ); // Can in-flight tasks be aborted?
+    const bool stopOnError = ( ( SEED & 0x2 ) != 0 ); // Stop building after encountering an error?
+    const bool reverseOrder = ( ( SEED & 0x4 ) != 0 ); // Reverse order of targets
+
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestFastCancel/BuildFailure/fbuild.bff";
+    options.m_ShowSummary = false; // Reduce build output spam
+    options.m_FastCancel = allowFastCancel;
+    options.m_StopOnFirstError = stopOnError;
+
+    // Flip order of targets passed on command line - results should be
+    // independent of this
+    Array<AString> targets;
+    if ( reverseOrder )
+    {
+        targets.EmplaceBack( "b" );
+        targets.EmplaceBack( "a" );
+    }
+    else
+    {
+        targets.EmplaceBack( "a" );
+        targets.EmplaceBack( "b" );
+    }
+
+    // Init
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Start build and check it failed as expected
+    TEST_ASSERT( fBuild.Build( targets ) == false );
+
+    // Item 'a' should always fail (contains a compile error)
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: a" ) );
+
+    // Item 'b' might succeed, but could be aborted depending on settings and
+    // other factors
+    if constexpr ( stopOnError == false )
+    {
+        // If we don't stop on errors, 'a' should always compile because it is
+        // unrelated to 'b'
+        TEST_ASSERT( GetRecordedOutput().Find( "FBuild: OK: b" ) );
+    }
+    else
+    {
+        // For multithreaded builds, thread scheduling and other timing is
+        // non-deterministic, so 'b' may or may not complete, but it should
+        // never fail
+        TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Incomplete: b" ) ||
+                     GetRecordedOutput().Find( "FBuild: OK: b" ) );
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure0 )
+{
+    BuildFailure<0>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure1 )
+{
+    BuildFailure<1>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure2 )
+{
+    BuildFailure<2>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure3 )
+{
+    BuildFailure<3>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure4 )
+{
+    BuildFailure<4>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure5 )
+{
+    BuildFailure<5>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure6 )
+{
+    BuildFailure<6>();
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFastCancel, BuildFailure7 )
+{
+    BuildFailure<7>();
+}
 
 // CancelHelperThread
 //------------------------------------------------------------------------------
@@ -36,24 +134,23 @@ static uint32_t CancelHelperThread( void * )
 {
     const Timer t;
 
-    // Wait for spawned processes to own all mutexes
-    SystemMutex mutex1( "FASTBuildFastCancelTest1" );
-    SystemMutex mutex2( "FASTBuildFastCancelTest2" );
-    SystemMutex mutex3( "FASTBuildFastCancelTest3" );
+    // The Exec step in our test spawns a hierarchy of processes. When the leaf
+    // process of the tree is created, it acquires the final mutex
+    // "FASTBuildFastCancelTest4"
+    //
+    // If we can acquire that, the process has either not started or has failed in
+    // an unexpected way.
     SystemMutex mutex4( "FASTBuildFastCancelTest4" );
-    SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
-    for ( SystemMutex * mutex : mutexes )
+    uint32_t sleepTimeMS = 1;
+    while ( mutex4.TryLock() == true )
     {
-        // if we acquired the lock, the child process is not yet spawned
-        while ( mutex->TryLock() == true )
-        {
-            // unlock so child can acquire
-            mutex->Unlock();
+        // unlock so child can acquire
+        mutex4.Unlock();
 
-            // Wait before trying again
-            Thread::Sleep( 10 );
-            TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
-        }
+        // Wait before trying again, waiting longer each time up to a limit
+        Thread::Sleep( sleepTimeMS );
+        sleepTimeMS = Math::Min<uint32_t>( ( sleepTimeMS * 2 ), 128 );
+        TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
     }
 
     // Once we are here, all child processes have acquired locks and will wait forever
@@ -62,38 +159,34 @@ static uint32_t CancelHelperThread( void * )
     return 0;
 }
 
-// Cancel
 //------------------------------------------------------------------------------
-void TestFastCancel::Cancel() const
+TEST_CASE( TestFastCancel, Cancel )
 {
     // Ensure a hierarchy of processes can be correctly aborted
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestFastCancel/Cancel/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
 
     // Init
-    FBuild fBuild( options );
+    FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    // We'll coordinate processes with these
+    // Create thread that will abort build once all processes are spawned
+    Thread thread;
+    thread.Start( CancelHelperThread );
+
+    // Start build and check it was aborted
+    TEST_ASSERT( fBuild.Build( "Cancel" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Incomplete: Cancel" ) );
+
+    thread.Join();
+
+    // Ensure that processes were killed
     SystemMutex mutex1( "FASTBuildFastCancelTest1" );
     SystemMutex mutex2( "FASTBuildFastCancelTest2" );
     SystemMutex mutex3( "FASTBuildFastCancelTest3" );
     SystemMutex mutex4( "FASTBuildFastCancelTest4" );
     SystemMutex * mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
-
-    // Create thread that will abort build once all processes are spawned
-    Thread::ThreadHandle h = Thread::CreateThread( CancelHelperThread );
-
-    // Start build and check it was aborted
-    TEST_ASSERT( fBuild.Build( "Cancel" ) == false );
-    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: Cancel" ) );
-
-    Thread::WaitForThread( h );
-    Thread::CloseHandle( h );
-
-    // Ensure that processes were killed
     for ( SystemMutex * mutex : mutexes )
     {
         // We should be able to acquire each lock

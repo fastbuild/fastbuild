@@ -1,5 +1,3 @@
-
-
 ; integers declared with varying layouts
 .IntA = 1
 .IntB=2
@@ -23,5 +21,4 @@
 
 ; big int
 .IntBig = 1234567890
-
 

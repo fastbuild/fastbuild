@@ -1,4 +1,5 @@
 define
+elif
 else
 endif
 exists
@@ -45,6 +46,16 @@ AdditionalSymbolSearchPaths
 AllowCaching
 AllowDistribution
 AllowResponseFile
+AndroidApkLocation
+AndroidDebugComponent
+AndroidDebugTarget
+AndroidJdb
+AndroidLldbPostAttachCommands
+AndroidLldbStartupCommands
+AndroidPostApkInstallCommands
+AndroidPreApkInstallCommands
+AndroidSymbolDirectories
+AndroidWaitForDebugger
 ApplicationEnvironment
 ApplicationType
 ApplicationTypeRevision
@@ -60,6 +71,7 @@ CachePluginDLLConfig
 ClangFixupUnity_Disable
 ClangGCCUpdateXLanguageArg
 ClangRewriteIncludes
+CompileFileCommand
 Compiler
 CompilerFamily
 CompilerForceUsing
@@ -83,6 +95,10 @@ CompilerOutputKeepBaseExtension
 CompilerOutputPath
 CompilerOutputPrefix
 CompilerReferences
+ConcurrencyGroupName
+ConcurrencyGroups
+ConcurrencyLimit
+ConcurrencyPerJobMiB
 Condition
 Config
 CustomEnvironmentVariables
@@ -124,6 +140,7 @@ IncludeSearchPath
 IntermediateDirectory
 Items
 Keyword
+LaunchFlags
 LayoutDir
 LayoutExtensionFilter
 Librarian
@@ -153,7 +170,6 @@ LocalDebuggerWorkingDirectory
 Output
 OutputDirectory
 PCHInputFile
-PCHObjectFileName
 PCHOptions
 PCHOutputFile
 PackagePath
@@ -178,6 +194,7 @@ ProjectFilesToExclude
 ProjectGuid
 ProjectInputPaths
 ProjectInputPathsExclude
+ProjectInputPathsRecurse
 ProjectOutput
 ProjectPatternToExclude
 ProjectProjectImports
@@ -190,11 +207,13 @@ Projects
 RemoteDebuggerCommand
 RemoteDebuggerCommandArguments
 RemoteDebuggerWorkingDirectory
+RemoveDirs
 RemoveExcludeFiles
 RemoveExcludePaths
 RemovePaths
 RemovePathsRecurse
 RemovePatterns
+RemoveRootDir
 RootNamespace
 SimpleDistributionMode
 SolutionBuildProject
@@ -249,6 +268,7 @@ UnityNumFiles
 UnityOutputPath
 UnityOutputPattern
 UnityPCH
+UseDeterministicPaths_Experimental
 UseLightCache_Experimental
 UseRelativePaths_Experimental
 VS2012EnumBugFix

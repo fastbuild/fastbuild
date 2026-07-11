@@ -13,6 +13,7 @@
     </Expand>
   </Type>
   <Type Name="BFFToken">
+    <DisplayString Condition="m_Type == BFFTokenType::Brace">{{{m_Type,en}  - {(char)m_BraceType,s}}}</DisplayString>
     <DisplayString>{{{m_Type,en}  - {m_String.m_Contents,s}}}</DisplayString>
   </Type>
 </AutoVisualizer>

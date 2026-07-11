@@ -15,25 +15,21 @@ jobs:
         include:
           - cfg: Build & Tests
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
-          - cfg: Build
-            gcc: 7
-            clang: 9
-            os: ubuntu-18.04
+            clang: 15
+            os: ubuntu-22.04
           - cfg: ASan
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
-          - cfg: MSan
-            gcc: 10
-            clang: 12
-            os: ubuntu-20.04
-            can-fail: true
+            clang: 15
+            os: ubuntu-22.04
+          #- cfg: MSan
+          #  gcc: 10
+          #  clang: 15
+          #  os: ubuntu-22.04
+          #  can-fail: true
           - cfg: TSan
             gcc: 10
-            clang: 12
-            os: ubuntu-20.04
+            clang: 15
+            os: ubuntu-22.04
             can-fail: true
 
     name: Linux (${{ matrix.cfg }}, GCC ${{ matrix.gcc }}, Clang ${{ matrix.clang }})
@@ -41,7 +37,7 @@ jobs:
     continue-on-error: ${{ matrix.can-fail || false }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/DownloadFBuild
 
@@ -84,13 +80,17 @@ jobs:
         if: ${{ matrix.cfg == 'Build & Tests' }}
         run: ${FBUILD_PATH} -nostoponerror -j1 -summary Tests
 
+      - name: Compat
+        if: ${{ startsWith(matrix.cfg, 'Build') }}
+        run: python3 ../Scripts/CheckGLIBCCompat.py 
+
       - name: ASan
         if: ${{ matrix.cfg == 'ASan' }}
         run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
 
-      - name: MSan
-        if: ${{ matrix.cfg == 'MSan' }}
-        run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
+      #- name: MSan
+      #  if: ${{ matrix.cfg == 'MSan' }}
+      #  run: ${FBUILD_PATH} -nostoponerror -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
 
       - name: TSan
         if: ${{ matrix.cfg == 'TSan' }}

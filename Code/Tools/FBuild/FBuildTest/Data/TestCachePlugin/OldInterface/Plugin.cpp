@@ -7,18 +7,19 @@
 
 // The FASTBuild DLL Interface
 //------------------------------------------------------------------------------
-#if defined(__WINDOWS__)
-#define CACHEPLUGIN_DLL_EXPORT __declspec(dllexport)
-#elif defined(__LINUX__) || defined(__APPLE__)
-#define CACHEPLUGIN_DLL_EXPORT
+#if defined( __WINDOWS__ )
+    #define CACHEPLUGIN_DLL_EXPORT __declspec( dllexport )
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    #define CACHEPLUGIN_DLL_EXPORT
 #endif
 
 #include "CachePluginInterface.h"
 
 // CacheInit
 //------------------------------------------------------------------------------
-#if !defined(__WINDOWS__) // TODO:Windows : Use unmangled names on windows
-extern "C" {
+#if !defined( __WINDOWS__ ) // TODO:Windows : Use unmangled names on windows
+extern "C"
+{
 #endif
 
 bool STDCALL CacheInit( const char * cachePath )
@@ -44,7 +45,7 @@ bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned lon
 
 // CacheRetrieve
 //------------------------------------------------------------------------------
-bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize )
+bool STDCALL CacheRetrieve( const char * cacheId, void *& data, unsigned long long & dataSize )
 {
     (void)data;
     (void)dataSize;
@@ -77,6 +78,6 @@ bool STDCALL CacheTrim( bool showProgress, unsigned int sizeMiB )
 
 //------------------------------------------------------------------------------
 
-#if !defined(__WINDOWS__)//TODO:Windows : Use unmangled name on windows.
-}// extern "C"
+#if !defined( __WINDOWS__ ) //TODO:Windows : Use unmangled name on windows.
+} // extern "C"
 #endif

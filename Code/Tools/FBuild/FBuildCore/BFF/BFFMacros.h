@@ -13,13 +13,13 @@ class AString;
 
 // BFFMacros
 //------------------------------------------------------------------------------
-class BFFMacros : public Singleton< BFFMacros >
+class BFFMacros : public Singleton<BFFMacros>
 {
 public:
     explicit BFFMacros();
     ~BFFMacros();
 
-    const Array< AString > & Tokens() const { return m_Tokens; }
+    const Array<AString> & Tokens() const { return m_Tokens; }
 
     bool IsDefined( const AString & token ) const;
 
@@ -27,7 +27,7 @@ public:
     bool Undefine( const AString & token );
 
 private:
-    Array< AString > m_Tokens;
+    Array<AString> m_Tokens;
 };
 
 //------------------------------------------------------------------------------

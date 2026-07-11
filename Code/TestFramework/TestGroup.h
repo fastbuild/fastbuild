@@ -8,30 +8,56 @@
 
 // Core
 #include "Core/Mem/MemTracker.h" // For MEMTRACKER_ENABLED
+#include "Core/Tracing/Tracing.h"
 
-// TestGroup - Tests derive from this interface
+class TestGroupTest;
+
 //------------------------------------------------------------------------------
 class TestGroup
 {
 protected:
-    explicit        TestGroup() { m_NextTestGroup = nullptr; }
-    inline virtual ~TestGroup() = default;
+    explicit TestGroup() { m_NextTestGroup = nullptr; }
+    virtual ~TestGroup() = default;
 
-    virtual void RunTests() = 0;
     virtual const char * GetName() const = 0;
 
-    // Run before and after each test
-    virtual void PreTest() const {}
-    virtual void PostTest( bool /*passed*/ ) const {}
-
 private:
+    // Test filtering
+    [[nodiscard]] bool ShouldRun( const char * test, const Array<AString> & filters ) const;
+    void RunTests( bool listOnly, const Array<AString> & filters );
+
     friend class TestManager;
+    friend class TestGroupTest;
     TestGroup * m_NextTestGroup;
+    TestGroupTest * m_TestsHead = nullptr;
+};
+
+//------------------------------------------------------------------------------
+class TestGroupTest
+{
+public:
+    TestGroupTest( TestGroup * testGroup );
+    virtual ~TestGroupTest() {}
+
+    // Memory Leak checks can be disabled for individual tests
+    static void SetMemoryLeakCheckEnabled( bool enabled ) { sMemoryLeakCheckEnabled = enabled; }
+    static bool IsMemoryLeakCheckEnabled() { return sMemoryLeakCheckEnabled; }
+
+protected:
+    virtual const char * GetName() const = 0;
+    virtual void Run() const = 0;
+    virtual void PreTest() const {}
+    virtual void PostTest() const {}
+
+    friend TestGroup;
+    TestGroupTest * m_NextTest = nullptr;
+
+    static bool sMemoryLeakCheckEnabled;
 };
 
 // Create a no-return helper to improve static analysis
 #if defined( __WINDOWS__ )
-    __declspec(noreturn) void TestNoReturn();
+__declspec( noreturn ) void TestNoReturn();
     #define TEST_NO_RETURN TestNoReturn();
 #else
     #define TEST_NO_RETURN
@@ -40,28 +66,13 @@ private:
 // Test Assertions
 //------------------------------------------------------------------------------
 #define TEST_ASSERT( expression )                                   \
-    do {                                                            \
-    PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
+    do                                                              \
+    {                                                               \
+        PRAGMA_DISABLE_PUSH_MSVC( 4127 )                            \
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )   \
         if ( !( expression ) )                                      \
         {                                                           \
-            if ( TestManager::AssertFailure(  #expression, __FILE__, __LINE__ ) ) \
-            {                                                       \
-                BREAK_IN_DEBUGGER;                                      \
-            }                                                       \
-            TEST_NO_RETURN                                          \
-        }                                                           \
-    } while ( false )                                               \
-    PRAGMA_DISABLE_POP_CLANG_WINDOWS                                \
-    PRAGMA_DISABLE_POP_MSVC
-
-#define TEST_ASSERTM( expression, ... )                             \
-    do {                                                            \
-    PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
-    PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )       \
-        if ( !( expression ) )                                      \
-        {                                                           \
-            if ( TestManager::AssertFailureM(  #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
+            if ( TestManager::AssertFailure( #expression, __FILE__, __LINE__ ) ) \
             {                                                       \
                 BREAK_IN_DEBUGGER;                                  \
             }                                                       \
@@ -71,51 +82,71 @@ private:
     PRAGMA_DISABLE_POP_CLANG_WINDOWS                                \
     PRAGMA_DISABLE_POP_MSVC
 
-// Test Declarations
-//------------------------------------------------------------------------------
-#define DECLARE_TESTS                                               \
-    virtual void RunTests() override;                               \
-    virtual const char * GetName() const override;
-
-#define REGISTER_TESTS_BEGIN( testGroupName )                       \
-    void testGroupName##Register()                                  \
+#define TEST_ASSERTM( expression, ... )                             \
+    do                                                              \
     {                                                               \
-        TestManager::RegisterTestGroup( new testGroupName );        \
-    }                                                               \
-    const char * testGroupName::GetName() const                     \
-    {                                                               \
-        return #testGroupName;                                      \
-    }                                                               \
-    void testGroupName::RunTests()                                  \
-    {                                                               \
-        TestManager & utm = TestManager::Get();                     \
-        (void)utm;
+        PRAGMA_DISABLE_PUSH_MSVC( 4127 )                            \
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" )   \
+        if ( !( expression ) )                                      \
+        {                                                           \
+            if ( TestManager::AssertFailureM( #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
+            {                                                       \
+                BREAK_IN_DEBUGGER;                                  \
+            }                                                       \
+            TEST_NO_RETURN                                          \
+        }                                                           \
+    } while ( false )                                               \
+    PRAGMA_DISABLE_POP_CLANG_WINDOWS                                \
+    PRAGMA_DISABLE_POP_MSVC
 
-#define REGISTER_TEST( testFunction )                               \
-        utm.TestBegin( this, #testFunction );                       \
-        testFunction();                                             \
-        utm.TestEnd();
+#define TEST_GROUP( testGroup, testGroupTestBaseClass ) \
+    class testGroup##_Group : public TestGroup \
+    { \
+    public: \
+        testGroup##_Group() \
+        { \
+            sTestGroup = this; \
+            TestManager::RegisterTestGroup( this ); \
+        } \
+        ~testGroup##_Group() override { sTestGroup = nullptr; } \
+        virtual const char * GetName() const override { return #testGroup; } \
+        inline static testGroup##_Group * sTestGroup = nullptr; \
+    } \
+    gTestRegister_##testGroup##_Instance; \
+    class testGroup##_TestCase_Base : public testGroupTestBaseClass \
+    { \
+    public: \
+        testGroup##_TestCase_Base() \
+            : testGroupTestBaseClass( testGroup##_Group::sTestGroup ) \
+        {} \
+    }; \
+    class testGroup : public testGroup##_TestCase_Base
 
-#define REGISTER_TESTS_END                                          \
-    }
-
-#define REGISTER_TESTGROUP( testGroupName )                         \
-        extern void testGroupName##Register();                      \
-        testGroupName##Register();
+#define TEST_CASE( testGroup, test ) \
+    class TestRegister_##testGroup##_##test : public testGroup \
+    { \
+    public: \
+        virtual const char * GetName() const override { return #test; } \
+        virtual void Run() const override; \
+        void operator=( TestRegister_##testGroup##_##test & ) = delete; \
+    } gTestRegister_##testGroup##_##test##_Instance; \
+    /*virtual*/ void TestRegister_##testGroup##_##test::Run() const
 
 // Memory snapshots
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
-    class TestMemorySnapshot
+class TestMemorySnapshot
+{
+public:
+    TestMemorySnapshot()
+        : m_AllocationId( MemTracker::GetCurrentAllocationId() )
+        , m_ActiveAllocationCount( MemTracker::GetCurrentAllocationCount() )
     {
-    public:
-        TestMemorySnapshot()
-            : m_AllocationId( MemTracker::GetCurrentAllocationId() )
-            , m_ActiveAllocationCount( MemTracker::GetCurrentAllocationCount() )
-        {}
-        uint32_t    m_AllocationId;
-        uint32_t    m_ActiveAllocationCount;
-    };
+    }
+
+    uint32_t m_AllocationId;
+    uint32_t m_ActiveAllocationCount;
+};
 
     // Take a snapshot of the memory state
     #define TEST_MEMORY_SNAPSHOT( snapshot )                            \
@@ -129,7 +160,7 @@ private:
         }
 
     // Test for new active allocations since a snapshot
-    #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected )    \
+    #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected ) \
         {                                                               \
             const uint32_t numActiveAllocs = ( MemTracker::GetCurrentAllocationCount() - snapshot.m_ActiveAllocationCount ); \
             TEST_ASSERTM( numActiveAllocs == expected, "%u allocs(s) instead of %u alloc(s)", numActiveAllocs, expected ); \

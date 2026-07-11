@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/LinkerNodeFileExistsCache.h"
-#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenizer.h"
 
 #include "Core/Env/Assert.h"
@@ -17,6 +16,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFFile;
+class BFFToken;
 class BFFTokenRange;
 class BFFUserFunction;
 class FileStream;
@@ -38,25 +38,25 @@ public:
 
     const Array<BFFFile *> & GetUsedFiles() const { return m_Tokenizer.GetUsedFiles(); }
 
-    enum { BFF_COMMENT_SEMICOLON = ';' };
-    enum { BFF_COMMENT_SLASH = '/' };
-    enum { BFF_DECLARE_VAR_INTERNAL = '.' };
-    enum { BFF_DECLARE_VAR_PARENT = '^' };
-    enum { BFF_VARIABLE_ASSIGNMENT = '=' };
-    enum { BFF_VARIABLE_CONCATENATION = '+' };
-    enum { BFF_VARIABLE_SUBTRACTION = '-' };
-    enum { BFF_START_ARRAY = '{' };
-    enum { BFF_END_ARRAY = '}' };
-    enum { BFF_FUNCTION_ARGS_OPEN = '(' };
-    enum { BFF_FUNCTION_ARGS_CLOSE = ')' };
-    enum { BFF_SCOPE_OPEN = '{' };
-    enum { BFF_SCOPE_CLOSE = '}' };
-    enum { BFF_STRUCT_OPEN = '[' };
-    enum { BFF_STRUCT_CLOSE = ']' };
-    enum { BFF_PREPROCESSOR_START = '#' };
+    inline static const char kBFFCommentSemicolon = ';';
+    inline static const char kBFFCommentSlash = '/';
+    inline static const char kBFFDeclareVarInternal = '.';
+    inline static const char kBFFDeclareVarParent = '^';
+    inline static const char kBFFVariableAssignment = '=';
+    inline static const char kBFFVariableConcatenation = '+';
+    inline static const char kBFFVariableSubtraction = '-';
+    inline static const char kBFFStartArray = '{';
+    inline static const char kBFFEndArray = '}';
+    inline static const char kBFFFunctionArgsOpen = '(';
+    inline static const char kBFFFunctionArgsClose = ')';
+    inline static const char kBFFScopeOpen = '{';
+    inline static const char kBFFScopeClose = '}';
+    inline static const char kBFFStructOpen = '[';
+    inline static const char kBFFStructClose = ']';
+    inline static const char kBFFPreprocessorStart = '#';
 
-    enum { MAX_VARIABLE_NAME_LENGTH = 256 };
-    enum { MAX_OPERATOR_HISTORY = 256 };
+    inline static const size_t kMaxVariableNameLength = 256;
+    inline static const size_t kMaxOperatorHistory = 256;
 
     static bool PerformVariableSubstitutions( const BFFToken * inputToken, AString & value );
     static bool ParseVariableName( const BFFToken * iter, AString & name, bool & parentScope );
@@ -76,8 +76,8 @@ private:
     bool StoreVariableString( const AString & name, const BFFToken * rhsString, const BFFToken * operatorToken, BFFStackFrame * frame );
     bool StoreVariableArray( const AString & name, const BFFTokenRange & tokenRange, const BFFToken * operatorIter, BFFStackFrame * frame );
     bool StoreVariableStruct( const AString & name, const BFFTokenRange & tokenRange, const BFFToken * operatorToken, BFFStackFrame * frame );
-    bool StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame );
-    bool StoreVariableInt( const AString & name, int value, BFFStackFrame * frame );
+    bool StoreVariableBool( const AString & name, const BFFToken * token, bool value, BFFStackFrame * frame );
+    bool StoreVariableInt( const AString & name, const BFFToken * token, int value, BFFStackFrame * frame );
     bool StoreVariableToVariable( const AString & dstName, const BFFToken * rhsToken, const BFFToken * operatorToken, BFFStackFrame * dstFrame );
 
     void CreateBuiltInVariables();
@@ -94,7 +94,7 @@ private:
     BFFTokenizer m_Tokenizer;
     LinkerNodeFileExistsCache m_LinkerNodeFileExistsCache;
 
-    BFFParser & operator = (const BFFParser &) = delete;
+    BFFParser & operator=( const BFFParser & ) = delete;
 };
 
 //------------------------------------------------------------------------------
