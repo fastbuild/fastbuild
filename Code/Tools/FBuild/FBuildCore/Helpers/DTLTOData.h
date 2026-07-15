@@ -19,8 +19,7 @@ struct DTLTOData
     };
 
     AString m_LinkerOutput;
-    AString m_Compiler;
-    Array<AString> m_CommonArgs;
+    Array<AString> m_CommonArgs; // m_CommonArgs[0] is the compiler; the rest are shared flags
     Array<AString> m_CommonInputs;
     Array<Job> m_Jobs;
 };

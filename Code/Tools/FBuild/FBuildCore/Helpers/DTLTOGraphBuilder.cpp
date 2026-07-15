@@ -30,7 +30,7 @@ DTLTOGraphBuilder::DTLTOGraphBuilder( NodeGraph & nodeGraph )
 //------------------------------------------------------------------------------
 Node * DTLTOGraphBuilder::BuildGraph( const DTLTOData & data, const AString & aliasName )
 {
-    if ( data.m_Compiler.IsEmpty() )
+    if ( data.m_CommonArgs.IsEmpty() ) // m_CommonArgs[0] is the compiler
     {
         FLOG_ERROR( "DTLTO: no compiler specified" );
         return nullptr;
@@ -83,15 +83,13 @@ Node * DTLTOGraphBuilder::CreateExecNodeForJob( const DTLTOData & data, const DT
     NodeGraph::CleanPath( job.m_Outputs[ 0 ], nodeName );
     // TODO: support multiple outputs? (DTLTO JSON can have multiple outputs)
 
-    // TODO: could check outputs for uniqueness?
-
     AStackString<> arguments;
     BuildArgumentsString( data.m_CommonArgs, job.m_Args, arguments );
 
     ExecNode * execNode = m_NodeGraph.CreateNode<ExecNode>( nodeName );
 
     const ReflectionInfo * ri = execNode->GetReflectionInfoV();
-    VERIFY( ri->SetProperty( execNode, "ExecExecutable", data.m_Compiler ) );
+    VERIFY( ri->SetProperty( execNode, "ExecExecutable", data.m_CommonArgs[ 0 ] ) ); // compiler
     VERIFY( ri->SetProperty( execNode, "ExecArguments", arguments ) );
     VERIFY( ri->SetProperty( execNode, "ExecInput", job.m_Inputs ) );
     VERIFY( ri->SetProperty( execNode, "ExecUseStdOutAsOutput", false ) );
@@ -111,9 +109,10 @@ Node * DTLTOGraphBuilder::CreateExecNodeForJob( const DTLTOData & data, const DT
                                                          AString & outArguments )
 {
     outArguments.Clear();
-    for ( const AString & arg : commonArgs )
+    // commonArgs[0] is the compiler (passed as ExecExecutable), skip
+    for ( size_t i = 1; i < commonArgs.GetSize(); ++i )
     {
-        AppendQuotedArg( arg, outArguments );
+        AppendQuotedArg( commonArgs[ i ], outArguments );
         outArguments += ' ';
     }
     for ( const AString & arg : jobArgs )
