@@ -261,6 +261,26 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowBuildReason = true;
                 continue;
             }
+            else if ( thisArg == "-dtlto" )
+            {
+                // TODO: reduce code duplicates?
+                const int32_t pathIndex = ( i + 1 );
+                if ( pathIndex >= argc )
+                {
+                    OUTPUT( "FBuild: Error: Missing <path> for '-dtlto' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                m_DTLTOFile = argv[ pathIndex ];
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += '"'; // surround with quotes to avoid problems with spaces in the path
+                m_Args += m_DTLTOFile;
+                m_Args += '"';
+                continue;
+            }
             else if ( thisArg == "-dot" )
             {
                 m_GenerateDotGraph = true;
@@ -671,6 +691,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "                   - >=  1 : more compression, with 12 being the highest\n"
             " -dot[full]        Emit known dependency tree info for specified targets to an\n"
             "                   fbuild.gv file in DOT format.\n"
+            " -dtlto <path>     Build backend jobs from an LLVM DTLTO JSON file.\n"
             " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote      Force distributable jobs to only be built remotely.\n"
             " -help             Show this help.\n"
