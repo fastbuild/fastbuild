@@ -17,29 +17,30 @@
 class BFFUserFunction
 {
 public:
-    struct Argument
+    class Argument
     {
-        const BFFToken * m_Val;
-        bool m_IsRef;
+    public:
+        const BFFToken * m_Val = nullptr;
+        bool m_IsRef = false;
     };
 
     explicit BFFUserFunction( const AString & name,
-                              const Array< Argument > & args,
+                              const Array<Argument> & args,
                               const BFFTokenRange & bodyTokenRange,
                               bool hasReferences );
     ~BFFUserFunction();
 
-    const Array< Argument > &   GetArgs() const { return m_Args; }
-    const BFFTokenRange &       GetBodyTokenRange() const { return m_BodyTokenRange; }
-    bool                        HasReferences() const { return m_HasReferences; }
+    const Array<Argument> & GetArgs() const { return m_Args; }
+    const BFFTokenRange & GetBodyTokenRange() const { return m_BodyTokenRange; }
+    bool HasReferences() const { return m_HasReferences; }
 
     bool operator==( const AString & name ) const { return ( m_Name == name ); }
 
 protected:
-    AString                     m_Name;
-    Array< Argument >           m_Args;
-    BFFTokenRange               m_BodyTokenRange;
-    bool                        m_HasReferences;
+    AString m_Name;
+    Array<Argument> m_Args;
+    BFFTokenRange m_BodyTokenRange;
+    bool m_HasReferences = false;
 };
 
 // BFFUserFunctions
@@ -51,7 +52,7 @@ public:
     ~BFFUserFunctions();
 
     void AddFunction( const AString & name,
-                      const Array< BFFUserFunction::Argument > & args,
+                      const Array<BFFUserFunction::Argument> & args,
                       const BFFTokenRange & tokenRange,
                       bool hasReferences );
     BFFUserFunction * FindFunction( const AString & name ) const;
