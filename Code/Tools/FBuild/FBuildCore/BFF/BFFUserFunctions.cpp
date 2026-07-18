@@ -8,7 +8,7 @@
 // CONSTRUCTOR (BFFUserFunction)
 //------------------------------------------------------------------------------
 BFFUserFunction::BFFUserFunction( const AString & name,
-                                  const Array< Argument > & args,
+                                  const Array<Argument> & args,
                                   const BFFTokenRange & bodyTokenRange,
                                   bool hasReferences )
     : m_Name( name )
@@ -39,7 +39,7 @@ BFFUserFunctions::~BFFUserFunctions()
 // AddFunction
 //------------------------------------------------------------------------------
 void BFFUserFunctions::AddFunction( const AString & name,
-                                    const Array< BFFUserFunction::Argument > & args,
+                                    const Array<BFFUserFunction::Argument> & args,
                                     const BFFTokenRange & tokenRange,
                                     bool hasReferences )
 {
