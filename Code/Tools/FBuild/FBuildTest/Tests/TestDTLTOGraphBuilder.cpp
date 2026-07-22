@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/DTLTOJsonParser.h"
 
 // Core
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Reflection/ReflectionInfo.h"
 #include "Core/Strings/AStackString.h"
 
@@ -22,24 +23,15 @@ TEST_GROUP( TestDTLTOGraphBuilder, FBuildTest )
 {
 };
 
-// MakeDTLTOData
+// FindObjectList
 //------------------------------------------------------------------------------
-static void MakeDTLTOData( DTLTOData & data )
+static Node * FindObjectList( NodeGraph & nodeGraph, const char * output )
 {
-    data.m_CommonArgs.EmplaceBack( "clang.exe" ); // args[0] is the compiler
-    data.m_CommonArgs.EmplaceBack( "-c" );
-    data.m_CommonArgs.EmplaceBack( "-O2" );
-
-    {
-        DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
-        job.m_Args.EmplaceBack( "app_main.c.obj" );
-        job.m_Args.EmplaceBack( "-fthinlto-index=app_main.c.1.native.o.thinlto.bc" );
-        job.m_Outputs.EmplaceBack( "app_main.c.1.native.o" );
-    }
-    {
-        DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
-        job.m_Outputs.EmplaceBack( "math.c.2.native.o" );
-    }
+    AStackString<> cleanOutput;
+    NodeGraph::CleanPath( AStackString<>( output ), cleanOutput );
+    AStackString<> listName;
+    listName.Format( "DTLTO-List:%s", cleanOutput.Get() );
+    return nodeGraph.FindNode( listName );
 }
 
 //------------------------------------------------------------------------------
@@ -49,7 +41,17 @@ TEST_CASE( TestDTLTOGraphBuilder, BuildSynthesizesGraph )
     NodeGraph nodeGraph;
 
     DTLTOData data;
-    MakeDTLTOData( data );
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    {
+        DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+        job.m_Args.EmplaceBack( "a.obj" );
+        job.m_Outputs.EmplaceBack( "a.o" );
+    }
+    {
+        DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+        job.m_Args.EmplaceBack( "b.obj" );
+        job.m_Outputs.EmplaceBack( "b.o" );
+    }
 
     DTLTOGraphBuilder builder( nodeGraph );
     const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
@@ -58,18 +60,41 @@ TEST_CASE( TestDTLTOGraphBuilder, BuildSynthesizesGraph )
     TEST_ASSERT( alias->GetType() == Node::ALIAS_NODE );
     TEST_ASSERT( alias->GetStaticDependencies().GetSize() == 2 ); // 2 jobs
 
-    AStackString<> expectedName;
-    NodeGraph::CleanPath( AStackString<>( "app_main.c.1.native.o" ), expectedName );
-    Node * jobNode = nodeGraph.FindNode( expectedName );
-    TEST_ASSERT( jobNode );
-    TEST_ASSERT( jobNode->GetType() == Node::EXEC_NODE );
+    Node * compiler = nodeGraph.FindNode( AStackString<>( "Compiler-DTLTO" ) );
+    TEST_ASSERT( compiler );
+    TEST_ASSERT( compiler->GetType() == Node::COMPILER_NODE );
 
-    AStackString<> args;
-    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "ExecArguments", &args ) );
-    TEST_ASSERT( args.Find( "-c" ) ); // common args
-    TEST_ASSERT( args.Find( "-O2" ) ); // common args
-    TEST_ASSERT( args.Find( "-fthinlto-index=app_main.c.1.native.o.thinlto.bc" ) ); // job args
-    TEST_ASSERT( args.Find( "app_main.c.obj" ) ); // job args
+    Node * job1Node = FindObjectList( nodeGraph, "a.o" );
+    TEST_ASSERT( job1Node );
+    TEST_ASSERT( job1Node->GetType() == Node::OBJECT_LIST_NODE );
+
+    Node * job2Node = FindObjectList( nodeGraph, "b.o" );
+    TEST_ASSERT( job2Node );
+    TEST_ASSERT( job2Node->GetType() == Node::OBJECT_LIST_NODE );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, JobCompilerOptions )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "a.obj" );
+    job.m_Args.EmplaceBack( "-jobflag" );
+    job.m_Outputs.EmplaceBack( "a.o" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
+
+    Node * jobNode = FindObjectList( nodeGraph, "a.o" );
+    TEST_ASSERT( jobNode );
+
+    AStackString<> options;
+    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerOptions", &options ) );
+    TEST_ASSERT( options == "-jobflag %1 -o \"%2\"" );
 }
 
 //------------------------------------------------------------------------------
@@ -95,7 +120,7 @@ TEST_CASE( TestDTLTOGraphBuilder, RejectsEmptyJobs )
     NodeGraph nodeGraph;
 
     DTLTOData data;
-    data.m_CommonArgs.EmplaceBack( "clang.exe" ); // args[0] is the compiler
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
 
     DTLTOGraphBuilder builder( nodeGraph );
     const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
@@ -110,51 +135,19 @@ TEST_CASE( TestDTLTOGraphBuilder, RejectsDuplicateTarget )
     NodeGraph nodeGraph;
 
     DTLTOData data;
-    MakeDTLTOData( data );
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "app_main.c.obj" );
+    job.m_Outputs.EmplaceBack( "app_main.c.1.native.o" );
 
     DTLTOGraphBuilder builder( nodeGraph );
     TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
 
-    // second build with the same target name must be rejected
-    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) );
+    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ); // duplicate
     TEST_ASSERT( alias == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "already exists" ) );
 }
 
-//------------------------------------------------------------------------------
-TEST_CASE( TestDTLTOGraphBuilder, QuotesArguments )
-{
-    FBuild fBuild;
-    NodeGraph nodeGraph;
-
-    DTLTOData data;
-    data.m_CommonArgs.EmplaceBack( "clang.exe" ); // args[0] is the compiler
-
-    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
-    job.m_Args.EmplaceBack( "C:\\Program Files\\in.o" ); // space       -> wrapped in quotes
-    job.m_Args.EmplaceBack( "-DMSG=\"hi\"" );            // has a quote -> wrapped and escaped
-    job.m_Args.EmplaceBack();                            // empty       -> ""
-    job.m_Args.EmplaceBack( "plain" );                   // no specials -> unchanged
-    job.m_Outputs.EmplaceBack( "out.o" );
-
-    DTLTOGraphBuilder builder( nodeGraph );
-    const Node * alias = builder.BuildGraph( data, AStackString<>( "dtlto-quote" ) );
-    TEST_ASSERT( alias );
-
-    AStackString<> nodeName;
-    NodeGraph::CleanPath( AStackString<>( "out.o" ), nodeName );
-    Node * jobNode = nodeGraph.FindNode( nodeName );
-    TEST_ASSERT( jobNode );
-
-    AStackString<> args;
-    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "ExecArguments", &args ) );
-    TEST_ASSERT( args.Find( "\"C:\\Program Files\\in.o\"" ) ); // space -> quoted
-    TEST_ASSERT( args.Find( "\"-DMSG=\\\"hi\\\"\"" ) );        // quote -> escaped + quoted
-    TEST_ASSERT( args.Find( " \"\" " ) );                      // empty -> ""
-    TEST_ASSERT( args.Find( "plain" ) );                       // unchanged
-}
-
-// Real DTLTO JSON -> parser -> builder end-to-end
 //------------------------------------------------------------------------------
 TEST_CASE( TestDTLTOGraphBuilder, BuildFromParsedJson )
 {
@@ -164,19 +157,14 @@ TEST_CASE( TestDTLTOGraphBuilder, BuildFromParsedJson )
     AStackString<> json( R"({
         "common": {
             "linker_output": "app.exe",
-            "args": [ "clang.exe", "-c", "--target=x86_64-pc-windows-msvc", "-O2" ],
+            "args": [ "clang.exe", "-O2" ],
             "inputs": []
         },
         "jobs": [
             {
-                "args": [ "app_main.c.obj", "-fthinlto-index=app_main.c.1.native.o.thinlto.bc", "-o", "app_main.c.1.native.o" ],
-                "inputs": [ "app_main.c.obj", "app_main.c.1.native.o.thinlto.bc" ],
-                "outputs": [ "app_main.c.1.native.o" ]
-            },
-            {
-                "args": [ "math.c.obj", "-fthinlto-index=math.c.2.native.o.thinlto.bc", "-o", "math.c.2.native.o" ],
-                "inputs": [ "math.c.obj", "math.c.2.native.o.thinlto.bc" ],
-                "outputs": [ "math.c.2.native.o" ]
+                "args": [ "a.obj", "-fthinlto-index=a.thinlto.bc", "-o", "a.o" ],
+                "inputs": [ "a.obj", "a.thinlto.bc" ],
+                "outputs": [ "a.o" ]
             }
         ]
     })" );
@@ -188,27 +176,159 @@ TEST_CASE( TestDTLTOGraphBuilder, BuildFromParsedJson )
     const Node * alias = builder.BuildGraph( parser.GetData(), AStackString<>( "dtlto-all" ) );
     TEST_ASSERT( alias );
     TEST_ASSERT( alias->GetType() == Node::ALIAS_NODE );
-    TEST_ASSERT( alias->GetStaticDependencies().GetSize() == 2 ); // 2 jobs
+    TEST_ASSERT( alias->GetStaticDependencies().GetSize() == 1 ); // 1 job
 
-    AStackString<> nodeName;
-    NodeGraph::CleanPath( AStackString<>( "app_main.c.1.native.o" ), nodeName );
-    Node * jobNode = nodeGraph.FindNode( nodeName );
+    Node * jobNode = FindObjectList( nodeGraph, "a.o" );
     TEST_ASSERT( jobNode );
-    TEST_ASSERT( jobNode->GetType() == Node::EXEC_NODE );
+    TEST_ASSERT( jobNode->GetType() == Node::OBJECT_LIST_NODE );
 
     const ReflectionInfo * ri = jobNode->GetReflectionInfoV();
 
-    AStackString<> exe;
-    TEST_ASSERT( ri->GetProperty( jobNode, "ExecExecutable", &exe ) );
-    TEST_ASSERT( exe.EndsWith( "clang.exe" ) ); // compiler = common.args[0]
+    AStackString<> compiler;
+    TEST_ASSERT( ri->GetProperty( jobNode, "Compiler", &compiler ) );
+    TEST_ASSERT( compiler == "Compiler-DTLTO" );
 
-    AStackString<> args;
-    TEST_ASSERT( ri->GetProperty( jobNode, "ExecArguments", &args ) );
-    TEST_ASSERT( args.Find( "-c" ) );                                                   // common flag
-    TEST_ASSERT( args.Find( "-O2" ) );                                                  // common flag
-    TEST_ASSERT( args.Find( "-fthinlto-index=app_main.c.1.native.o.thinlto.bc" ) );     // job arg
-    TEST_ASSERT( args.Find( "app_main.c.obj" ) );                                       // job arg
-    TEST_ASSERT( args.Find( "clang.exe" ) == nullptr );                                 // compiler is not duplicated into args
+    AStackString<> options;
+    TEST_ASSERT( ri->GetProperty( jobNode, "CompilerOptions", &options ) );
+    TEST_ASSERT( options == "-O2 -fthinlto-index=a.thinlto.bc %1 -o \"%2\"" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, ComputesOutputNaming )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "app_main.c.obj" );
+    job.m_Outputs.EmplaceBack( "app_main.c.1.25872.native.o" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
+
+    Node * jobNode = FindObjectList( nodeGraph, "app_main.c.1.25872.native.o" );
+    TEST_ASSERT( jobNode );
+    const ReflectionInfo * ri = jobNode->GetReflectionInfoV();
+
+    AStackString<> path;
+    AStackString<> ext;
+    TEST_ASSERT( ri->GetProperty( jobNode, "CompilerOutputPath", &path ) );
+    TEST_ASSERT( ri->GetProperty( jobNode, "CompilerOutputExtension", &ext ) );
+    TEST_ASSERT( ext == ".1.25872.native.o" );
+
+    // Reconstruct the object name ObjectList will emit (path + <input base> + ext) and
+    // check it equals the desired output.
+    AStackString<> cleanOutput;
+    NodeGraph::CleanPath( AStackString<>( "app_main.c.1.25872.native.o" ), cleanOutput );
+    AStackString<> reconstructed;
+    reconstructed.Format( "%sapp_main.c%s", path.Get(), ext.Get() );
+    TEST_ASSERT( PathUtils::ArePathsEqual( reconstructed, cleanOutput ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, RejectsOutputNotMatchingInput )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "app_main.c.obj" );
+    job.m_Outputs.EmplaceBack( "unrelated.o" ); // does not begin with input base "app_main.c"
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "does not begin with input base" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, RejectsJobWithoutOutputs )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "app_main.c.obj" ); // input present, but no outputs
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "job has no outputs" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, RejectsJobWithoutInput )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Outputs.EmplaceBack( "app_main.c.1.native.o" ); // output present, but no args
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) == nullptr ); //
+    TEST_ASSERT( GetRecordedOutput().Find( "job has no input bitcode path" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, DropsExplicitOutputArgs )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    data.m_CommonArgs.EmplaceBack( "-common" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "input.bc" ); // %1, dropped from options
+    job.m_Args.EmplaceBack( "-keepme" );
+    job.m_Args.EmplaceBack( "-o" );
+    job.m_Args.EmplaceBack( "DROP_SPACE" ); // dropped together with "-o"
+    job.m_Args.EmplaceBack( "-o=DROP_EQ" ); // dropped
+    job.m_Outputs.EmplaceBack( "input.1.native.o" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
+
+    Node * jobNode = FindObjectList( nodeGraph, "input.1.native.o" );
+    TEST_ASSERT( jobNode );
+
+    AStackString<> options;
+    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerOptions", &options ) );
+    TEST_ASSERT( options == "-common -keepme %1 -o \"%2\"" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, ReusesExistingCompilerNode )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data1;
+    data1.m_CommonArgs.EmplaceBack( "clang.exe" );
+    DTLTOData::Job & job1 = data1.m_Jobs.EmplaceBack();
+    job1.m_Args.EmplaceBack( "app_main.c.obj" );
+    job1.m_Outputs.EmplaceBack( "app_main.c.1.native.o" );
+
+    DTLTOData data2;
+    data2.m_CommonArgs.EmplaceBack( "clang.exe" ); // same compiler -> node reused
+    DTLTOData::Job & job2 = data2.m_Jobs.EmplaceBack();
+    job2.m_Args.EmplaceBack( "math.c.obj" );
+    job2.m_Outputs.EmplaceBack( "math.c.2.native.o" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data1, AStackString<>( "dtlto-all-1" ) ) );
+    TEST_ASSERT( builder.BuildGraph( data2, AStackString<>( "dtlto-all-2" ) ) ); // reuse, no assert
+
+    Node * compiler = nodeGraph.FindNode( AStackString<>( "Compiler-DTLTO" ) );
+    TEST_ASSERT( compiler );
+    TEST_ASSERT( compiler->GetType() == Node::COMPILER_NODE );
 }
 
 //------------------------------------------------------------------------------
