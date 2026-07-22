@@ -38,10 +38,13 @@ TEST_CASE( TestUserFunctions, DeclareWithArgs )
     TEST_PARSE_OK( "function Func( .ArgA .ArgB ){}" );
     TEST_PARSE_OK( "function Func( .ArgA .ArgB .ArgC ){}" );
     TEST_PARSE_OK( "function Func( .ArgA, .ArgB, .ArgC ){}" ); // Commas between args are allowed
+    TEST_PARSE_OK( "function Func( in .ArgA ){}" ); // Optional in specifier
+    TEST_PARSE_OK( "function Func( out .ArgA ){}" ); // Args can be out values
 
     // Function arg names must be unique
     TEST_PARSE_FAIL( "function Func( .ArgA .ArgA ){}",          "#1109 - Function argument '.ArgA' is already defined." );
     TEST_PARSE_FAIL( "function Func( .ArgA .ArgB .ArgA ){}",    "#1109 - Function argument '.ArgA' is already defined." );
+    TEST_PARSE_FAIL( "function Func( in out .ArgA ){}",         "#1007 - Expected a variable at this location." );
 }
 
 //------------------------------------------------------------------------------
@@ -73,6 +76,10 @@ TEST_CASE( TestUserFunctions, InvokeWithArgs )
                      "Func( XX )",                      "#1112 - Function call arguments should be literals or variables." );
     TEST_PARSE_FAIL( "function Func( .Arg ){}\n"
                      "Func( XX )",                      "#1112 - Function call arguments should be literals or variables." );
+
+    // Out parameters should be set with variable only
+    TEST_PARSE_FAIL( "function Func( out .Arg ){ .Arg = 'Out Value' }\n"
+                     "Func( 'arg' )",                   "#1113 - Function call out argument should be a variable." );
 
     // Number of arguments must match
     TEST_PARSE_FAIL( "function Func( .ArgA ){}\n"
@@ -120,6 +127,23 @@ TEST_CASE( TestUserFunctions, InvokeWithArgs )
                                                         "    'Hello'\n"
                                                         "    'Yo'\n"
                                                         "}" );
+
+    // Valid function calls - out variables
+    // - String
+    TEST_PARSE_OK( "function Func( out .ArgA ){ .ArgA = 'OutValue' }\n"
+                   ".String = 'Init Value'\n"
+                   "Func( .String )\n"
+                   "Print( 'String = $String$' )\n",    "String = OutValue" );
+    // - Bool
+    TEST_PARSE_OK( "function Func( out .ArgA ){ .ArgA = true }\n"
+                   ".Bool = false\n"
+                   "Func( .Bool )\n"
+                   "Print( 'Bool = $Bool$' )\n",        "Bool = true" );
+    // - Int
+    TEST_PARSE_OK( "function Func( out .ArgA ){ .ArgA = 1 }\n"
+                   ".Int = 0\n"
+                   "Func( .Int )\n"
+                   "Print( 'Int = $Int$' )\n",          "Int = 1" );
 
     // Valid function calls - variables with substitutions
     // - String

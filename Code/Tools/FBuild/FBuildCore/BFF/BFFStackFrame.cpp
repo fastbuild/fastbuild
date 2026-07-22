@@ -356,6 +356,30 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
     return GetVarNoRecurse( name );
 }
 
+//------------------------------------------------------------------------------
+/*static*/ BFFStackFrame * BFFStackFrame::GetDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
+{
+    AStackString strName( name );
+    return GetDeclaration( strName, frame, variable );
+}
+
+//------------------------------------------------------------------------------
+/*static*/ BFFStackFrame * BFFStackFrame::GetDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable )
+{
+    if ( frame == nullptr )
+    {
+        frame = GetCurrent();
+    }
+
+    variable = frame->GetLocalVar( name );
+    if ( variable != nullptr )
+    {
+        return frame;
+    }
+
+    return GetParentDeclaration( name, frame, variable );
+}
+
 // GetParentDeclaration
 //------------------------------------------------------------------------------
 /*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
