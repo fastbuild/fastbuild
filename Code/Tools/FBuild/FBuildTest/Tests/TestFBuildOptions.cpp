@@ -50,9 +50,18 @@ FBuildOptions::OptionsResult TestFBuildOptions::Parse( FBuildOptions & options,
 {
     StackArray<char *> argv;
     argv.Append( const_cast<char *>( "FBuild.exe" ) ); // argv[0] is the program name
-    if ( a1 ) { argv.Append( const_cast<char *>( a1 ) ); }
-    if ( a2 ) { argv.Append( const_cast<char *>( a2 ) ); }
-    if ( a3 ) { argv.Append( const_cast<char *>( a3 ) ); }
+    if ( a1 )
+    {
+        argv.Append( const_cast<char *>( a1 ) );
+    }
+    if ( a2 )
+    {
+        argv.Append( const_cast<char *>( a2 ) );
+    }
+    if ( a3 )
+    {
+        argv.Append( const_cast<char *>( a3 ) );
+    }
     return options.ProcessCommandLine( static_cast<int32_t>( argv.GetSize() ), argv.Begin() );
 }
 
