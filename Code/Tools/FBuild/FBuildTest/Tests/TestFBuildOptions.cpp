@@ -25,20 +25,57 @@ public:
 };
 
 //------------------------------------------------------------------------------
+TEST_CASE( TestFBuildOptions, DTLTOFileMissingArgErrors )
+{
+    FBuildOptions options;
+    TEST_ASSERT( Parse( options, "-dtlto" ) == FBuildOptions::OPTIONS_ERROR );
+    TEST_ASSERT( options.m_DTLTOFile.IsEmpty() );
+    TEST_ASSERT( GetRecordedOutput().Find( "Missing DTLTO JSON" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFBuildOptions, DTLTOTargetErrors )
+{
+    FBuildOptions options;
+    TEST_ASSERT( Parse( options, "-dtlto", "target", "dist-file.json" ) == FBuildOptions::OPTIONS_ERROR );
+    TEST_ASSERT( options.m_DTLTOFile.IsEmpty() );
+    TEST_ASSERT( GetRecordedOutput().Find( "'-dtlto' accepts exactly one DTLTO JSON file as the build target" ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFBuildOptions, DTLTOFileExtensionErrors )
+{
+    FBuildOptions options;
+    TEST_ASSERT( Parse( options, "-dtlto", "target" ) == FBuildOptions::OPTIONS_ERROR );
+    TEST_ASSERT( options.m_DTLTOFile.IsEmpty() );
+    TEST_ASSERT( GetRecordedOutput().Find( "'-dtlto' requires a DTLTO JSON file, got 'target'" ) );
+}
+
+//------------------------------------------------------------------------------
 TEST_CASE( TestFBuildOptions, DTLTOFile )
 {
     FBuildOptions options;
     TEST_ASSERT( Parse( options, "-dtlto", "dist-file.json" ) == FBuildOptions::OPTIONS_OK );
     TEST_ASSERT( options.m_DTLTOFile == "dist-file.json" );
     TEST_ASSERT( options.GetArgs().Find( "dist-file.json" ) );
+    TEST_ASSERT( options.m_Targets.GetSize() == 1 );
+    TEST_ASSERT( options.m_Targets[ 0 ] == "all" );
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE( TestFBuildOptions, DTLTOFileMissingArgErrors )
+TEST_CASE( TestFBuildOptions, DTLTOFileAfterOptions )
 {
     FBuildOptions options;
-    TEST_ASSERT( Parse( options, "-dtlto" ) == FBuildOptions::OPTIONS_ERROR ); // no <path> follows
-    TEST_ASSERT( options.m_DTLTOFile.IsEmpty() );
+    TEST_ASSERT( Parse( options, "-dtlto", "-dist", "dist-file.json" ) == FBuildOptions::OPTIONS_OK );
+    TEST_ASSERT( options.m_DTLTOFile == "dist-file.json" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestFBuildOptions, DTLTOFileBeforeOptions )
+{
+    FBuildOptions options;
+    TEST_ASSERT( Parse( options, "-dtlto", "dist-file.json", "-dist" ) == FBuildOptions::OPTIONS_OK );
+    TEST_ASSERT( options.m_DTLTOFile == "dist-file.json" );
 }
 
 // Parse

@@ -116,6 +116,8 @@ public:
     void SetSettings( const SettingsNode & settings );
     const SettingsNode * GetSettings() const { return m_Settings; }
 
+    void CreateDefaultSettingsNode();
+
     void RegisterNode( Node * n, const BFFToken * sourceToken );
 
     // create new nodes
