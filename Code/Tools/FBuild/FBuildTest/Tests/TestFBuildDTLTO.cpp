@@ -72,4 +72,3 @@ TEST_CASE( TestFBuildDTLTO, MalformedDTLTOJson )
     TEST_ASSERT( fBuild.Initialize() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "DTLTO: expected '{'" ) );
 }
-

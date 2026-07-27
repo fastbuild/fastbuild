@@ -94,7 +94,7 @@ TEST_CASE( TestDTLTOGraphBuilder, JobCompilerOptions )
 
     AStackString<> options;
     TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerOptions", &options ) );
-    TEST_ASSERT( options == "-jobflag %1 -o \"%2\"" );
+    TEST_ASSERT( options == "-jobflag -D_FASTBUILD_DTLTO_INPUT=\"%1\" \"a.obj\" -o \"%2\"" );
 }
 
 //------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ TEST_CASE( TestDTLTOGraphBuilder, BuildFromParsedJson )
 
     AStackString<> options;
     TEST_ASSERT( ri->GetProperty( jobNode, "CompilerOptions", &options ) );
-    TEST_ASSERT( options == "-O2 -fthinlto-index=a.thinlto.bc %1 -o \"%2\"" );
+    TEST_ASSERT( options == "-O2 -fthinlto-index=a.thinlto.bc -D_FASTBUILD_DTLTO_INPUT=\"%1\" \"a.obj\" -o \"%2\"" );
 }
 
 //------------------------------------------------------------------------------
@@ -225,6 +225,46 @@ TEST_CASE( TestDTLTOGraphBuilder, ComputesOutputNaming )
     AStackString<> reconstructed;
     reconstructed.Format( "%sapp_main.c%s", path.Get(), ext.Get() );
     TEST_ASSERT( PathUtils::ArePathsEqual( reconstructed, cleanOutput ) );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, NormalizesFASTBuildPathsPreservesDTLTOInput )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "tools\\subdir/../clang.exe" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "objects\\subdir/../app_main.c.obj" );
+    job.m_Outputs.EmplaceBack( "app_main.c.1.native.o" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
+
+    // Compiler path is normalized
+    AStackString<> expectedCompiler;
+    NodeGraph::CleanPath( data.m_CommonArgs[ 0 ], expectedCompiler );
+    Node * compilerNode = nodeGraph.FindNode( AStackString<>( "Compiler-DTLTO" ) );
+    TEST_ASSERT( compilerNode );
+    AStackString<> compiler;
+    TEST_ASSERT( compilerNode->GetReflectionInfoV()->GetProperty( compilerNode, "Executable", &compiler ) );
+    TEST_ASSERT( compiler == expectedCompiler );
+
+    // Input path is normalized
+    Node * jobNode = FindObjectList( nodeGraph, "app_main.c.1.native.o" );
+    TEST_ASSERT( jobNode );
+    StackArray<AString> inputs;
+    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerInputFiles", &inputs ) );
+    TEST_ASSERT( inputs.GetSize() == 1 );
+    AStackString<> expectedInput;
+    NodeGraph::CleanPath( job.m_Args[ 0 ], expectedInput );
+    TEST_ASSERT( inputs[ 0 ] == expectedInput );
+
+    // Clang receives the original path used as the ThinLTO module identifier
+    AStackString<> options;
+    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerOptions", &options ) );
+    TEST_ASSERT( options == "-D_FASTBUILD_DTLTO_INPUT=\"%1\" \"objects\\subdir/../app_main.c.obj\" -o \"%2\"" );
 }
 
 //------------------------------------------------------------------------------
@@ -286,7 +326,7 @@ TEST_CASE( TestDTLTOGraphBuilder, DropsExplicitOutputArgs )
     data.m_CommonArgs.EmplaceBack( "clang.exe" );
     data.m_CommonArgs.EmplaceBack( "-common" );
     DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
-    job.m_Args.EmplaceBack( "input.bc" ); // %1, dropped from options
+    job.m_Args.EmplaceBack( "input.bc" );
     job.m_Args.EmplaceBack( "-keepme" );
     job.m_Args.EmplaceBack( "-o" );
     job.m_Args.EmplaceBack( "DROP_SPACE" ); // dropped together with "-o"
@@ -301,7 +341,7 @@ TEST_CASE( TestDTLTOGraphBuilder, DropsExplicitOutputArgs )
 
     AStackString<> options;
     TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerOptions", &options ) );
-    TEST_ASSERT( options == "-common -keepme %1 -o \"%2\"" );
+    TEST_ASSERT( options == "-common -keepme -D_FASTBUILD_DTLTO_INPUT=\"%1\" \"input.bc\" -o \"%2\"" );
 }
 
 //------------------------------------------------------------------------------

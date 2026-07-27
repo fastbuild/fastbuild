@@ -93,9 +93,12 @@ CompilerNode * DTLTOGraphBuilder::CreateCompilerNode( const AString & compilerEx
         return existing->CastTo<CompilerNode>();
     }
 
+    AStackString<> cleanCompilerExe;
+    NodeGraph::CleanPath( compilerExe, cleanCompilerExe );
+
     CompilerNode * compiler = m_NodeGraph.CreateNode<CompilerNode>( compilerName );
     const ReflectionInfo * ri = compiler->GetReflectionInfoV();
-    VERIFY( ri->SetProperty( compiler, "Executable", compilerExe ) );
+    VERIFY( ri->SetProperty( compiler, "Executable", cleanCompilerExe ) );
     VERIFY( ri->SetProperty( compiler, "CompilerFamily", AStackString( "custom" ) ) );
     VERIFY( ri->SetProperty( compiler, "SimpleDistributionMode", true ) );
     VERIFY( ri->SetProperty( compiler, "AllowDistribution", true ) );
@@ -124,8 +127,6 @@ Node * DTLTOGraphBuilder::CreateObjectListForJob( const Array<AString> & commonA
         FLOG_ERROR( "DTLTO: job has no input bitcode path" );
         return nullptr;
     }
-    const AString & inputFilePath = job.m_Args[ 0 ];  // the compiled module is the first positional job arg
-
     AStackString<> compilerOptions;
     BuildCompilerOptions( commonArgs, job.m_Args, compilerOptions );
 
@@ -140,7 +141,7 @@ Node * DTLTOGraphBuilder::CreateObjectListForJob( const Array<AString> & commonA
 
     // Get the base name of the input file
     AStackString<> cleanInput;
-    NodeGraph::CleanPath( inputFilePath, cleanInput );
+    NodeGraph::CleanPath( job.m_Args[ 0 ], cleanInput );  // the compiled module is the first positional job arg
     AStackString<> inputBase;
     result->GetObjectFileName( cleanInput, AString::GetEmpty(), inputBase );
     inputBase.SetLength( inputBase.GetLength() - (uint32_t)AString::StrLen( result->GetObjExtension() ) );
@@ -164,7 +165,7 @@ Node * DTLTOGraphBuilder::CreateObjectListForJob( const Array<AString> & commonA
 
     // Prepare the input files
     StackArray<AString> inputFiles;
-    inputFiles.EmplaceBack( inputFilePath );
+    inputFiles.EmplaceBack( cleanInput );
 
     // Set the properties of the ObjectListNode
     const ReflectionInfo * ri = result->GetReflectionInfoV();
@@ -198,7 +199,7 @@ Node * DTLTOGraphBuilder::CreateObjectListForJob( const Array<AString> & commonA
         outOptions += ' ';
     }
 
-    // Skip jobArgs[0] (input, passed via %1) and any -o (output is %2).
+    // Skip jobArgs[0] (input, appended below) and any -o (output is %2).
     for ( size_t i = 1; i < jobArgs.GetSize(); ++i )
     {
         const AString & a = jobArgs[ i ];
@@ -215,7 +216,12 @@ Node * DTLTOGraphBuilder::CreateObjectListForJob( const Array<AString> & commonA
         outOptions += ' ';
     }
 
-    outOptions += "%1 -o \"%2\""; // %1/%2 are required by ObjectList
+    // ObjectList requires %1, but expands it to an absolute path.
+    // ThinLTO identifies modules by the original path from the JSON.
+    // So use %1 only in an inert define and pass the original input path to clang.
+    outOptions += "-D_FASTBUILD_DTLTO_INPUT=\"%1\" \"";
+    outOptions += jobArgs[ 0 ];
+    outOptions += "\" -o \"%2\"";
 }
 
 //------------------------------------------------------------------------------
