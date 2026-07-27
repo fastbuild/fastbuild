@@ -14,5 +14,6 @@ The pull request:
 - [ ] **Has accompanying tests**
 - [ ] **Passes existing tests**
 - [ ] **Keeps Windows, OSX and Linux at parity**
-- [ ] **Follows the code style**
+- [ ] **Follows the code style and applies .clang-format**
 - [ ] **Includes documentation**
+- [ ] **Is human authored. AI generated contributions are not accepted.**
