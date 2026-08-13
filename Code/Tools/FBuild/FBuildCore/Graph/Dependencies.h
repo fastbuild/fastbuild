@@ -214,6 +214,7 @@ inline void Dependencies::Add( const Dependencies & deps )
 //------------------------------------------------------------------------------
 inline Dependencies & Dependencies::operator=( const Dependencies & other )
 {
+    ASSERT(&other != this); // Self assignment is not permitted
     Clear();
     Add( other );
     return *this;
@@ -222,6 +223,7 @@ inline Dependencies & Dependencies::operator=( const Dependencies & other )
 //------------------------------------------------------------------------------
 inline Dependencies & Dependencies::operator=( Dependencies && other )
 {
+    ASSERT( &other != this ); // Self assignment is not permitted
     Clear();
     m_DependencyList = other.m_DependencyList;
     other.m_DependencyList = nullptr;
