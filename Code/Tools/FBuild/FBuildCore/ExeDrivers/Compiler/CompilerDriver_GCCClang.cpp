@@ -290,6 +290,10 @@ bool CompilerDriver_GCCClang::ProcessArg_DependencyOption( const AString & token
     {
         return true;
     }
+    if ( StripTokenWithArg( "-MT", token, index ) )
+    {
+        return true;
+    }
 
     return false;
 }
