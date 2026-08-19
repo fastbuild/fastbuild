@@ -242,7 +242,7 @@ TEST_CASE( TestDTLTOGraphBuilder, NormalizesFASTBuildPathsPreservesDTLTOInput )
     DTLTOGraphBuilder builder( nodeGraph );
     TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
 
-    // Compiler path is normalized
+    // Check that path is normalized
     AStackString<> expectedCompiler;
     NodeGraph::CleanPath( data.m_CommonArgs[ 0 ], expectedCompiler );
     Node * compilerNode = nodeGraph.FindNode( AStackString<>( "Compiler-DTLTO" ) );
@@ -251,7 +251,7 @@ TEST_CASE( TestDTLTOGraphBuilder, NormalizesFASTBuildPathsPreservesDTLTOInput )
     TEST_ASSERT( compilerNode->GetReflectionInfoV()->GetProperty( compilerNode, "Executable", &compiler ) );
     TEST_ASSERT( compiler == expectedCompiler );
 
-    // Input path is normalized
+    // Check that input path is normalized
     Node * jobNode = FindObjectList( nodeGraph, "app_main.c.1.native.o" );
     TEST_ASSERT( jobNode );
     StackArray<AString> inputs;
@@ -261,7 +261,7 @@ TEST_CASE( TestDTLTOGraphBuilder, NormalizesFASTBuildPathsPreservesDTLTOInput )
     NodeGraph::CleanPath( job.m_Args[ 0 ], expectedInput );
     TEST_ASSERT( inputs[ 0 ] == expectedInput );
 
-    // Clang receives the original path used as the ThinLTO module identifier
+    // Check that Clang receives the original path
     AStackString<> options;
     TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CompilerOptions", &options ) );
     TEST_ASSERT( options == "-D_FASTBUILD_DTLTO_INPUT=\"%1\" \"objects\\subdir/../app_main.c.obj\" -o \"%2\"" );
@@ -369,6 +369,76 @@ TEST_CASE( TestDTLTOGraphBuilder, ReusesExistingCompilerNode )
     Node * compiler = nodeGraph.FindNode( AStackString<>( "Compiler-DTLTO" ) );
     TEST_ASSERT( compiler );
     TEST_ASSERT( compiler->GetType() == Node::COMPILER_NODE );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, CacheKeyCompilerOptions )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    data.m_CommonArgs.EmplaceBack( "-O2" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "a.obj" );
+    job.m_Args.EmplaceBack( "-fthinlto-index=a.thinlto.bc" );
+    job.m_Args.EmplaceBack( "-jobflag" );
+    job.m_Args.EmplaceBack( "-o" );
+    job.m_Args.EmplaceBack( "a.o" );
+    job.m_Outputs.EmplaceBack( "a.o" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
+
+    Node * jobNode = FindObjectList( nodeGraph, "a.o" );
+    TEST_ASSERT( jobNode );
+
+    AStackString<> cacheKeyOptions;
+    TEST_ASSERT( jobNode->GetReflectionInfoV()->GetProperty( jobNode, "CacheKeyCompilerOptions", &cacheKeyOptions ) );
+    TEST_ASSERT( cacheKeyOptions == "-O2 -jobflag a.obj" );
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestDTLTOGraphBuilder, CacheKeyInputFiles )
+{
+    FBuild fBuild;
+    NodeGraph nodeGraph;
+
+    DTLTOData data;
+    data.m_CommonArgs.EmplaceBack( "clang.exe" );
+    data.m_CommonInputs.EmplaceBack( "extra.bc" );
+    DTLTOData::Job & job = data.m_Jobs.EmplaceBack();
+    job.m_Args.EmplaceBack( "a.obj" );
+    job.m_Outputs.EmplaceBack( "a.o" );
+    job.m_Inputs.EmplaceBack( "a.obj" );
+    job.m_Inputs.EmplaceBack( "a.thinlto.bc" );
+
+    DTLTOGraphBuilder builder( nodeGraph );
+    TEST_ASSERT( builder.BuildGraph( data, AStackString<>( "dtlto-all" ) ) );
+
+    Node * jobNode = FindObjectList( nodeGraph, "a.o" );
+    TEST_ASSERT( jobNode );
+    const ReflectionInfo * ri = jobNode->GetReflectionInfoV();
+
+    // Check compiler input files
+    StackArray<AString> compilerInputs;
+    TEST_ASSERT( ri->GetProperty( jobNode, "CompilerInputFiles", &compilerInputs ) );
+    TEST_ASSERT( compilerInputs.GetSize() == 1 );
+    AStackString<> expectedPrimary;
+    NodeGraph::CleanPath( AStackString<>( "a.obj" ), expectedPrimary );
+    TEST_ASSERT( compilerInputs[ 0 ] == expectedPrimary );
+
+    // Check cache key input files
+    StackArray<AString> cacheInputs;
+    TEST_ASSERT( ri->GetProperty( jobNode, "CacheKeyInputFiles", &cacheInputs ) );
+    TEST_ASSERT( cacheInputs.GetSize() == 2 );
+    AStackString<> expectedIndex;
+    AStackString<> expectedCommon;
+    NodeGraph::CleanPath( AStackString<>( "a.thinlto.bc" ), expectedIndex );
+    NodeGraph::CleanPath( AStackString<>( "extra.bc" ), expectedCommon );
+    TEST_ASSERT( cacheInputs[ 0 ] == expectedIndex );
+    TEST_ASSERT( cacheInputs[ 1 ] == expectedCommon );
 }
 
 //------------------------------------------------------------------------------

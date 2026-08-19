@@ -29,13 +29,14 @@ public:
 
 private:
     CompilerNode * CreateCompilerNode( const AString & compilerExe );
-    Node * CreateObjectListForJob( const Array<AString> & commonArgs,
+    Node * CreateObjectListForJob( const DTLTOData & data,
                                    const DTLTOData::Job & job,
                                    CompilerNode * compiler );
 
     static void BuildCompilerOptions( const Array<AString> & commonArgs,
                                       const Array<AString> & jobArgs,
-                                      AString & outOptions );
+                                      AString & outOptions,
+                                      AString & outOptionsForCacheKey );
 
     NodeGraph & m_NodeGraph;
 };

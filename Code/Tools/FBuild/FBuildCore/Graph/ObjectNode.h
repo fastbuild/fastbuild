@@ -210,6 +210,7 @@ protected:
     bool ProcessIncludesWithPreProcessor( Job * job );
 
     const AString & GetCacheName( Job * job ) const;
+    bool GetCacheKeyInputFilesHash( uint64_t primaryInputHash, uint64_t & outHash ) const;
     uint32_t GetCommandLineKey( Job * job ) const;
     bool RetrieveFromCache( Job * job );
     void WriteToCache_FromDisk( Job * job );

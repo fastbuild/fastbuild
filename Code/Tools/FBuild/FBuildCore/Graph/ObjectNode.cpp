@@ -1157,6 +1157,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
     }
 
+    // Simple distribution mode can be cached (used by DTLTO)
+    if ( compilerNode->SimpleDistributionMode() && isCacheableCompiler )
+    {
+        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+    }
+
     return flags;
 }
 
@@ -1355,9 +1361,15 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
-    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey
-                                                           : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
-    ASSERT( preprocessedSourceKey );
+    uint64_t sourceKey = m_LightCacheKey ? m_LightCacheKey
+                                         : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
+    ASSERT( sourceKey );
+
+    // DTLTO cache key inputs
+    if ( GetCacheKeyInputFilesHash( sourceKey, sourceKey ) == false )
+    {
+        return job->GetCacheName();
+    }
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
@@ -1377,16 +1389,58 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     }
 
     AStackString cacheName;
-    ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
+    ICache::GetCacheId( sourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName( cacheName );
 
     return job->GetCacheName();
+}
+
+// GetCacheKeyInputFilesHash
+//------------------------------------------------------------------------------
+bool ObjectNode::GetCacheKeyInputFilesHash( uint64_t primaryInputHash, uint64_t & outHash ) const
+{
+    if ( ( m_OwnerObjectList == nullptr ) || m_OwnerObjectList->GetCacheKeyInputFiles().IsEmpty() )
+    {
+        outHash = primaryInputHash;
+        return true;
+    }
+
+    xxHash3Accumulator accumulator;
+    accumulator.AddData( &primaryInputHash, sizeof( primaryInputHash ) );
+
+    // Hash contents of each additional input
+    for ( const AString & inputFile : m_OwnerObjectList->GetCacheKeyInputFiles() )
+    {
+        FileStream fs;
+        if ( fs.Open( inputFile.Get(), FileStream::READ_ONLY ) == false )
+        {
+            FLOG_ERROR( "Error: opening file '%s' for cache key\n", inputFile.Get() );
+            return false;
+        }
+        const uint64_t contentSize = fs.GetFileSize();
+        UniquePtr<void, FreeDeletor> mem( ALLOC( contentSize ) );
+        if ( fs.Read( mem.Get(), contentSize ) != contentSize )
+        {
+            FLOG_ERROR( "Error: reading file '%s' for cache key\n", inputFile.Get() );
+            return false;
+        }
+        accumulator.AddData( &contentSize, sizeof( contentSize ) );
+        accumulator.AddDataBig( mem.Get(), contentSize );
+    }
+    outHash = accumulator.Finalize64();
+    return true;
 }
 
 // GetCommandLineKey
 //------------------------------------------------------------------------------
 uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
 {
+    // DTLTO args embed the linker pid, so a stable substitute is used
+    if ( ( m_OwnerObjectList != nullptr ) && ( m_OwnerObjectList->GetCacheKeyCompilerOptions().IsEmpty() == false ) )
+    {
+        return xxHash::Calc32( m_OwnerObjectList->GetCacheKeyCompilerOptions() );
+    }
+
     Args args;
     const bool useDeoptimization = false;
     const bool showIncludes = false;
