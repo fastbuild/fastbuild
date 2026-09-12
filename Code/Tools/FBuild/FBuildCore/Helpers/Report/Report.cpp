@@ -120,6 +120,9 @@ void Report::GetLibraryStats( const NodeGraph & nodeGraph, const FBuildStats & s
     // Mark all nodes for recursion sweep
     nodeGraph.SetBuildPassTagForAllNodes( eNodeNotSeen );
 
+    // Root node might be a proxy node and thus not present in the node graph, so must be marked explicitly.
+    stats.GetRootNode()->SetBuildPassTag( eNodeNotSeen );
+
     // gather library stats, sorted by CPU cost
     GetLibraryStatsRecurse( m_LibraryStats, stats.GetRootNode(), nullptr );
     m_LibraryStats.SortDeref();
