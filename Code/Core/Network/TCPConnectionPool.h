@@ -102,7 +102,6 @@ public:
                const void * payloadData,
                size_t payloadSize,
                uint32_t timeoutMS = kDefaultSendTimeoutMS );
-    bool Broadcast( const void * data, size_t size );
 
     static void GetAddressAsString( uint32_t addr, AString & address );
 

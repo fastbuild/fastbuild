@@ -643,21 +643,6 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     return sendOK;
 }
 
-// Broadcast
-//------------------------------------------------------------------------------
-bool TCPConnectionPool::Broadcast( const void * data, size_t size )
-{
-    MutexHolder mh( m_ConnectionsMutex );
-
-    bool result = true;
-
-    for ( const ConnectionInfo * connection : m_Connections )
-    {
-        result &= Send( connection, data, size );
-    }
-    return result;
-}
-
 // AllocBuffer
 //------------------------------------------------------------------------------
 /*virtual*/ void * TCPConnectionPool::AllocBuffer( uint32_t size )

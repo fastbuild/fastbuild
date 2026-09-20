@@ -83,7 +83,6 @@ namespace Protocol
         bool Send( const ConnectionInfo * connection ) const;
         bool Send( const ConnectionInfo * connection, const MemoryStream & payload ) const;
         bool Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const;
-        bool Broadcast( TCPConnectionPool * pool ) const;
 
         MessageType GetType() const { return m_MsgType; }
         uint32_t GetSize() const { return m_MsgSize; }
