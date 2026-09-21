@@ -151,6 +151,25 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
         return true;
     }
 
+    if ( isLocal && m_IsClangCL )
+    {
+        // Remove "/clang:-MD"
+        if ( IsCompilerArg_MSVC( token, "clang:-MD" ) )
+        {
+            return true;
+        }
+        // Remove "/clang:-MF<arg>"
+        if ( IsStartOfCompilerArg_MSVC( token, "clang:-MF" ) )
+        {
+            return true;
+        }
+        // Remove "/clang:-MT<arg>"
+        if ( IsStartOfCompilerArg_MSVC( token, "clang:-MT" ) )
+        {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -302,6 +321,25 @@ CompilerDriver_CL::~CompilerDriver_CL() = default;
     if ( IsStartOfCompilerArg_MSVC( token, "sourceDependencies" ) )
     {
         return true;
+    }
+
+    if ( m_IsClangCL )
+    {
+        // Remove "/clang:-MD"
+        if ( IsCompilerArg_MSVC( token, "clang:-MD" ) )
+        {
+            return true;
+        }
+        // Remove "/clang:-MF<arg>"
+        if ( IsStartOfCompilerArg_MSVC( token, "clang:-MF" ) )
+        {
+            return true;
+        }
+        // Remove "/clang:-MT<arg>"
+        if ( IsStartOfCompilerArg_MSVC( token, "clang:-MT" ) )
+        {
+            return true;
+        }
     }
 
     return false;
