@@ -483,8 +483,10 @@ TEST_CASE( TestDistributed, ExtraInputFiles )
 
     TEST_ASSERT( fBuild.Initialize() );
 
-    const char * const target = "../tmp/Test/Distributed/ExtraInputs/input.out";
-    EnsureFileDoesNotExist( target );
+    const char * const target1 = "../tmp/Test/Distributed/ExtraInputs/input1.out";
+    const char * const target2 = "../tmp/Test/Distributed/ExtraInputs/input2.out";
+    EnsureFileDoesNotExist( target1 );
+    EnsureFileDoesNotExist( target2 );
 
     // start a client to emulate the other end
     Server s( 1 );
@@ -492,12 +494,17 @@ TEST_CASE( TestDistributed, ExtraInputFiles )
 
     TEST_ASSERT( fBuild.Build( "ExtraInputs" ) );
 
-    // FakeCompiler concatenates both inputs; the extra file is opened relative
-    // to the working dir it is given on the worker
-    AString output;
-    LoadFileContentsAsString( target, output );
-    TEST_ASSERT( output.Find( "PRIMARY_INPUT" ) );
-    TEST_ASSERT( output.Find( "EXTRA_INPUT" ) );
+    // the first job gets the extra input on the worker
+    AString output1;
+    LoadFileContentsAsString( target1, output1 );
+    TEST_ASSERT( output1.Find( "PRIMARY_INPUT" ) );
+    TEST_ASSERT( output1.Find( "EXTRA_INPUT" ) );
+
+    // the second job reuses the extra input
+    AString output2;
+    LoadFileContentsAsString( target2, output2 );
+    TEST_ASSERT( output2.Find( "SECOND_PRIMARY_INPUT" ) );
+    TEST_ASSERT( output2.Find( "EXTRA_INPUT" ) );
 }
 
 //------------------------------------------------------------------------------

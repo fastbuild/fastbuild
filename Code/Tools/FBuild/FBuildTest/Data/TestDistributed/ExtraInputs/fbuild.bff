@@ -41,7 +41,11 @@ ObjectList( "ExtraInputs" )
 {
     .Compiler                   = "FakeCompiler"
     .CompilerOptions            = '"%1" "%2" "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/extra.txt"'
-    .CompilerInputFiles         = "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/input.txt"
+    .CompilerInputFiles         =
+    {
+        "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/input1.txt"
+        "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/input2.txt"
+    }
     .CompilerOutputPath         = "$Out$/Test/Distributed/ExtraInputs/"
     .CompilerOutputExtension    = ".out"
     .ExtraInputFiles            = { "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/extra.txt" }

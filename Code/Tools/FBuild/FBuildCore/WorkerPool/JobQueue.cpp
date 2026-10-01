@@ -479,7 +479,7 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
             }
 
             // Extra input files (DTLTO) require minor protocol 6 or later
-            if ( on->HasExtraInputFilesForDistribution() &&
+            if ( on->HasExtraInputFiles() &&
                  ( workerMinorProtocolVersion < 6 ) )
             {
                 continue;

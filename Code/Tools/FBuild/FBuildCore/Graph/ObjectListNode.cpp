@@ -628,6 +628,29 @@ ObjectListNode::~ObjectListNode() = default;
     return BuildResult::eOk;
 }
 
+// BuildExtraInputManifest
+//------------------------------------------------------------------------------
+bool ObjectListNode::BuildExtraInputManifest()
+{
+    MutexHolder mh( m_ExtraInputManifestMutex );
+
+    if ( m_ExtraInputManifest.GetToolId() != 0 )
+    {
+        return true;
+    }
+
+    // a previous attempt can have failed
+    if ( m_ExtraInputManifest.GetFiles().IsEmpty() )
+    {
+        AStackString sourceRoot( FBuild::Get().GetOptions().GetWorkingDir() );
+        PathUtils::EnsureTrailingSlash( sourceRoot );
+        m_ExtraInputManifest.Initialize( sourceRoot, m_ExtraInputFiles );
+    }
+
+    const bool skipHashing = true; // for inputs we use name, timestamp and size instead of content hashing
+    return m_ExtraInputManifest.DoBuild( skipHashing );
+}
+
 // GetInputFiles
 //------------------------------------------------------------------------------
 void ObjectListNode::GetInputFiles( bool objectsInsteadOfLibs, Array<AString> & outInputs ) const

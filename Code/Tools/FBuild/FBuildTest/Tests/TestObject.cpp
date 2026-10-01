@@ -860,9 +860,7 @@ TEST_CASE( TestObject, LoadRemote )
         AStackString source( "a.obj" );
         const uint32_t flags = ObjectNode::CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES;
         AStackString args( "-c %1 -o %2" );
-        StackArray<AString> extras;
-        extras.EmplaceBack( AStackString( "a.thinlto.bc" ) );
-        extras.EmplaceBack( AStackString( "sub/b.obj" ) );
+        const uint64_t extraInputManifestId = 0x0123456789ABCDEF;
 
         // Write what SaveRemote sends from the client
         MemoryStream stream;
@@ -870,7 +868,7 @@ TEST_CASE( TestObject, LoadRemote )
         stream.Write( source );
         stream.Write( flags );
         stream.Write( args );
-        stream.Write( extras );
+        stream.Write( extraInputManifestId );
 
         // Read back
         ConstMemoryStream readStream( Move( stream ) );
@@ -878,14 +876,12 @@ TEST_CASE( TestObject, LoadRemote )
         TEST_ASSERT( node );
 
         const ObjectNode * objectNode = node->CastTo<ObjectNode>();
-        TEST_ASSERT( objectNode->GetExtraInputFiles().GetSize() == 2 );
-        TEST_ASSERT( objectNode->GetExtraInputFiles()[ 0 ] == "a.thinlto.bc" );
-        TEST_ASSERT( objectNode->GetExtraInputFiles()[ 1 ] == "sub/b.obj" );
+        TEST_ASSERT( objectNode->GetExtraInputManifestId() == extraInputManifestId );
 
         FDELETE( node );
     }
 
-    // Without extra input files (no list of files follows in the stream)
+    // Without extra input files (no manifest id in the stream)
     {
         FBuild fBuild;
 
@@ -907,7 +903,7 @@ TEST_CASE( TestObject, LoadRemote )
         TEST_ASSERT( node );
 
         const ObjectNode * objectNode = node->CastTo<ObjectNode>();
-        TEST_ASSERT( objectNode->GetExtraInputFiles().IsEmpty() );
+        TEST_ASSERT( objectNode->GetExtraInputManifestId() == 0 );
 
         FDELETE( node );
     }

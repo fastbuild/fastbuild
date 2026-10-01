@@ -24,6 +24,7 @@ class NodeGraph;
 class NodeProxy;
 class ObjectListNode;
 class ObjectNode;
+class ToolManifest;
 enum class ArgsResponseFileMode : uint32_t;
 
 // Defines
@@ -149,8 +150,9 @@ public:
     bool IsWarningsAsErrorsClangGCC() const { return m_CompilerFlags.IsWarningsAsErrorsClangGCC(); }
     bool IsUsingGcovCoverage() const { return m_CompilerFlags.IsUsingGcovCoverage(); }
     bool IsUsingDynamicDeopt() const { return m_CompilerFlags.IsUsingDynamicDeopt(); }
-    bool HasExtraInputFilesForDistribution() const;
-    const Array<AString> & GetExtraInputFiles() const { return m_ExtraInputFiles; }
+    bool HasExtraInputFiles() const;
+    const ToolManifest * GetExtraInputManifest() const;
+    uint64_t GetExtraInputManifestId() const { return m_ExtraInputManifestId; }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
@@ -239,10 +241,9 @@ protected:
 
     BuildResult BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
-    bool PackExtraInputFilesForDistribution( Job * job ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
-    bool WriteExtraInputFiles( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
+    bool WriteSourceFileToExtraInputs( Job * job, AString & inputsDirectory, AString & sourceFileName ) const;
     BuildResult BuildFinalOutput( Job * job, const Args & fullArgs, const AString & remoteWorkingDir = AString::GetEmpty() ) const;
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
@@ -314,7 +315,7 @@ protected:
 
     // Not serialized
     Array<AString> m_Includes;
-    Array<AString> m_ExtraInputFiles;
+    uint64_t m_ExtraInputManifestId = 0;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests
@@ -330,7 +331,7 @@ public:
                       NodeProxy * srcFile,
                       AString && compilerOptions,
                       uint32_t flags,
-                      Array<AString> && extraInputFiles );
+                      uint64_t extraInputManifestId );
     virtual ~ObjectNodeRemote() override;
 
 protected:

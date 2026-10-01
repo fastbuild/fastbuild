@@ -8,9 +8,11 @@
 
 // FBuild
 #include <Tools/FBuild/FBuildCore/Graph/ObjectNode.h>
+#include <Tools/FBuild/FBuildCore/Helpers/ToolManifest.h>
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Process/Mutex.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -59,6 +61,9 @@ public:
     const Array<AString> & GetCacheKeyInputFiles() const { return m_CacheKeyInputFiles; }
     const AString & GetCacheKeyCompilerOptions() const { return m_CacheKeyCompilerOptions; }
     const Array<AString> & GetExtraInputFiles() const { return m_ExtraInputFiles; }
+    const ToolManifest & GetExtraInputManifest() const { return m_ExtraInputManifest; }
+
+    bool BuildExtraInputManifest();
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
@@ -146,6 +151,8 @@ protected:
     uint32_t m_OwnerObjectListHash = 0;
     ObjectNode::CompilerFlags m_CompilerFlags;
     ObjectNode::CompilerFlags m_PreprocessorFlags;
+    Mutex m_ExtraInputManifestMutex;
+    ToolManifest m_ExtraInputManifest;
 };
 
 //------------------------------------------------------------------------------
