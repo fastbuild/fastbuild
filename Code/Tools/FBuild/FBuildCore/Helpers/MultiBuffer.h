@@ -35,8 +35,6 @@ public:
     void * Release( size_t & outSize );
 
 private:
-    inline static const uint32_t kMaxFiles = 4;
-
     ConstMemoryStream * m_ReadStream;
     MemoryStream * m_WriteStream;
 };

@@ -470,6 +470,44 @@ TEST_CASE( TestDistributed, DynamicDeoptimization )
 #endif
 
 //------------------------------------------------------------------------------
+TEST_CASE( TestDistributed, ExtraInputFiles )
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    FBuildForTest fBuild( options );
+
+    TEST_ASSERT( fBuild.Initialize() );
+
+    const char * const target1 = "../tmp/Test/Distributed/ExtraInputs/input1.out";
+    const char * const target2 = "../tmp/Test/Distributed/ExtraInputs/input2.out";
+    EnsureFileDoesNotExist( target1 );
+    EnsureFileDoesNotExist( target2 );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( Protocol::kTestPort );
+
+    TEST_ASSERT( fBuild.Build( "ExtraInputs" ) );
+
+    // the first job gets the extra input on the worker
+    AString output1;
+    LoadFileContentsAsString( target1, output1 );
+    TEST_ASSERT( output1.Find( "PRIMARY_INPUT" ) );
+    TEST_ASSERT( output1.Find( "EXTRA_INPUT" ) );
+
+    // the second job reuses the extra input
+    AString output2;
+    LoadFileContentsAsString( target2, output2 );
+    TEST_ASSERT( output2.Find( "SECOND_PRIMARY_INPUT" ) );
+    TEST_ASSERT( output2.Find( "EXTRA_INPUT" ) );
+}
+
+//------------------------------------------------------------------------------
 TEST_CASE( TestDistributed, CleanMessageToPreventMSBuildFailure )
 {
     // Error should be identical except for a single remove colon

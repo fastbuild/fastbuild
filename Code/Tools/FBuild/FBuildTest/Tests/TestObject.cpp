@@ -14,9 +14,13 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 
 // Core
+#include "Core/Containers/Move.h"
+#include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Mem/Mem.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
@@ -842,6 +846,66 @@ TEST_CASE( TestObject, OwnerObjectListPCH )
             TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
             CheckStatsNode( fBuild.GetStats(), 2, 2, Node::OBJECT_NODE );
         }
+    }
+}
+
+//------------------------------------------------------------------------------
+TEST_CASE( TestObject, LoadRemote )
+{
+    // With extra input files
+    {
+        FBuild fBuild;
+
+        AStackString name( "out.o" );
+        AStackString source( "a.obj" );
+        const uint32_t flags = ObjectNode::CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES;
+        AStackString args( "-c %1 -o %2" );
+        const uint64_t extraInputManifestId = 0x0123456789ABCDEF;
+
+        // Write what SaveRemote sends from the client
+        MemoryStream stream;
+        stream.Write( name );
+        stream.Write( source );
+        stream.Write( flags );
+        stream.Write( args );
+        stream.Write( extraInputManifestId );
+
+        // Read back
+        ConstMemoryStream readStream( Move( stream ) );
+        Node * node = ObjectNode::LoadRemote( readStream );
+        TEST_ASSERT( node );
+
+        const ObjectNode * objectNode = node->CastTo<ObjectNode>();
+        TEST_ASSERT( objectNode->GetExtraInputManifestId() == extraInputManifestId );
+
+        FDELETE( node );
+    }
+
+    // Without extra input files (no manifest id in the stream)
+    {
+        FBuild fBuild;
+
+        AStackString name( "out.o" );
+        AStackString source( "a.obj" );
+        const uint32_t flags = 0;
+        AStackString args( "-c %1 -o %2" );
+
+        // Write what SaveRemote sends from the client
+        MemoryStream stream;
+        stream.Write( name );
+        stream.Write( source );
+        stream.Write( flags );
+        stream.Write( args );
+
+        // Read back
+        ConstMemoryStream readStream( Move( stream ) );
+        Node * node = ObjectNode::LoadRemote( readStream );
+        TEST_ASSERT( node );
+
+        const ObjectNode * objectNode = node->CastTo<ObjectNode>();
+        TEST_ASSERT( objectNode->GetExtraInputManifestId() == 0 );
+
+        FDELETE( node );
     }
 }
 
