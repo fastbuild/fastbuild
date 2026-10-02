@@ -1293,7 +1293,7 @@ void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
-    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
+    const AString & sourceName = IsCreatingPCH() ? GetPCHObjectName() : m_Name;
 
     // TODO:B The xml path can be manually specified with /analyze:log
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
@@ -1319,7 +1319,7 @@ void ObjectNode::GetAltObjPath( AString & altObjName ) const
 {
     ASSERT( IsUsingDynamicDeopt() );
 
-    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
+    const AString & sourceName = IsCreatingPCH() ? GetPCHObjectName() : m_Name;
 
     // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
