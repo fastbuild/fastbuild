@@ -448,6 +448,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "RemoteDebuggerCommand", config.m_RemoteDebuggerCommand );
             WritePGItem( "RemoteDebuggerCommandArguments", config.m_RemoteDebuggerCommandArguments );
             WritePGItem( "RemoteDebuggerWorkingDirectory", config.m_RemoteDebuggerWorkingDirectory );
+            WritePGItem( "LocalRemoteCopySources", config.m_LocalRemoteCopySources );
             Write( "  </PropertyGroup>\n" );
         }
     }
