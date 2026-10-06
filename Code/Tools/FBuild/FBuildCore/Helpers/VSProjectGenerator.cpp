@@ -262,6 +262,19 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 }
             }
 
+            if( config.m_Keyword == "Linux" )
+            {
+                if( config.m_RemoteRootDir.IsEmpty() == false )
+                {
+                    WritePGItem( "RemoteRootDir", config.m_RemoteRootDir );
+                }
+
+                if( config.m_RemoteProjectRelDir.IsEmpty() == false )
+                {
+                    WritePGItem( "RemoteProjectRelDir", config.m_RemoteProjectRelDir );
+                }
+            }
+
             WritePGItem( "PlatformToolset", config.m_PlatformToolset );
             WritePGItem( "LocalDebuggerCommandArguments", config.m_LocalDebuggerCommandArguments );
             WritePGItem( "LocalDebuggerCommand", localDebuggerCommand );
@@ -304,6 +317,26 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 WritePGItem( "BuildCommandLine", config.m_ProjectBuildCommand );
                 WritePGItem( "ReBuildCommandLine", config.m_ProjectRebuildCommand );
                 WritePGItem( "CleanCommandLine", config.m_ProjectCleanCommand );
+
+                WritePGItem( "RemoteBuildCommandLine", config.m_RemoteBuildCommandLine );
+                WritePGItem( "RemoteReBuildCommandLine", config.m_RemoteReBuildCommandLine );
+                WritePGItem( "RemoteCleanCommandLine", config.m_RemoteCleanCommandLine );
+                WritePGItem( "RemoteBuildOutputs",  config.m_RemoteBuildOutputs ); 
+
+                if( config.m_RemoteDebuggingMode.IsEmpty() == false )
+                {
+                    WritePGItem( "RemoteDebuggingMode", config.m_RemoteDebuggingMode );
+                }
+
+                if( config.m_RemoteGDBPath.IsEmpty() == false )
+                {
+                    WritePGItem( "RemoteGDBPath", config.m_RemoteGDBPath );
+                }
+
+                if( config.m_MIMode.IsEmpty() == false )
+                {
+                    WritePGItem( "MIMode", config.m_MIMode );
+                }
             }
             else
             {
@@ -415,6 +448,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "RemoteDebuggerCommand", config.m_RemoteDebuggerCommand );
             WritePGItem( "RemoteDebuggerCommandArguments", config.m_RemoteDebuggerCommandArguments );
             WritePGItem( "RemoteDebuggerWorkingDirectory", config.m_RemoteDebuggerWorkingDirectory );
+            WritePGItem( "LocalRemoteCopySources", config.m_LocalRemoteCopySources );
             Write( "  </PropertyGroup>\n" );
         }
     }
@@ -424,16 +458,12 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         for ( const VSProjectConfig & config : configs )
         {
             WriteF( "  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", config.m_Config.Get(), config.m_Platform.Get() );
-            Write( "    <BuildLog>\n" );
             if ( !config.m_BuildLogFile.IsEmpty() )
             {
+                Write( "    <BuildLog>\n" );
                 WritePGItem( "Path", config.m_BuildLogFile );
+                Write( "    </BuildLog>\n" );
             }
-            else
-            {
-                Write( "      <Path />\n" );
-            }
-            Write( "    </BuildLog>\n" );
             if ( !config.m_DeploymentType.IsEmpty() || !config.m_DeploymentFiles.IsEmpty() )
             {
                 Write( "    <Deploy>\n" );
