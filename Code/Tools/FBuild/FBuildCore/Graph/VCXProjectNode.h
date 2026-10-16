@@ -52,7 +52,7 @@ public:
     AString m_RemoteDebuggerCommand;
     AString m_RemoteDebuggerCommandArguments;
     AString m_RemoteDebuggerWorkingDirectory;
-    AString m_LocalRemoteCopySources;
+    bool    m_LocalRemoteCopySources;
     AString m_Keyword;
     AString m_RootNamespace;
     AString m_ApplicationType;
