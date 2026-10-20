@@ -34,6 +34,8 @@ __asm__( ".symver sem_timedwait,sem_timedwait@GLIBC_2.2.5" );
 __asm__( ".symver sem_wait,sem_wait@GLIBC_2.2.5" );
 __asm__( ".symver shm_open,shm_open@GLIBC_2.2.5" );
 __asm__( ".symver shm_unlink,shm_unlink@GLIBC_2.2.5" );
+__asm__( ".symver __isoc23_strtoul,strtoul@GLIBC_2.2.5" );
+__asm__( ".symver __isoc23_vsscanf,vsscanf@GLIBC_2.2.5" );
 __asm__( ".symver __isoc99_vsscanf,vsscanf@GLIBC_2.2.5" );
 
 //------------------------------------------------------------------------------
