@@ -221,6 +221,10 @@ public:
     // Special case symlinks.
     if ( S_ISLNK( stat_source.st_mode ) )
     {
+        if ( FileExists( dstFileName ) )
+        {
+            FileDelete( dstFileName );
+        }
         AString linkPath( stat_source.st_size + 1 );
         ssize_t length = readlink( srcFileName, linkPath.Get(), linkPath.GetReserved() );
         if ( length != stat_source.st_size )
@@ -901,7 +905,7 @@ public:
     // Fallback to regular low-resolution filetime setting
     return ( utimes( fileName.Get(), nullptr ) == 0 );
 #elif defined( __LINUX__ )
-    return ( utimensat( 0, fileName.Get(), nullptr, 0 ) == 0 );
+    return ( utimensat( 0, fileName.Get(), nullptr, AT_SYMLINK_NOFOLLOW ) == 0 );
 #else
     #error Unknown platform
 #endif
