@@ -58,6 +58,7 @@ private:
     void TouchToolchains();
     void CheckWaitingJobs( const ToolManifest * manifest );
 
+    ToolManifest * FindOrRequestManifest( const ConnectionInfo * connection, uint64_t manifestId, bool holdsExtraInputs );
     void RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;
 
     struct ClientState

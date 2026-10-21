@@ -1095,8 +1095,11 @@ void ClientToWorkerConnection::Process( const ConnectionInfo * connection,
     }
 
     const uint32_t fileId = msg->GetFileId();
+
+    const bool takeOwnership = manifest->HoldsExtraInputs(); // job inputs are too large to keep in memory
     size_t dataSize( 0 );
-    const void * data = manifest->GetFileData( fileId, dataSize );
+    const void * data = takeOwnership ? manifest->ReleaseFileData( fileId, dataSize )
+                                      : manifest->GetFileData( fileId, dataSize );
     if ( !data )
     {
         ASSERT( false ); // something is terribly wrong
@@ -1104,7 +1107,8 @@ void ClientToWorkerConnection::Process( const ConnectionInfo * connection,
         return;
     }
 
-    ConstMemoryStream ms( data, dataSize );
+    ConstMemoryStream ms;
+    ms.Replace( data, dataSize, takeOwnership );
 
     // Send file to worker
     EnqueueSend( Protocol::MsgFile( toolId, fileId ),
@@ -1119,12 +1123,19 @@ const ToolManifest * ClientToWorkerConnection::FindManifest( uint64_t toolId ) c
 
     for ( const Job * job : m_Jobs )
     {
-        const Node * n = job->GetNode()->CastTo<ObjectNode>()->GetCompiler();
+        const ObjectNode * objectNode = job->GetNode()->CastTo<ObjectNode>();
+        const Node * n = objectNode->GetCompiler();
         const ToolManifest & m = n->CastTo<CompilerNode>()->GetManifest();
         if ( m.GetToolId() == toolId )
         {
             // found a job with the same toolid
             return &m;
+        }
+
+        const ToolManifest * extraInputManifest = objectNode->GetExtraInputManifest();
+        if ( extraInputManifest && ( extraInputManifest->GetToolId() == toolId ) )
+        {
+            return extraInputManifest;
         }
     }
 

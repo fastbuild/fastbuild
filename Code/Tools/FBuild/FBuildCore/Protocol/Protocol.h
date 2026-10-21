@@ -32,7 +32,7 @@ namespace Protocol
 
     // Protocol Version
     inline static const uint32_t kVersionMajor = 22; // Changes here make workers incompatible
-    inline static const uint8_t kVersionMinor = 5; // Changes must be forwards and backwards compatible
+    inline static const uint8_t kVersionMinor = 6; // Changes must be forwards and backwards compatible
 
     inline static const uint16_t kTestPort = kPort + 1; // Different port for use by tests
 
@@ -64,6 +64,8 @@ namespace Protocol
         // v22.4 or later supports Zstd compression (no packet changes)
 
         // v22.5 or later support /dynamicdeopt for MSVC 2022 v17.44.x or later
+
+        // v22.6 or later support extra input files for distributed DTLTO jobs
 
         NUM_MESSAGES            // leave last
     };

@@ -50,6 +50,9 @@ public:
     void SetToolManifest( ToolManifest * manifest ) { m_ToolManifest = manifest; }
     ToolManifest * GetToolManifest() const { return m_ToolManifest; }
 
+    void SetExtraInputManifest( ToolManifest * manifest ) { m_ExtraInputManifest = manifest; }
+    ToolManifest * GetExtraInputManifest() const { return m_ExtraInputManifest; }
+
     bool IsDataCompressed() const { return m_DataIsCompressed; }
     bool IsLocal() const { return m_IsLocal; }
 
@@ -128,6 +131,7 @@ private:
     AString m_CacheName;
     BuildProfilerScope * m_BuildProfilerScope = nullptr; // Additional context when profiling a build
     ToolManifest * m_ToolManifest = nullptr;
+    ToolManifest * m_ExtraInputManifest = nullptr;
 
     Array<AString> m_Messages;
 

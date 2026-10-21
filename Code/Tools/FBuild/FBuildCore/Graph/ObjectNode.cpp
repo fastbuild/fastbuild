@@ -477,6 +477,15 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
     if ( canDistribute && belowMemoryLimit )
     {
+        // extra input files are synchronized to the worker via a manifest
+        if ( HasExtraInputFiles() )
+        {
+            if ( m_OwnerObjectList->BuildExtraInputManifest() == false )
+            {
+                return BuildResult::eFailed; // BuildExtraInputManifest will have emitted an error
+            }
+        }
+
         // compress job data
         Compressor c;
         c.Compress( job->GetData(), job->GetDataSize(), FBuild::Get().GetOptions().m_DistributionCompressionLevel );
@@ -577,9 +586,18 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     Args fullArgs;
     AStackString tmpDirectoryName;
     AStackString tmpFileName;
+    const bool useExtraInputs = ( job->IsLocal() == false ) && ( m_ExtraInputManifestId != 0 );
     if ( usePreProcessedOutput )
     {
-        if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
+        // write the source file next to the extra inputs
+        if ( useExtraInputs )
+        {
+            if ( WriteSourceFileToExtraInputs( job, tmpDirectoryName, tmpFileName ) == false )
+            {
+                return BuildResult::eFailed; // WriteSourceFileToExtraInputs will have emitted an error
+            }
+        }
+        else if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
         {
             return BuildResult::eFailed; // WriteTmpFile will have emitted an error
         }
@@ -627,18 +645,21 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     }
 #endif
 
-    const BuildResult result = BuildFinalOutput( job, fullArgs );
+    const BuildResult result = BuildFinalOutput( job, fullArgs, useExtraInputs ? tmpDirectoryName : AString::GetEmpty() );
 
-    // cleanup temp file
-    if ( tmpFileName.IsEmpty() == false )
+    if ( useExtraInputs == false ) // the directory of extra inputs is shared with other jobs, no cleanup
     {
-        FileIO::FileDelete( tmpFileName.Get() );
-    }
+        // cleanup temp file
+        if ( tmpFileName.IsEmpty() == false )
+        {
+            FileIO::FileDelete( tmpFileName.Get() );
+        }
 
-    // cleanup temp directory
-    if ( tmpDirectoryName.IsEmpty() == false )
-    {
-        FileIO::DirectoryDelete( tmpDirectoryName );
+        // cleanup temp directory
+        if ( tmpDirectoryName.IsEmpty() == false )
+        {
+            FileIO::DirectoryDelete( tmpDirectoryName );
+        }
     }
 
     if ( result != BuildResult::eOk )
@@ -881,6 +902,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     AString sourceFile;
     uint32_t flags;
     AString compilerArgs;
+    uint64_t extraInputManifestId = 0;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -888,10 +910,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         return nullptr;
     }
+    if ( ( flags & CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES ) &&
+         ( stream.Read( extraInputManifestId ) == false ) )
+    {
+        return nullptr;
+    }
 
     NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags ) );
+    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags, extraInputManifestId ) );
 }
 
 // DetermineFlags
@@ -1157,6 +1184,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
     }
 
+    // Simple distribution mode can be cached (used by DTLTO)
+    if ( compilerNode->SimpleDistributionMode() && isCacheableCompiler )
+    {
+        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+    }
+
     return flags;
 }
 
@@ -1216,7 +1249,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Save minimal information for the remote worker
     stream.Write( m_Name );
     stream.Write( GetSourceFile()->GetName() );
-    stream.Write( m_CompilerFlags.m_Flags );
+
+    uint32_t flags = m_CompilerFlags.m_Flags;
+    if ( HasExtraInputFiles() )
+    {
+        flags |= CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES;
+    }
+    stream.Write( flags );
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
@@ -1251,6 +1290,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     driver->AddAdditionalArgs_PreparePreprocessedForRemote( fullArgs );
 
     stream.Write( fullArgs.GetRawArgs() );
+
+    if ( flags & CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES )
+    {
+        stream.Write( GetExtraInputManifest()->GetToolId() );
+    }
 }
 
 // GetCompiler
@@ -1355,9 +1399,15 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
-    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey
-                                                           : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
-    ASSERT( preprocessedSourceKey );
+    uint64_t sourceKey = m_LightCacheKey ? m_LightCacheKey
+                                         : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
+    ASSERT( sourceKey );
+
+    // DTLTO cache key inputs
+    if ( GetCacheKeyInputFilesHash( sourceKey, sourceKey ) == false )
+    {
+        return job->GetCacheName();
+    }
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
@@ -1377,16 +1427,58 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     }
 
     AStackString cacheName;
-    ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
+    ICache::GetCacheId( sourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName( cacheName );
 
     return job->GetCacheName();
+}
+
+// GetCacheKeyInputFilesHash
+//------------------------------------------------------------------------------
+bool ObjectNode::GetCacheKeyInputFilesHash( uint64_t primaryInputHash, uint64_t & outHash ) const
+{
+    if ( ( m_OwnerObjectList == nullptr ) || m_OwnerObjectList->GetCacheKeyInputFiles().IsEmpty() )
+    {
+        outHash = primaryInputHash;
+        return true;
+    }
+
+    xxHash3Accumulator accumulator;
+    accumulator.AddData( &primaryInputHash, sizeof( primaryInputHash ) );
+
+    // Hash contents of each additional input
+    for ( const AString & inputFile : m_OwnerObjectList->GetCacheKeyInputFiles() )
+    {
+        FileStream fs;
+        if ( fs.Open( inputFile.Get(), FileStream::READ_ONLY ) == false )
+        {
+            FLOG_ERROR( "Error: opening file '%s' for cache key\n", inputFile.Get() );
+            return false;
+        }
+        const uint64_t contentSize = fs.GetFileSize();
+        UniquePtr<void, FreeDeletor> mem( ALLOC( contentSize ) );
+        if ( fs.Read( mem.Get(), contentSize ) != contentSize )
+        {
+            FLOG_ERROR( "Error: reading file '%s' for cache key\n", inputFile.Get() );
+            return false;
+        }
+        accumulator.AddData( &contentSize, sizeof( contentSize ) );
+        accumulator.AddDataBig( mem.Get(), contentSize );
+    }
+    outHash = accumulator.Finalize64();
+    return true;
 }
 
 // GetCommandLineKey
 //------------------------------------------------------------------------------
 uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
 {
+    // DTLTO args embed the linker pid, so a stable substitute is used
+    if ( ( m_OwnerObjectList != nullptr ) && ( m_OwnerObjectList->GetCacheKeyCompilerOptions().IsEmpty() == false ) )
+    {
+        return xxHash::Calc32( m_OwnerObjectList->GetCacheKeyCompilerOptions() );
+    }
+
     Args args;
     const bool useDeoptimization = false;
     const bool showIncludes = false;
@@ -1986,6 +2078,21 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
     return true;
 }
 
+// HasExtraInputFiles
+//------------------------------------------------------------------------------
+bool ObjectNode::HasExtraInputFiles() const
+{
+    return ( m_OwnerObjectList != nullptr ) &&
+           ( m_OwnerObjectList->GetExtraInputFiles().IsEmpty() == false );
+}
+
+// GetExtraInputManifest
+//------------------------------------------------------------------------------
+const ToolManifest * ObjectNode::GetExtraInputManifest() const
+{
+    return HasExtraInputFiles() ? &m_OwnerObjectList->GetExtraInputManifest() : nullptr;
+}
+
 // TransferPreprocessedData
 //------------------------------------------------------------------------------
 void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const
@@ -2257,9 +2364,80 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     return true;
 }
 
+// WriteSourceFileToExtraInputs
+//------------------------------------------------------------------------------
+bool ObjectNode::WriteSourceFileToExtraInputs( Job * job, AString & inputsDirectory, AString & sourceFileName ) const
+{
+    ASSERT( job->GetData() && job->GetDataSize() );
+    ASSERT( job->IsLocal() == false ); // the source file is written only on the worker
+
+    void const * dataToWrite = job->GetData();
+    size_t dataToWriteSize = job->GetDataSize();
+
+    // Handle compressed data
+    Compressor c;
+    if ( job->IsDataCompressed() )
+    {
+        if ( c.Decompress( dataToWrite ) == false )
+        {
+            // Decompression failure would indicate a bug
+            job->Error( "Decompression failed. Target: '%s'", GetName().Get() );
+            job->OnSystemError();
+            return false;
+        }
+        dataToWrite = c.GetResult();
+        dataToWriteSize = c.GetResultSize();
+    }
+
+    // Get the directory of the extra inputs
+    const ToolManifest * extraInputManifest = job->GetExtraInputManifest();
+    ASSERT( extraInputManifest );
+    extraInputManifest->GetRemotePath( inputsDirectory );
+
+    // Get the relative path of the source file to the extra inputs directory
+    AStackString sourceFileRelativePath;
+    PathUtils::GetRelativePath( job->GetRemoteSourceRoot(), GetSourceFile()->GetName(), sourceFileRelativePath );
+    sourceFileName = inputsDirectory;
+    sourceFileName += sourceFileRelativePath;
+    if ( FileIO::EnsurePathExistsForFile( sourceFileName ) == false )
+    {
+        job->Error( "Failed to create directory for input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, sourceFileName.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
+    }
+
+    FileIO::FileInfo info;
+    const bool alreadyPresent = FileIO::GetFileInfo( sourceFileName, info ) &&
+                                ( info.m_Size == dataToWriteSize );
+    if ( alreadyPresent == false ) // do not rewrite the file if another job has already put it there
+    {
+        // Another job can be writing this file right now, so wait for it
+        const uint32_t extendedRetryTimeMS = 15'000;
+
+        FileStream sourceFile;
+        if ( sourceFile.Open( sourceFileName.Get(), FileStream::WRITE_ONLY, extendedRetryTimeMS ) == false )
+        {
+            job->Error( "Failed to create input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, sourceFileName.Get(), GetName().Get() );
+            job->OnSystemError();
+            return false;
+        }
+        if ( sourceFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
+        {
+            job->Error( "Failed to write to input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, sourceFileName.Get(), GetName().Get() );
+            job->OnSystemError();
+            return false;
+        }
+        sourceFile.Close();
+    }
+
+    job->OwnData( nullptr, 0, false ); // free the buffer
+
+    return true;
+}
+
 // BuildFinalOutput
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
+Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AString & remoteWorkingDir ) const
 {
     // Use the remotely synchronized compiler if building remotely
     AStackString compiler;
@@ -2272,7 +2450,14 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
     {
         ASSERT( job->GetToolManifest() );
         job->GetToolManifest()->GetRemoteFilePath( 0, compiler );
-        job->GetToolManifest()->GetRemotePath( workingDir );
+        if ( remoteWorkingDir.IsEmpty() == false )
+        {
+            workingDir = remoteWorkingDir;
+        }
+        else
+        {
+            job->GetToolManifest()->GetRemotePath( workingDir );
+        }
     }
 
     // spawn the process
@@ -3031,13 +3216,15 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
 ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
                                     NodeProxy * srcFile,
                                     AString && compilerOptions,
-                                    uint32_t flags )
+                                    uint32_t flags,
+                                    uint64_t extraInputManifestId )
     : ObjectNode()
     , m_CompilerOptions( Move( compilerOptions ) )
 {
     SetName( Move( objectName ) );
     m_CompilerFlags.m_Flags = flags;
 
+    m_ExtraInputManifestId = extraInputManifestId;
     m_StaticDependencies.SetCapacity( 2 );
     m_StaticDependencies.Add( nullptr );
     m_StaticDependencies.Add( srcFile );

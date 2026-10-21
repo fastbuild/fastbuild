@@ -18,6 +18,8 @@
 #include "Graph/SettingsNode.h"
 #include "Helpers/BuildProfiler.h"
 #include "Helpers/CompilationDatabase.h"
+#include "Helpers/DTLTOGraphBuilder.h"
+#include "Helpers/DTLTOJsonParser.h"
 #include "Helpers/SourceFileTargetResolver.h"
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
@@ -153,6 +155,12 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         return false;
     }
 
+    // DTLTO distributor mode: synthesize the graph from an LLVM DTLTO JSON
+    if ( m_Options.m_DTLTOFile.IsEmpty() == false )
+    {
+        return InitializeFromDTLTO();
+    }
+
     const char * bffFile = m_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
                                                             : m_Options.m_ConfigFile.Get();
 
@@ -191,11 +199,19 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         return false;
     }
 
-    const SettingsNode * settings = m_DependencyGraph->GetSettings();
+    InitializeCache();
 
+    return true;
+}
+
+// InitializeCache
+//------------------------------------------------------------------------------
+void FBuild::InitializeCache()
+{
     // if the cache is enabled, make sure the path is set and accessible
     if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
     {
+        const SettingsNode * settings = m_DependencyGraph->GetSettings();
         if ( !settings->GetCachePluginDLL().IsEmpty() )
         {
             m_Cache = FNEW( CachePlugin( settings->GetCachePluginDLL() ) );
@@ -218,6 +234,52 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = nullptr;
         }
     }
+}
+
+// InitializeFromDTLTO
+//------------------------------------------------------------------------------
+bool FBuild::InitializeFromDTLTO()
+{
+    PROFILE_FUNCTION;
+    BuildProfilerScope buildProfileScope( "InitializeFromDTLTO" );
+
+    // read and parse the DTLTO JSON
+    FileStream f;
+    if ( f.Open( m_Options.m_DTLTOFile.Get(), FileStream::READ_ONLY ) == false )
+    {
+        FLOG_ERROR( "DTLTO: failed to open '%s'", m_Options.m_DTLTOFile.Get() );
+        return false;
+    }
+    const uint64_t fileSize = f.GetFileSize();
+    AString buffer;
+    buffer.SetLength( (uint32_t)fileSize );
+    if ( f.ReadBuffer( buffer.Get(), fileSize ) != fileSize )
+    {
+        FLOG_ERROR( "DTLTO: failed to read '%s'", m_Options.m_DTLTOFile.Get() );
+        return false;
+    }
+    f.Close();
+
+    DTLTOJsonParser parser( buffer );
+    if ( parser.Parse() == false )
+    {
+        return false;
+    }
+
+    // build node graph from json data
+    m_DependencyGraph = FNEW( NodeGraph );
+    m_DependencyGraph->CreateDefaultSettingsNode();
+
+    DTLTOGraphBuilder builder( *m_DependencyGraph );
+    if ( builder.BuildGraph( parser.GetData(), AStackString<>( "all" ) ) == nullptr )
+    {
+        return false;
+    }
+
+    // DTLTO graphs are ephemeral; don't save a dependency database
+    m_Options.m_SaveDBOnCompletion = false;
+
+    InitializeCache();
 
     return true;
 }
