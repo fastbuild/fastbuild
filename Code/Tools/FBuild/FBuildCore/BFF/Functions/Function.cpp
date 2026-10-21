@@ -10,6 +10,7 @@
 #include "FunctionCopy.h"
 #include "FunctionCopyDir.h"
 #include "FunctionDLL.h"
+#include "FunctionEval.h"
 #include "FunctionError.h"
 #include "FunctionExec.h"
 #include "FunctionExecutable.h"
@@ -102,6 +103,7 @@ Function::~Function() = default;
     g_Functions.Append( FNEW( FunctionCSAssembly ) );
     g_Functions.Append( FNEW( FunctionDLL ) );
     g_Functions.Append( FNEW( FunctionError ) );
+    g_Functions.Append( FNEW( FunctionEval ) );
     g_Functions.Append( FNEW( FunctionExec ) );
     g_Functions.Append( FNEW( FunctionExecutable ) );
     g_Functions.Append( FNEW( FunctionForEach ) );
