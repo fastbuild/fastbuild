@@ -209,7 +209,6 @@ void ToolManifest::Initialize( const AString & sourceRoot, const Array<AString> 
     ASSERT( m_Files.IsEmpty() );
     m_Files.SetCapacity( extraInputFiles.GetSize() );
 
-    // TODO: DTLTO JSON inputs can be absolute; currently we don't support this.
     for ( const AString & file : extraInputFiles )
     {
         m_Files.EmplaceBack( file, (uint64_t)0, (uint32_t)0, (uint32_t)0 );
@@ -596,15 +595,6 @@ const void * ToolManifest::GetFileData( uint32_t fileId, size_t & dataSize ) con
     return m_Files[ fileId ].GetFileData( dataSize );
 }
 
-// ReleaseFileData
-//------------------------------------------------------------------------------
-const void * ToolManifest::ReleaseFileData( uint32_t fileId, size_t & dataSize ) const
-{
-    MutexHolder mh( m_Mutex );
-
-    return m_Files[ fileId ].ReleaseFileData( dataSize );
-}
-
 // GetFileData (ToolManifestFile)
 //------------------------------------------------------------------------------
 const void * ToolManifestFile::GetFileData( size_t & outDataSize ) const
@@ -633,6 +623,15 @@ const void * ToolManifestFile::GetFileData( size_t & outDataSize ) const
     }
     outDataSize = m_CompressedContentSize;
     return m_CompressedContent;
+}
+
+// ReleaseFileData
+//------------------------------------------------------------------------------
+const void * ToolManifest::ReleaseFileData( uint32_t fileId, size_t & dataSize ) const
+{
+    MutexHolder mh( m_Mutex );
+
+    return m_Files[ fileId ].ReleaseFileData( dataSize );
 }
 
 // ReleaseFileData (ToolManifestFile)
@@ -691,25 +690,25 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     AStackString fileName;
     GetRemoteFilePath( fileId, fileName );
 
-    // prepare destination
-    AStackString pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
-    if ( !FileIO::EnsurePathExists( pathOnly ) )
+    if ( m_HoldsExtraInputs )
     {
-        return false; // FAILED
+        if ( WriteSharedFile( fileName, uncompressedData, uncompressedDataSize ) == false )
+        {
+            return false; // FAILED
+        }
     }
-
-    // check for an extra input already in the shared directory
-    FileIO::FileInfo info;
-    const bool fileAlreadyPresent = FileIO::GetFileInfo( fileName, info ) &&
-                                    ( info.m_Size == uncompressedDataSize );
-
-    if ( ( m_HoldsExtraInputs == false ) || ( fileAlreadyPresent == false ) )
+    else
     {
-        const uint32_t extendedRetryTimeMS = 15'000; // another job can be writing this input right now
+        // prepare destination
+        AStackString pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
+        if ( !FileIO::EnsurePathExists( pathOnly ) )
+        {
+            return false; // FAILED
+        }
 
         // write to disk
         FileStream fs;
-        if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY, extendedRetryTimeMS ) )
+        if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
         {
             return false; // FAILED
         }
@@ -718,10 +717,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
             return false; // FAILED
         }
         fs.Close();
-    }
 
-    if ( m_HoldsExtraInputs == false )
-    {
         // mark executable
 #if defined( __LINUX__ ) || defined( __OSX__ )
         FileIO::SetExecutable( fileName.Get() );
@@ -753,6 +749,37 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     // all files received
     m_Synchronized = true;
     return true; // file stored ok
+}
+
+// WriteSharedFile
+//------------------------------------------------------------------------------
+/*static*/ bool ToolManifest::WriteSharedFile( const AString & fileName, const void * data, size_t dataSize )
+{
+    if ( FileIO::EnsurePathExistsForFile( fileName ) == false )
+    {
+        return false;
+    }
+
+    // keep a copy another job has already stored
+    FileIO::FileInfo info;
+    if ( FileIO::GetFileInfo( fileName, info ) && ( info.m_Size == dataSize ) )
+    {
+        return true;
+    }
+
+    // another job can be writing this file right now
+    const uint32_t extendedRetryTimeMS = 15'000;
+    FileStream fs;
+    if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY, extendedRetryTimeMS ) == false )
+    {
+        return false;
+    }
+    if ( fs.Write( data, dataSize ) != dataSize )
+    {
+        return false;
+    }
+    fs.Close();
+    return true;
 }
 
 // GetRelativePath
