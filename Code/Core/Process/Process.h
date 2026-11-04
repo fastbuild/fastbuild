@@ -89,7 +89,7 @@ private:
 #endif
 
 #if defined( __WINDOWS__ )
-    uint32_t m_ProcessInfo[ 2 + 2 + 1 + 1 ]; // PROCESS_INFORMATION
+    uint32_t m_ProcessInfo[ 2 + 2 + 1 + 1 ] = { 0 }; // PROCESS_INFORMATION
 #endif
 
     bool m_Started;

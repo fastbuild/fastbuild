@@ -170,7 +170,6 @@
     // Data to communicate between threads
     NameResolutionData data;
     data.hostName = hostName;
-    data.safeToFree = false; // will be marked by other thread
 
     // Create thread to perform resolution
     Thread thread;

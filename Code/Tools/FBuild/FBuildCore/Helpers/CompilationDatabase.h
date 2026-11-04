@@ -26,8 +26,8 @@ public:
 protected:
     struct ObjectListContext
     {
-        CompilationDatabase * m_DB;
-        ObjectListNode * m_ObjectListNode;
+        CompilationDatabase * m_DB = nullptr;
+        ObjectListNode * m_ObjectListNode = nullptr;
         AString m_CompilerEscaped;
         Array<AString> m_ArgumentsEscaped;
     };

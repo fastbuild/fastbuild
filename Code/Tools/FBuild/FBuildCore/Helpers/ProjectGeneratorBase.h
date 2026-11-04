@@ -90,7 +90,7 @@ protected:
         AString m_Path; // Project Base Path(s) relative
         Array<File *> m_Files; // Child Files
         Array<Folder *> m_Folders; // Child Folders
-        uint32_t m_SortedIndex;
+        uint32_t m_SortedIndex = 0;
 
         bool operator<( const Folder & other ) const { return m_Path < other.m_Path; }
     };
@@ -98,8 +98,8 @@ protected:
     {
         AString m_FileName; // FileName with no path info
         AString m_FullPath; // Full path
-        Folder * m_Folder; // Index into m_Folders
-        uint32_t m_SortedIndex;
+        Folder * m_Folder = nullptr; // Index into m_Folders
+        uint32_t m_SortedIndex = 0;
 
         bool operator<( const File & other ) const { return m_FileName < other.m_FileName; }
     };

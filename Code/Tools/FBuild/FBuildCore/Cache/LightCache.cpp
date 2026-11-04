@@ -55,13 +55,16 @@ public:
         IncludeType m_Type;
     };
 
+    IncludedFile( const AString & fileName, uint64_t fileNameHash );
     ~IncludedFile();
 
-    uint64_t m_FileNameHash;
-    AString m_FileName;
-    bool m_Exists;
-    uint64_t m_RelativePathHash;
-    uint64_t m_ContentHash;
+    IncludedFile & operator=( const IncludedFile & other ) = delete;
+
+    const uint64_t m_FileNameHash;
+    const AString m_FileName;
+    bool m_Exists = false;
+    uint64_t m_RelativePathHash = 0;
+    uint64_t m_ContentHash = 0;
     Array<Include> m_Includes;
     Array<const IncludeDefine *> m_IncludeDefines;
     Array<uint64_t> m_NonIncludeDefines;
@@ -207,6 +210,13 @@ public:
     AString m_Include;
     IncludeType m_Type;
 };
+
+//------------------------------------------------------------------------------
+IncludedFile::IncludedFile( const AString & fileName, uint64_t fileNameHash )
+    : m_FileNameHash( fileNameHash )
+    , m_FileName( fileName )
+{
+}
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
@@ -930,10 +940,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     }
 
     // A newly seen file
-    IncludedFile * newFile = FNEW( IncludedFile() );
-    newFile->m_FileNameHash = fileNameHash;
-    newFile->m_FileName = fileName;
-    newFile->m_Exists = false;
+    IncludedFile * newFile = FNEW( IncludedFile( fileName, fileNameHash ) );
     newFile->m_ContentHash = 0;
     if ( m_BasePath.IsEmpty() == false )
     {

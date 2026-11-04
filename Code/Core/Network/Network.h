@@ -28,7 +28,7 @@ private:
     struct NameResolutionData
     {
         AStackString<> hostName;
-        bool safeToFree;
+        bool safeToFree = false; // will be marked by other thread
     };
 };
 
