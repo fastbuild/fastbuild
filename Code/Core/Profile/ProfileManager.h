@@ -43,10 +43,10 @@ private:
 
     struct ProfileEventInfo
     {
-        Thread::ThreadId m_ThreadId;
+        Thread::ThreadId m_ThreadId = INVALID_THREAD_ID;
         AStackString<32> m_ThreadName;
-        const ProfileEvent * m_Events;
-        size_t m_NumEvents;
+        const ProfileEvent * m_Events = nullptr;
+        size_t m_NumEvents = 0;
     };
     static Array<ProfileEventInfo> s_ProfileEventInfo;
 };

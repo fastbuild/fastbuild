@@ -289,7 +289,7 @@ protected:
     // Note: Unused 2 bytes here
     uint32_t m_RecursiveCost = 0; // Recursive cost used during task ordering
     Node * m_Next = nullptr; // Node map in-place linked list pointer
-    uint32_t m_NameHash; // Hash of mName
+    uint32_t m_NameHash = 0; // Hash of mName
     uint32_t m_LastBuildTimeMs = 0; // Time it took to do last known full build of this node
     uint32_t m_ProcessingTime = 0; // Time spent on this node during this build
     uint32_t m_CachingTime = 0; // Time spent caching this node

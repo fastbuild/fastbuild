@@ -76,6 +76,7 @@ AStackString<RESERVED>::AStackString( const AString & string )
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
     SetReserved( RESERVED, false );
+    m_Storage[ 0 ] = '\0';
     Assign( string );
 }
 
@@ -88,6 +89,7 @@ AStackString<RESERVED>::AStackString( AString && string )
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
     SetReserved( RESERVED, false );
+    m_Storage[ 0 ] = '\0';
     Assign( Move( string ) );
 }
 
@@ -100,6 +102,7 @@ AStackString<RESERVED>::AStackString( const AStackString & string )
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
     SetReserved( RESERVED, false );
+    m_Storage[ 0 ] = '\0';
     Assign( string );
 }
 
@@ -112,6 +115,7 @@ AStackString<RESERVED>::AStackString( AStackString && string )
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
     SetReserved( RESERVED, false );
+    m_Storage[ 0 ] = '\0';
     Assign( Move( string ) );
 }
 
@@ -123,6 +127,7 @@ AStackString<RESERVED>::AStackString( const char * string )
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
     SetReserved( RESERVED, false );
+    m_Storage[ 0 ] = '\0';
     Assign( string );
 }
 
@@ -134,6 +139,7 @@ AStackString<RESERVED>::AStackString( const char * start, const char * end )
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;
     SetReserved( RESERVED, false );
+    m_Storage[ 0 ] = '\0';
     Assign( start, end );
 }
 

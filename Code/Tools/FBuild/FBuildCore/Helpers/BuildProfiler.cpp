@@ -339,14 +339,9 @@ BuildProfilerScope::BuildProfilerScope( const char * stepName )
     // Only record info if the BuildProfiler is active
     if ( m_Active )
     {
-        m_ThreadId = 0;
         m_StepName = stepName;
-        m_TargetName = nullptr; // Main thread tasks have no associated target
         m_StartTime = Timer::GetNow();
     }
-
-    // No associated Job
-    m_Job = nullptr;
 }
 
 // CONSTRUCTOR (BuildProfilerScope)

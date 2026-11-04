@@ -37,9 +37,9 @@ public:
     struct FileInfo
     {
         AString m_Name;
-        uint32_t m_Attributes;
-        uint64_t m_LastWriteTime;
-        uint64_t m_Size;
+        uint32_t m_Attributes = 0;
+        uint64_t m_LastWriteTime = 0;
+        uint64_t m_Size = 0;
 
         bool IsReadOnly() const;
     };

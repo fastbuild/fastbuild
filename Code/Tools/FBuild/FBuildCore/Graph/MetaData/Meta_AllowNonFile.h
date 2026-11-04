@@ -26,7 +26,7 @@ public:
 
 protected:
     bool m_LimitToTypeEnabled = false;
-    Node::Type m_LimitToType;
+    Node::Type m_LimitToType = Node::Type::PROXY_NODE; // Only used if m_LimitToTypeEnabled set
 };
 
 //------------------------------------------------------------------------------
