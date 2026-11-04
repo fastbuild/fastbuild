@@ -443,7 +443,10 @@ void CPUInfo::DetermineCoreTypes()
         return;
     }
 
-    #if defined( __WINDOWS__ ) && defined( _M_ARM64 )
+    #if !defined( __WINDOWS__ ) && !defined( __x86_64__ ) && !defined( _M_X64 )
+    // No cpuid on non-x86 Linux (e.g. aarch64): count every core as a performance core
+    m_NumPCores = m_NumCores;
+    #elif defined( __WINDOWS__ ) && defined( _M_ARM64 )
     // Query core efficiency classes via Windows API.
     DWORD bufferSize = 0;
     VERIFY( GetLogicalProcessorInformationEx(

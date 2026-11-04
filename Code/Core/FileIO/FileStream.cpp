@@ -419,7 +419,9 @@ bool FileStream::Truncate()
 {
 #if defined( __WINDOWS__ )
     return ( SetEndOfFile( m_Handle ) != FALSE );
-#elif defined( __APPLE__ )
+#elif defined( __APPLE__ ) || ( defined( __LINUX__ ) && !defined( __GLIBC__ ) )
+    // macOS, and non-glibc Linux (e.g. musl, whose off_t is always 64-bit and
+    // which no longer provides the LFS64 aliases), have only ftruncate
     return ( ftruncate( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
 #else
     return ( ftruncate64( m_Handle, static_cast<off_t>( Tell() ) ) == 0 );
