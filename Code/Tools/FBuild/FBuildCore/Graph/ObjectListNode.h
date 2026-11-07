@@ -8,9 +8,11 @@
 
 // FBuild
 #include <Tools/FBuild/FBuildCore/Graph/ObjectNode.h>
+#include <Tools/FBuild/FBuildCore/Helpers/ToolManifest.h>
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Process/Mutex.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -55,6 +57,13 @@ public:
 
     [[nodiscard]] bool IsCachingAllowed() const { return m_AllowCaching; }
     [[nodiscard]] bool IsDistributionAllowed() const { return m_AllowDistribution; }
+
+    const Array<AString> & GetCacheKeyInputFiles() const { return m_CacheKeyInputFiles; }
+    const AString & GetCacheKeyCompilerOptions() const { return m_CacheKeyCompilerOptions; }
+    const Array<AString> & GetExtraInputFiles() const { return m_ExtraInputFiles; }
+    const ToolManifest & GetExtraInputManifest() const { return m_ExtraInputManifest; }
+
+    bool BuildExtraInputManifest();
 
     void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
 
@@ -106,6 +115,9 @@ protected:
     AString m_CompilerInputFilesRoot;
     Array<AString> m_CompilerInputObjectLists;
     Array<AString> m_CompilerForceUsing;
+    Array<AString> m_CacheKeyInputFiles;
+    AString m_CacheKeyCompilerOptions;
+    Array<AString> m_ExtraInputFiles;
     bool m_CompilerInputAllowNoFiles = false;
     bool m_CompilerInputPathRecurse = true;
     bool m_CompilerOutputKeepBaseExtension = false;
@@ -139,6 +151,8 @@ protected:
     uint32_t m_OwnerObjectListHash = 0;
     ObjectNode::CompilerFlags m_CompilerFlags;
     ObjectNode::CompilerFlags m_PreprocessorFlags;
+    Mutex m_ExtraInputManifestMutex;
+    ToolManifest m_ExtraInputManifest;
 };
 
 //------------------------------------------------------------------------------

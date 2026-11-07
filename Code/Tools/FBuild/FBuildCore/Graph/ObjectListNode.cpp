@@ -52,6 +52,9 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node )
     REFLECT( m_DeoptimizeWritableFilesWithToken )
     REFLECT( m_AllowDistribution )
     REFLECT( m_AllowCaching )
+    REFLECT( m_CacheKeyInputFiles, MetaFile() )
+    REFLECT( m_CacheKeyCompilerOptions )
+    REFLECT( m_ExtraInputFiles, MetaFile() )
     REFLECT( m_Hidden )
     // Precompiled Headers
     REFLECT( m_PCHInputFile, MetaFile() )
@@ -623,6 +626,29 @@ ObjectListNode::~ObjectListNode() = default;
     }
 
     return BuildResult::eOk;
+}
+
+// BuildExtraInputManifest
+//------------------------------------------------------------------------------
+bool ObjectListNode::BuildExtraInputManifest()
+{
+    MutexHolder mh( m_ExtraInputManifestMutex );
+
+    if ( m_ExtraInputManifest.GetToolId() != 0 )
+    {
+        return true;
+    }
+
+    // a previous attempt can have failed
+    if ( m_ExtraInputManifest.GetFiles().IsEmpty() )
+    {
+        AStackString sourceRoot( FBuild::Get().GetOptions().GetWorkingDir() );
+        PathUtils::EnsureTrailingSlash( sourceRoot );
+        m_ExtraInputManifest.Initialize( sourceRoot, m_ExtraInputFiles );
+    }
+
+    const bool skipHashing = true; // for inputs we use name, timestamp and size instead of content hashing
+    return m_ExtraInputManifest.DoBuild( skipHashing );
 }
 
 // GetInputFiles
