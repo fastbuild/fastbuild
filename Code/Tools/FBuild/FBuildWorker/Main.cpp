@@ -117,7 +117,6 @@ int Main( const AString & args )
 #endif
 
     // start the worker and wait for it to be closed
-    int ret;
     {
         Worker worker( args, options.m_ConsoleMode, options.m_PeriodicRestart );
         if ( options.m_OverrideCPUAllocation )
@@ -132,10 +131,8 @@ int Main( const AString & args )
         {
             WorkerSettings::Get().SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );
         }
-        ret = worker.Work();
+        return worker.Work();
     }
-
-    return ret;
 }
 
 // LaunchSubProcess

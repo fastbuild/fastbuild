@@ -138,8 +138,8 @@ private:
 
     struct SendBuffer
     {
-        uint32_t size;
-        const void * data;
+        uint32_t size = 0;
+        const void * data = nullptr;
     };
     bool SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
 

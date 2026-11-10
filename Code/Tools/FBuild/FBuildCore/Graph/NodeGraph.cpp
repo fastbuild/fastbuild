@@ -1267,7 +1267,7 @@ const BFFToken * NodeGraph::FindNodeSourceToken( const Node * node ) const
 {
     ASSERT( &name != &cleanPath );
 
-    char * dst;
+    char * dst = nullptr;
 
     //  - path can be fully qualified
     bool isFullPath = PathUtils::IsFullPath( name );
@@ -1892,11 +1892,10 @@ void NodeGraph::MigrateNode( NodeGraphMigrationCache & migrationCache,
     }
 
     // Get the matching node in the old DB
-    const Node * oldNode;
-    if ( oldNodeHint )
+    const Node * oldNode = oldNodeHint;
+    if ( oldNode )
     {
         // Use the node passed in (if calling code already knows it saves us a lookup)
-        oldNode = oldNodeHint;
         ASSERT( oldNode == oldNodeGraph.FindNodeInternal( newNode.GetName(), newNode.GetNameHash() ) );
     }
     else

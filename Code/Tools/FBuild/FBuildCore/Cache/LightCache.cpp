@@ -644,7 +644,7 @@ bool LightCache::ParseMacroName( const char *& pos, AString & outMacroName )
     ++pos;
 
     // Find end of macro name
-    const char * macroNameEnd;
+    const char * macroNameEnd = nullptr;
     for ( ;; )
     {
         c = *pos;

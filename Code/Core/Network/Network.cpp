@@ -54,7 +54,7 @@
     const NetworkStartupHelper nsh; // ensure network is up if not already
 
 #if defined( __WINDOWS__ )
-    TCHAR buffer[ 256 ];
+    TCHAR buffer[ 256 ] = { 0 };
     DWORD bufferSize = sizeof( buffer );
     if ( GetComputerNameEx( ComputerNameDnsDomain, buffer, &bufferSize ) )
     {

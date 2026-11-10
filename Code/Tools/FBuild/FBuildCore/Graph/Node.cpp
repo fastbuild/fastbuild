@@ -974,7 +974,8 @@ void Node::ReplaceDummyName( const AString & newName )
     }
 
     // are last two tokens numbers?
-    int row, column;
+    int32_t row = 0;
+    int32_t column = 0;
     if ( ( tokens[ numTokens - 1 ].Scan( "%i", &column ) != 1 ) ||
          ( tokens[ numTokens - 2 ].Scan( "%i", &row ) != 1 ) )
     {

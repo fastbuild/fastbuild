@@ -21,9 +21,9 @@ namespace
     class SerializedDependency
     {
     public:
-        uint32_t m_Index;
-        uint64_t m_Stamp;
-        bool m_IsWeak;
+        uint32_t m_Index = 0;
+        uint64_t m_Stamp = 0;
+        bool m_IsWeak = false;
     };
 #pragma pack( pop )
 }

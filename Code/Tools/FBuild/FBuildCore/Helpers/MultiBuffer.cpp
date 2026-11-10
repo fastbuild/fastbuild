@@ -46,7 +46,7 @@ bool MultiBuffer::CreateFromFiles( const Array<AString> & fileNames, size_t * ou
     ASSERT( fileNames.GetSize() <= kMaxFiles );
     ASSERT( ( m_ReadStream == nullptr ) && ( m_WriteStream == nullptr ) );
 
-    uint64_t fileSizes[ kMaxFiles ];
+    uint64_t fileSizes[ kMaxFiles ] = { 0 };
     FileStream fileStreams[ kMaxFiles ];
     const size_t numFiles = fileNames.GetSize();
 

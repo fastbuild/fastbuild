@@ -844,7 +844,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         ASSERT( output && outputSize );
 
         CIncludeParser parser;
-        bool msvcStyle;
+        bool msvcStyle = false;
         if ( GetDedicatedPreprocessor() != nullptr )
         {
             msvcStyle = m_PreprocessorFlags.IsMSVC() || m_PreprocessorFlags.IsCUDANVCC();
@@ -879,7 +879,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 {
     AString name;
     AString sourceFile;
-    uint32_t flags;
+    uint32_t flags = 0;
     AString compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||

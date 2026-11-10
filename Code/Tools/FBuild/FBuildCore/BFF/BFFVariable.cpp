@@ -449,7 +449,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             {
                 const BFFVariable * const * it2 = GetMemberByName( ( *it )->GetName(), srcMembers );
 
-                BFFVariable * newVar;
+                BFFVariable * newVar = nullptr;
                 if ( it2 )
                 {
                     newVar = ( *it )->ConcatVarsRecurse( ( *it )->GetName(), **it2, operatorIter );

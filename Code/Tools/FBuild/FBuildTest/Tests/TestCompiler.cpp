@@ -22,9 +22,9 @@ public:
 //------------------------------------------------------------------------------
 TEST_CASE( TestCompiler, BuildCompiler_Explicit )
 {
-    uint64_t toolIdA;
-    uint64_t toolIdB;
-    uint64_t toolIdC;
+    uint64_t toolIdA = 0;
+    uint64_t toolIdB = 0;
+    uint64_t toolIdC = 0;
 
     // Build
     {
@@ -90,9 +90,9 @@ TEST_CASE( TestCompiler, BuildCompiler_Explicit )
 //------------------------------------------------------------------------------
 TEST_CASE( TestCompiler, BuildCompiler_Implicit )
 {
-    uint64_t toolIdA;
-    uint64_t toolIdB;
-    uint64_t toolIdC;
+    uint64_t toolIdA = 0;
+    uint64_t toolIdB = 0;
+    uint64_t toolIdC = 0;
     AStackString compilerNodeName;
 
     // Implicit Definition
