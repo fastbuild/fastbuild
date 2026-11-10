@@ -16,6 +16,24 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
+namespace
+{
+    [[nodiscard]] bool FindInObjectData( const AString & buffer,
+                                         const char * startToken,
+                                         const char * endToken,
+                                         AString & outString )
+    {
+        const char * const start = buffer.Find( startToken );
+        const char * const end = buffer.Find( endToken, start );
+        if ( start && end )
+        {
+            outString.Assign( start + AString::StrLen( startToken ), end );
+            return true;
+        }
+        return false;
+    }
+}
+
 //------------------------------------------------------------------------------
 TEST_GROUP( TestUnity, FBuildTest )
 {
@@ -854,15 +872,25 @@ TEST_CASE( TestUnity, CacheUsingRelativePaths )
         }
 
         // Check __FILE__ paths are relative
+        AStackString token1;
+        TEST_ASSERT( FindInObjectData( buffer, "FILE_MACRO_START_1(", ")FILE_MACRO_END_1", token1 ) );
+        AStackString token2;
+        TEST_ASSERT( FindInObjectData( buffer, "FILE_MACRO_START_2(", ")FILE_MACRO_END_2", token2 ) );
 #if defined( __WINDOWS__ )
-        TEST_ASSERT(
-            buffer.Find( "FILE_MACRO_START_1(..\\out\\..\\Code\\Subdir/Header.h)FILE_MACRO_END_1" ) );
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(..\\out\\..\\Code\\File.cpp)FILE_MACRO_END_2" ) );
+        TEST_ASSERTM( ( token1 == "..\\out\\..\\Code\\Subdir/Header.h" ),
+                      "%s",
+                      token1.Get() );
+        TEST_ASSERTM( ( token2 == "..\\out\\..\\Code\\File.cpp" ),
+                      "%s",
+                      token2.Get() );
 #else
         // Slash direction changed in Clang 18.x.x from forward slash to backslash
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) ||
-                     buffer.Find( "FILE_MACRO_START_1(.\\Subdir/Header.h)FILE_MACRO_END_1" ) );
-        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(../out/../Code/File.cpp)FILE_MACRO_END_2" ) );
+        TEST_ASSERTM( ( token1 == "./Subdir/Header.h" ) || ( token1 == ".\\Subdir/Header.h" ),
+                      "%s",
+                      token1.Get() );
+        TEST_ASSERTM( ( token2 == "../out/../Code/File.cpp" ),
+                      "%s",
+                      token2.Get() );
 #endif
     }
 
