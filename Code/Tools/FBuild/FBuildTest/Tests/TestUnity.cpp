@@ -887,8 +887,8 @@ TEST_CASE( TestUnity, CacheUsingRelativePaths )
         // Slash direction changed in Clang 18.x.x from forward slash to backslash and is
         // inconsistent between versions
         TEST_ASSERTM( ( token1 == "./Subdir/Header.h" ) ||
-                      ( token1 == ".\\Subdir/Header.h" ) ||
-                      ( token1 == "../out/../Code/Subdir/Header.h" ),
+                          ( token1 == ".\\Subdir/Header.h" ) ||
+                          ( token1 == "../out/../Code/Subdir/Header.h" ),
                       "%s",
                       token1.Get() );
         TEST_ASSERTM( ( token2 == "../out/../Code/File.cpp" ),
