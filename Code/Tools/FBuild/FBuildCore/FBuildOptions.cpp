@@ -157,7 +157,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-cachecompressionlevel" )
             {
                 const int sizeIndex = ( i + 1 );
-                int32_t cacheCompressionLevel;
+                int32_t cacheCompressionLevel = 0;
                 if ( ( sizeIndex >= argc ) ||
                      ( AString::ScanS( argv[ sizeIndex ], "%i", &cacheCompressionLevel ) != 1 ) ||
                      ( ( cacheCompressionLevel < -128 ) || ( cacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
@@ -177,7 +177,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-distcompressionlevel" )
             {
                 const int sizeIndex = ( i + 1 );
-                int32_t distLevel;
+                int32_t distLevel = 0;
                 if ( ( sizeIndex >= argc ) ||
                      ( AString::ScanS( argv[ sizeIndex ], "%i", &distLevel ) != 1 ) ||
                      ( ( distLevel < -128 ) || ( distLevel > 12 ) ) ) // See Compressor for valid ranges

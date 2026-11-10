@@ -337,8 +337,10 @@ bool FileStream::IsOpen() const
     ASSERT( IsOpen() );
 
 #if defined( __WINDOWS__ )
-    LARGE_INTEGER zeroPos, newPos;
-    zeroPos.QuadPart = 0;
+    LARGE_INTEGER zeroPos;
+    memset( &zeroPos, 0, sizeof( LARGE_INTEGER ) );
+    LARGE_INTEGER newPos;
+    memset( &newPos, 0, sizeof( LARGE_INTEGER ) );
     VERIFY( SetFilePointerEx( (HANDLE)m_Handle, zeroPos, &newPos, FILE_CURRENT ) );
     return (uint64_t)newPos.QuadPart;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )

@@ -791,7 +791,7 @@ namespace
             return false;
         }
 
-        bool rhs;
+        bool rhs = false;
         switch ( iter.GetCurrent()->GetType() )
         {
             case BFFTokenType::Boolean:         // true, false

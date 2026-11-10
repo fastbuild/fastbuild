@@ -308,7 +308,7 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
     ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
 
     // Read header info
-    uint64_t toolId;
+    uint64_t toolId = 0;
     AStackString mainExecutablePath;
     uint32_t numFiles( 0 );
     if ( !ms.Read( toolId ) ||

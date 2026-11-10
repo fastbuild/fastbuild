@@ -45,7 +45,9 @@ void FormatU64( uint64_t value, char * outBuffer )
     }
     else
     {
+        PRAGMA_DISABLE_PUSH_MSVC( 26494 ) // Variable 'tmp' is uninitialized. Always initialize an object
         char tmp[ 24 ]; // 20 bytes needed for max U64 value: 18,446,744,073,709,551,615
+        PRAGMA_DISABLE_POP_MSVC
         char * pos = tmp;
         while ( value )
         {
@@ -250,7 +252,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
         for ( const ProfileEventInfo & info : infos )
         {
             uint64_t threadId = (uint64_t)info.m_ThreadId;
-            char threadIsAsString[ 32 ];
+            char threadIdAsString[ 32 ] = { 0 };
 
             // Thread Name
             if ( ( info.m_ThreadName.IsEmpty() == false ) || ( info.m_ThreadId == Thread::GetMainThreadId() ) )
@@ -259,12 +261,12 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 {
                     threadId = xxHash3::Calc32( info.m_ThreadName );
                 }
-                FormatU64( threadId, threadIsAsString );
+                FormatU64( threadId, threadIdAsString );
 
                 // SetThreadName event
                 // {"name": "thread_name", "ph": "M", "pid": 0, "tid": 164, "args": { "name" : "ThreadName" }},
                 buffer += "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":";
-                buffer += threadIsAsString;
+                buffer += threadIdAsString;
                 buffer += ", \"args\":{\"name\":\"";
                 buffer += info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get();
                 buffer += "\"}},\n";
@@ -277,7 +279,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
             }
             else
             {
-                FormatU64( threadId, threadIsAsString );
+                FormatU64( threadId, threadIdAsString );
             }
 
             const size_t numEvents( info.m_NumEvents );
@@ -296,7 +298,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 {
                     buffer += "{\"name\":\"\",\"ph\":\"E\",\"pid\":0,\"tid\":";
                 }
-                buffer += threadIsAsString;
+                buffer += threadIdAsString;
                 buffer += ",\"ts\":";
                 const uint64_t eventTime = (uint64_t)( (double)e.m_TimeStamp * freqMul );
                 char eventTimeBuffer[ 32 ];

@@ -37,7 +37,7 @@ FunctionCopy::FunctionCopy()
 {
     // make sure all required variables are defined
     StackArray<AString> sources;
-    const BFFVariable * dstFileV;
+    const BFFVariable * dstFileV = nullptr;
     if ( !GetStrings( funcStartIter, sources, ".Source", true ) ||
          !GetString( funcStartIter, dstFileV, ".Dest", true ) )
     {
