@@ -35,7 +35,6 @@ public:
 #else
     #error Unknown platform
 #endif
-    inline static const uint32_t kDefaultStackSize = ( 64 * 1024 );
 
     Thread();
     ~Thread();
@@ -44,7 +43,7 @@ public:
     void Start( ThreadEntryFunction func,
                 const char * threadName = nullptr,
                 void * userData = nullptr,
-                uint32_t stackSizeBytes = kDefaultStackSize );
+                uint32_t stackSizeOverrideBytes = 0 );
     uint32_t Join();
     bool IsRunning() const;
 

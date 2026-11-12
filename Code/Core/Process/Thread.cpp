@@ -118,7 +118,7 @@ Thread::~Thread()
 void Thread::Start( ThreadEntryFunction func,
                     const char * threadName,
                     void * userData,
-                    uint32_t stackSizeBytes )
+                    uint32_t stackSizeOverrideBytes )
 {
     // Can only start if not already started
     ASSERT( !IsRunning() );
@@ -130,7 +130,7 @@ void Thread::Start( ThreadEntryFunction func,
     // Create thread
 #if defined( __WINDOWS__ )
     HANDLE h = ::CreateThread( nullptr,         // LPSECURITY_ATTRIBUTES lpThreadAttributes
-                               stackSizeBytes,  // SIZE_T dwStackSize
+                               stackSizeOverrideBytes, // SIZE_T dwStackSize
                                (LPTHREAD_START_ROUTINE)ThreadStartInfo::ThreadStartFunction,    // LPTHREAD_START_ROUTINE lpStartAddress
                                &info,           // LPVOID lpParameter
                                0,               // DWORD dwCreationFlags
@@ -138,21 +138,28 @@ void Thread::Start( ThreadEntryFunction func,
     );
     ASSERT( h != nullptr );
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
-    // AddressSanitizer instruments objects created on the stack by inserting redzones around them.
-    // This greatly increases the amount of stack space used by the program.
-    // To account for that double the requested stack size for the thread.
-    stackSizeBytes *= 2;
-    #endif
-    // Necessary on Aarch64, where it's 131072 in my tests. Sometimes we ask for 65536.
-    if ( stackSizeBytes < PTHREAD_STACK_MIN )
+    if ( stackSizeOverrideBytes > 0 )
     {
-        stackSizeBytes = PTHREAD_STACK_MIN;
+    #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
+        // AddressSanitizer instruments objects created on the stack by inserting redzones around them.
+        // This greatly increases the amount of stack space used by the program.
+        // To account for that double the requested stack size for the thread.
+        stackSizeOverrideBytes *= 2;
+    #endif
+        // Necessary on Aarch64, where it's 131072 in my tests. Sometimes we ask for 65536.
+        if ( stackSizeOverrideBytes < PTHREAD_STACK_MIN )
+        {
+            stackSizeOverrideBytes = PTHREAD_STACK_MIN;
+        }
     }
+
     pthread_t h( INVALID_THREAD_ID );
     pthread_attr_t threadAttr;
     VERIFY( pthread_attr_init( &threadAttr ) == 0 );
-    VERIFY( pthread_attr_setstacksize( &threadAttr, stackSizeBytes ) == 0 );
+    if ( stackSizeOverrideBytes > 0 )
+    {
+        VERIFY( pthread_attr_setstacksize( &threadAttr, stackSizeOverrideBytes ) == 0 );
+    }
     VERIFY( pthread_attr_setdetachstate( &threadAttr, PTHREAD_CREATE_JOINABLE ) == 0 );
     VERIFY( pthread_create( &h, &threadAttr, ThreadStartInfo::ThreadStartFunction, &info ) == 0 );
     ASSERT( h != (pthread_t)INVALID_THREAD_ID );
