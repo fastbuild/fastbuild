@@ -322,8 +322,9 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     // wait for connection
     for ( ;; )
     {
-        fd_set write, err;
+        fd_set write;
         FD_ZERO( &write );
+        fd_set err;
         FD_ZERO( &err );
         FDSet( sockfd, &write );
         FDSet( sockfd, &err );
@@ -551,6 +552,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 #else
     struct iovec sendBuffers[ 4 ];
 #endif
+    memset( &sendBuffers, 0, sizeof( sendBuffers ) );
 
     // Calculate total to send
     uint32_t totalBytes( 0 );
@@ -641,21 +643,6 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     connection->m_SendSocketInUseThreadId = INVALID_THREAD_ID;
 #endif
     return sendOK;
-}
-
-// Broadcast
-//------------------------------------------------------------------------------
-bool TCPConnectionPool::Broadcast( const void * data, size_t size )
-{
-    MutexHolder mh( m_ConnectionsMutex );
-
-    bool result = true;
-
-    for ( const ConnectionInfo * connection : m_Connections )
-    {
-        result &= Send( connection, data, size );
-    }
-    return result;
 }
 
 // AllocBuffer
@@ -947,6 +934,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
     ASSERT( ci->m_Socket != INVALID_SOCKET );
 
     struct sockaddr_in remoteAddrInfo;
+    memset( &remoteAddrInfo, 0, sizeof( sockaddr_in ) );
     int remoteAddrInfoSize = sizeof( remoteAddrInfo );
 
     while ( ci->m_ThreadQuitNotification.Load() == false )

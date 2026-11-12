@@ -102,6 +102,9 @@ void FBuildStats::GatherPostBuildStatistics( const NodeGraph & nodeGraph, Node *
     // Mark nodes to track recursion
     nodeGraph.SetBuildPassTagForAllNodes( eTagStatsNotProcessed );
 
+    // Root node might be a proxy node and thus not present in the node graph, so must be marked explicitly.
+    node->SetBuildPassTag( eTagStatsNotProcessed );
+
     // recurse and gather the per-node-type statistics
     GatherPostBuildStatisticsRecurse( node );
 

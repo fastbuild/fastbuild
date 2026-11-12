@@ -102,7 +102,6 @@ public:
                const void * payloadData,
                size_t payloadSize,
                uint32_t timeoutMS = kDefaultSendTimeoutMS );
-    bool Broadcast( const void * data, size_t size );
 
     static void GetAddressAsString( uint32_t addr, AString & address );
 
@@ -139,8 +138,8 @@ private:
 
     struct SendBuffer
     {
-        uint32_t size;
-        const void * data;
+        uint32_t size = 0;
+        const void * data = nullptr;
     };
     bool SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
 

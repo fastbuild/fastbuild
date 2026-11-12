@@ -94,17 +94,6 @@ bool Protocol::IMessage::Send( const ConnectionInfo * connection, const ConstMem
     return pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
 }
 
-// IMessage::Broadcast
-//------------------------------------------------------------------------------
-bool Protocol::IMessage::Broadcast( TCPConnectionPool * pool ) const
-{
-    ASSERT( pool );
-    ASSERT( m_HasPayload == false ); // must implement custom function
-
-    // the packet is the contents of the derived class
-    return pool->Broadcast( this, m_MsgSize );
-}
-
 // MsgConnection
 //------------------------------------------------------------------------------
 Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )

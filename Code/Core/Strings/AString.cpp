@@ -227,7 +227,9 @@ AString & AString::VFormat( const char * fmtString, va_list args )
 {
     // try to work entirely on the stack
     const uint32_t STACK_BUFFER_SIZE( 8 * KILOBYTE );
+    PRAGMA_DISABLE_PUSH_MSVC( 26494 ) // Variable 'stackBuffer' is uninitialized. Always initialize an object
     char stackBuffer[ STACK_BUFFER_SIZE ];
+    PRAGMA_DISABLE_POP_MSVC
     char * buffer = stackBuffer;
     size_t bufferSize = STACK_BUFFER_SIZE;
 

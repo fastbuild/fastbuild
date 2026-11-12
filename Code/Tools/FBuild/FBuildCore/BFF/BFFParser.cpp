@@ -377,7 +377,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
 
         const int i = rhsToken->GetValueInt();
         iter++; // Consume token
-        int32_t newVal;
+        int32_t newVal = 0;
         if ( concat )
         {
             newVal = var->GetInt() + i;
@@ -1348,7 +1348,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
 
     // if dst exists, types must match
     const BFFVariable::VarType srcType = varSrc->GetType();
-    BFFVariable::VarType dstType;
+    BFFVariable::VarType dstType = srcType;
     if ( varDst )
     {
         dstType = varDst->GetType();
@@ -1356,7 +1356,6 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
     else
     {
         ASSERT( concat == false );
-        dstType = srcType;
     }
 
     // handle supported types
@@ -1541,7 +1540,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
 
         if ( srcType == BFFVariable::VAR_INT )
         {
-            int32_t newVal;
+            int32_t newVal = 0;
             if ( concat )
             {
                 newVal = varDst->GetInt() + varSrc->GetInt();

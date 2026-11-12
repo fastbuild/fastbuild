@@ -91,7 +91,7 @@ bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressi
     ASSERT( worstCaseSize > 0 );
     UniquePtr<char, FreeDeletor> output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
-    int32_t compressedSize;
+    int32_t compressedSize = 0;
 
     // do compression
     if ( compressionLevel > 0 )
@@ -217,7 +217,7 @@ bool Compressor::CompressZstd( const void * data,
     const size_t worstCaseSize = ZSTD_compressBound( dataSize );
     UniquePtr<char, FreeDeletor> output( (char *)ALLOC( worstCaseSize ) );
 
-    size_t compressedSize;
+    size_t compressedSize = 0;
 
     // do compression
     if ( compressionLevel > 0 )

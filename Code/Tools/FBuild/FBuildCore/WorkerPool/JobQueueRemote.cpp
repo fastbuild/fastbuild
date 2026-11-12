@@ -338,7 +338,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, Node::BuildResult result 
         FileIO::FileDelete( pdbName.Get() );
     }
 
-    Node::BuildResult result;
+    Node::BuildResult result = Node::BuildResult::eFailed;
     {
         PROFILE_SECTION( racingRemoteJob ? "RACE" : "LOCAL" );
         result = ( (Node *)node )->DoBuild2( job, racingRemoteJob );

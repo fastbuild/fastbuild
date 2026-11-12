@@ -871,7 +871,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         ASSERT( output && outputSize );
 
         CIncludeParser parser;
-        bool msvcStyle;
+        bool msvcStyle = false;
         if ( GetDedicatedPreprocessor() != nullptr )
         {
             msvcStyle = m_PreprocessorFlags.IsMSVC() || m_PreprocessorFlags.IsCUDANVCC();
@@ -906,7 +906,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 {
     AString name;
     AString sourceFile;
-    uint32_t flags;
+    uint32_t flags = 0;
     AString compilerArgs;
     uint64_t extraInputManifestId = 0;
     bool useVFSOverlayForExtraInputs = false;
@@ -1346,7 +1346,7 @@ void ObjectNode::GetNativeAnalysisXMLPath( AString & outXMLFileName ) const
 {
     ASSERT( IsUsingStaticAnalysisMSVC() );
 
-    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
+    const AString & sourceName = IsCreatingPCH() ? GetPCHObjectName() : m_Name;
 
     // TODO:B The xml path can be manually specified with /analyze:log
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
@@ -1372,7 +1372,7 @@ void ObjectNode::GetAltObjPath( AString & altObjName ) const
 {
     ASSERT( IsUsingDynamicDeopt() );
 
-    const AString & sourceName = GetPCHObjectName().IsEmpty() ? m_Name : GetPCHObjectName();
+    const AString & sourceName = IsCreatingPCH() ? GetPCHObjectName() : m_Name;
 
     // TODO:B The suffix ('.alt') can be manually specified with /dynamicdeopt:suffix
     const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed

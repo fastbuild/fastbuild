@@ -872,7 +872,7 @@ bool BFFTokenizer::HandleDirective_IfExpression( const BFFFile & file, BFFTokenR
         IF_NEGATE = 8
     };
     bool ranOnce = false;
-    uint8_t operatorHistory[ BFFParser::kMaxOperatorHistory ];   // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
+    uint8_t operatorHistory[ BFFParser::kMaxOperatorHistory ] = { 0 }; // Record any expression operators into an array in order to process the operator precedence after we finish parsing the line
     uint32_t numOperators = 0;
 
     while ( !ranOnce || ( ranOnce && ( argsIter->IsOperator( BFFOperator::Type::eAnd ) || argsIter->IsOperator( BFFOperator::Type::eOr ) ) ) )

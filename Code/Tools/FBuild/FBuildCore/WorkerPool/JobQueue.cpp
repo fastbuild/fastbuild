@@ -928,7 +928,7 @@ void JobQueue::FinishedProcessingJob( Job * job, Node::BuildResult result, bool 
         }
     }
 
-    Node::BuildResult result;
+    Node::BuildResult result = Node::BuildResult::eFailed;
     if ( FBuild::Get().GetOptions().m_FastCancel && FBuild::GetStopBuild() )
     {
         // When stopping build and fast cancel is active we simulate a build error with this node.

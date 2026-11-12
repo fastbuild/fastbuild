@@ -236,7 +236,7 @@ static bool IsStdOutRedirectedInternal()
 /*static*/ bool Env::GetLocalUserName( AString & outUserName )
 {
 #if defined( __WINDOWS__ )
-    char userName[ UNLEN + 1 ];
+    char userName[ UNLEN + 1 ] = { 0 };
     DWORD bufferSize = sizeof( userName );
     if ( ::GetUserNameA( userName, &bufferSize ) == FALSE )
     {

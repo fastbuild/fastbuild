@@ -43,10 +43,10 @@ namespace
     public:
         explicit CPUId( int32_t leaf, int32_t subLeaf = 0 );
 
-        int32_t m_EAX;
-        int32_t m_EBX;
-        int32_t m_ECX;
-        int32_t m_EDX;
+        int32_t m_EAX = 0;
+        int32_t m_EBX = 0;
+        int32_t m_ECX = 0;
+        int32_t m_EDX = 0;
     };
 #endif
 

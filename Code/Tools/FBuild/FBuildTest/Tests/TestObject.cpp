@@ -195,7 +195,7 @@ TEST_CASE( TestObject, ModTimeChangeBackwards )
     }
 
     // Create two empty files
-    uint64_t oldModTime;
+    uint64_t oldModTime = 0;
     {
         // Generate some header files
         EnsureDirExists( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/" );

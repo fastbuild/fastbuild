@@ -108,7 +108,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 {
     // read some test data into a file
     UniquePtr<void, FreeDeletor> data;
-    size_t dataSize;
+    size_t dataSize = 0;
     {
         FileStream fs;
         TEST_ASSERT( fs.Open( fileName ) );

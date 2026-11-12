@@ -786,7 +786,7 @@ bool Process::ReadAllData( AString & outMem,
                 // Check if timeout is hit
                 if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= (float)timeOutMS ) )
                 {
-                    Terminate();
+                    KillProcessTree();
                     return false; // Timed out
                 }
 
@@ -804,7 +804,7 @@ bool Process::ReadAllData( AString & outMem,
             // Check if timeout is hit
             if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= static_cast<float>( timeOutMS ) ) )
             {
-                Terminate();
+                KillProcessTree();
                 return false; // Timed out
             }
 

@@ -54,7 +54,7 @@
     const NetworkStartupHelper nsh; // ensure network is up if not already
 
 #if defined( __WINDOWS__ )
-    TCHAR buffer[ 256 ];
+    TCHAR buffer[ 256 ] = { 0 };
     DWORD bufferSize = sizeof( buffer );
     if ( GetComputerNameEx( ComputerNameDnsDomain, buffer, &bufferSize ) )
     {
@@ -170,7 +170,6 @@
     // Data to communicate between threads
     NameResolutionData data;
     data.hostName = hostName;
-    data.safeToFree = false; // will be marked by other thread
 
     // Create thread to perform resolution
     Thread thread;

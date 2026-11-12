@@ -142,11 +142,11 @@ protected:
     BuildProfilerScope & operator=( BuildProfilerScope & other ) = delete;
 
     bool m_Active;
-    uint32_t m_ThreadId;
-    const char * m_StepName;
-    const char * m_TargetName;
-    int64_t m_StartTime;
-    Job * m_Job;
+    uint32_t m_ThreadId = 0;
+    const char * m_StepName = nullptr;
+    const char * m_TargetName = nullptr;
+    int64_t m_StartTime = 0;
+    Job * m_Job = nullptr;
 };
 
 //------------------------------------------------------------------------------

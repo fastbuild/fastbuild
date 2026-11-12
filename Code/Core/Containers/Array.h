@@ -689,6 +689,7 @@ void Array<T>::Deallocate( T * ptr ) const
 
 // StackArray
 //------------------------------------------------------------------------------
+PRAGMA_DISABLE_PUSH_MSVC( 26495 ) // m_Storage is intentionally not initialized
 template <class T, uint32_t RESERVED = 32>
 class StackArray : public Array<T>
 {
@@ -730,5 +731,6 @@ private:
     alignas( __alignof( T ) ) uint8_t m_Storage[ RESERVED * sizeof( T ) ];
     PRAGMA_DISABLE_POP_MSVC // 4324
 };
+PRAGMA_DISABLE_POP_MSVC // 26495
 
 //------------------------------------------------------------------------------

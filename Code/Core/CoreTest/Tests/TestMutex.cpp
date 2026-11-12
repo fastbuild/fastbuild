@@ -20,8 +20,8 @@ public:
     struct TestExclusivityUserData
     {
         Mutex m_Mutex;
-        uint32_t m_Count;
-        volatile uint32_t m_BarrierCounter;
+        uint32_t m_Count = 0;
+        volatile uint32_t m_BarrierCounter = 0;
     };
     static uint32_t TestExclusivityThreadEntryFunction( void * userData );
 
@@ -29,7 +29,7 @@ public:
     struct PaddingStruct
     {
         Mutex m_Mutex1;
-        uint8_t m_Padding;
+        uint8_t m_Padding = 0;
         Mutex m_Mutex2;
     };
 #endif

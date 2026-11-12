@@ -186,7 +186,7 @@ TEST_CASE( TestTCPConnectionPool, DataTransfer )
         }
         volatile uint64_t m_ReceivedBytes = 0;
         size_t m_DataSize = 0;
-        const char * m_ExpectedData;
+        const char * m_ExpectedData = nullptr;
         Semaphore m_DataReceviedSemaphore;
     };
 

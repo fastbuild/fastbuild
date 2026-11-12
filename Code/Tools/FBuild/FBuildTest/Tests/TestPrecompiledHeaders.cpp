@@ -448,6 +448,75 @@ TEST_CASE( TestPrecompiledHeaders, Deoptimization )
 }
 
 //------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+TEST_CASE( TestPrecompiledHeaders, CacheDynamicDeopt )
+{
+    #if defined( _MSC_VER ) && ( _MSC_VER >= 1944 ) // VS 2022 17.44.x
+    const char * const config = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheDynamicDeopt/fbuild.bff";
+    const char * const target = "PCHTest-CacheDynamicDeopt";
+
+    const char * const objFile = "../tmp/Test/PrecompiledHeaders/CacheDynamicDeopt/PCHUser.obj";
+    const char * const altObjFile = "../tmp/Test/PrecompiledHeaders/CacheDynamicDeopt/PCHUser.alt.obj";
+    const char * const pchObjFile = "../tmp/Test/PrecompiledHeaders/CacheDynamicDeopt/PrecompiledHeader.pch.obj";
+    const char * const pchAltObjFile = "../tmp/Test/PrecompiledHeaders/CacheDynamicDeopt/PrecompiledHeader.pch.alt.obj";
+
+    EnsureFileDoesNotExist( objFile );
+    EnsureFileDoesNotExist( altObjFile );
+    EnsureFileDoesNotExist( pchObjFile );
+    EnsureFileDoesNotExist( pchAltObjFile );
+
+    // Build from scratch
+    {
+        FBuildTestOptions options;
+        options.m_ConfigFile = config;
+        options.m_ForceCleanBuild = true;
+        options.m_UseCacheWrite = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( target ) );
+    }
+
+    // The compiler produces both (obj, alt.obj) files for a /dynamicdeopt translation unit
+    TEST_ASSERT( FileIO::FileExists( objFile ) );
+    TEST_ASSERT( FileIO::FileExists( altObjFile ) );
+    TEST_ASSERT( FileIO::FileExists( pchObjFile ) );
+    TEST_ASSERT( FileIO::FileExists( pchAltObjFile ) );
+
+    FileIO::FileDelete( objFile );
+    FileIO::FileDelete( altObjFile );
+    FileIO::FileDelete( pchObjFile );
+    FileIO::FileDelete( pchAltObjFile );
+
+    // Rebuild, reading from the cache
+    {
+        FBuildTestOptions options;
+        options.m_ConfigFile = config;
+        options.m_ForceCleanBuild = true;
+        options.m_UseCacheRead = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        // Ensure cache was read from
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == 0 );
+    }
+
+    TEST_ASSERT( FileIO::FileExists( objFile ) );
+    TEST_ASSERT( FileIO::FileExists( altObjFile ) );
+    TEST_ASSERT( FileIO::FileExists( pchObjFile ) );
+    TEST_ASSERT( FileIO::FileExists( pchAltObjFile ) );
+
+    #else
+    OUTPUT( "[SKIP] CacheDynamicDeopt - /dynamicdeopt unavailable (requires VS2022 v17.44.x)\n" );
+    #endif
+}
+#endif
+
+//------------------------------------------------------------------------------
 TEST_CASE( TestPrecompiledHeaders, PCHOnly )
 {
     // Initialize
