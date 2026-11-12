@@ -861,6 +861,7 @@ TEST_CASE( TestObject, LoadRemote )
         const uint32_t flags = ObjectNode::CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES;
         AStackString args( "-c %1 -o %2" );
         const uint64_t extraInputManifestId = 0x0123456789ABCDEF;
+        const bool useVFSOverlayForExtraInputs = true;
 
         // Write what SaveRemote sends from the client
         MemoryStream stream;
@@ -869,6 +870,7 @@ TEST_CASE( TestObject, LoadRemote )
         stream.Write( flags );
         stream.Write( args );
         stream.Write( extraInputManifestId );
+        stream.Write( useVFSOverlayForExtraInputs );
 
         // Read back
         ConstMemoryStream readStream( Move( stream ) );
