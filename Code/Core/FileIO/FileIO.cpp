@@ -204,8 +204,14 @@ public:
     // then copyfile() and fcopyfile() will use the information from the state
     // object; if it is NULL, then both functions will work normally, but less
     // control will be available to the caller.
-    bool result = ( copyfile( srcFileName, dstFileName, nullptr, COPYFILE_DATA | COPYFILE_XATTR | COPYFILE_NOFOLLOW ) == 0 );
-    return result;
+    // Use COPYFILE_UNLINK to ensure copies of signed files receive new inodes
+    // to avoid issues with OSX caching code signatures as described in
+    // https://developer.apple.com/documentation/security/updating-mac-software
+    const copyfile_flags_t flags = COPYFILE_DATA |
+                                   COPYFILE_XATTR |
+                                   COPYFILE_NOFOLLOW |
+                                   COPYFILE_UNLINK;
+    return ( copyfile( srcFileName, dstFileName, nullptr, flags ) == 0 );
 #elif defined( __LINUX__ )
     if ( allowOverwrite == false )
     {
