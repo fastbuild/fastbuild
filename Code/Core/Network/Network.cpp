@@ -173,7 +173,7 @@
 
     // Create thread to perform resolution
     Thread thread;
-    thread.Start( NameResolutionThreadFunc, "NameResolution", &data, ( 32 * KILOBYTE ) );
+    thread.Start( NameResolutionThreadFunc, "NameResolution", &data );
 
     // wait for name resolution with timeout
     bool timedOut( false );

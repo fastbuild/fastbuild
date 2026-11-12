@@ -911,7 +911,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 
     // Spawn thread to handle socket
     Thread thread;
-    thread.Start( &ListenThreadWrapperFunction, "TCPListen", m_ListenConnection, ( 32 * KILOBYTE ) );
+    thread.Start( &ListenThreadWrapperFunction, "TCPListen", m_ListenConnection );
     thread.Detach(); // TODO: Remove use of this unsafe API
 }
 

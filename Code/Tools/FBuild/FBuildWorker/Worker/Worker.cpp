@@ -125,7 +125,7 @@ int32_t Worker::Work()
 
     // spawn work thread
     Thread workThread;
-    workThread.Start( &WorkThreadWrapper, "WorkerThread", this, ( 256 * KILOBYTE ) );
+    workThread.Start( &WorkThreadWrapper, "WorkerThread", this );
 
     // Run the UI message loop if we're not in console mode
     if ( m_MainWindow )
