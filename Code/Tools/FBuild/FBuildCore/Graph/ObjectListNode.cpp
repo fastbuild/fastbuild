@@ -55,6 +55,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node )
     REFLECT( m_CacheKeyInputFiles, MetaFile() )
     REFLECT( m_CacheKeyCompilerOptions )
     REFLECT( m_ExtraInputFiles, MetaFile() )
+    REFLECT( m_UseVFSOverlayForExtraInputs )
     REFLECT( m_Hidden )
     // Precompiled Headers
     REFLECT( m_PCHInputFile, MetaFile() )

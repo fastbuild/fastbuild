@@ -61,6 +61,7 @@ public:
     const Array<AString> & GetCacheKeyInputFiles() const { return m_CacheKeyInputFiles; }
     const AString & GetCacheKeyCompilerOptions() const { return m_CacheKeyCompilerOptions; }
     const Array<AString> & GetExtraInputFiles() const { return m_ExtraInputFiles; }
+    bool GetUseVFSOverlayForExtraInputs() const { return m_UseVFSOverlayForExtraInputs; }
     const ToolManifest & GetExtraInputManifest() const { return m_ExtraInputManifest; }
 
     bool BuildExtraInputManifest();
@@ -125,6 +126,7 @@ protected:
     bool m_DeoptimizeWritableFilesWithToken = false;
     bool m_AllowDistribution = true;
     bool m_AllowCaching = true;
+    bool m_UseVFSOverlayForExtraInputs = false;
     uint8_t m_ConcurrencyGroupIndex = 0; // Internal; placed here to use padding
     AString m_PCHInputFile;
     AString m_PCHOutputFile;

@@ -214,6 +214,7 @@ Node * DTLTOGraphBuilder::CreateObjectListForJob( const DTLTOData & data,
     VERIFY( ri->SetProperty( result, "CacheKeyInputFiles", cacheKeyInputFiles ) );
     VERIFY( ri->SetProperty( result, "CacheKeyCompilerOptions", cacheKeyCompilerOptions ) );
     VERIFY( ri->SetProperty( result, "ExtraInputFiles", extraInputFiles ) );
+    VERIFY( ri->SetProperty( result, "UseVFSOverlayForExtraInputs", true ) );
 
     if ( !result->Initialize( m_NodeGraph, nullptr, Function::Find( AStackString( "ObjectList" ) ) ) )
     {

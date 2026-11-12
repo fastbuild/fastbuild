@@ -31,6 +31,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 #include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
@@ -586,15 +587,20 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     Args fullArgs;
     AStackString tmpDirectoryName;
     AStackString tmpFileName;
+    AStackString vfsOverlayFileName;
     const bool useExtraInputs = ( job->IsLocal() == false ) && ( m_ExtraInputManifestId != 0 );
     if ( usePreProcessedOutput )
     {
         // write the source file next to the extra inputs
         if ( useExtraInputs )
         {
-            if ( WriteSourceFileToExtraInputs( job, tmpDirectoryName, tmpFileName ) == false )
+            if ( WriteSourceFileToExtraInputsDir( job, tmpDirectoryName, tmpFileName ) == false )
             {
-                return BuildResult::eFailed; // WriteSourceFileToExtraInputs will have emitted an error
+                return BuildResult::eFailed; // WriteSourceFileToExtraInputsDir will have emitted an error
+            }
+            if ( m_UseVFSOverlayForExtraInputs && ( WriteVFSOverlayForExtraInputs( job, vfsOverlayFileName ) == false ) )
+            {
+                return BuildResult::eFailed; // WriteVFSOverlayForExtraInputs will have emitted an error
             }
         }
         else if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
@@ -605,7 +611,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool showIncludes( false );
         const bool useSourceMapping( true );
         const bool finalize( true );
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName, vfsOverlayFileName ) )
         {
             return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
@@ -903,6 +909,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     uint32_t flags;
     AString compilerArgs;
     uint64_t extraInputManifestId = 0;
+    bool useVFSOverlayForExtraInputs = false;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -911,14 +918,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         return nullptr;
     }
     if ( ( flags & CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES ) &&
-         ( stream.Read( extraInputManifestId ) == false ) )
+         ( ( stream.Read( extraInputManifestId ) == false ) ||
+           ( stream.Read( useVFSOverlayForExtraInputs ) == false ) ) )
     {
         return nullptr;
     }
 
     NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags, extraInputManifestId ) );
+    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags, extraInputManifestId, useVFSOverlayForExtraInputs ) );
 }
 
 // DetermineFlags
@@ -1294,6 +1302,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     if ( flags & CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES )
     {
         stream.Write( GetExtraInputManifest()->GetToolId() );
+        stream.Write( m_OwnerObjectList->GetUseVFSOverlayForExtraInputs() );
     }
 }
 
@@ -1878,7 +1887,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 
 // BuildArgs
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile ) const
+bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile, const AString & vfsOverlayFile ) const
 {
     PROFILE_FUNCTION;
 
@@ -1960,6 +1969,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     if ( showIncludes )
     {
         fullArgs += " /showIncludes"; // we'll extract dependency information from this
+    }
+
+    if ( vfsOverlayFile.IsEmpty() == false )
+    {
+        fullArgs += " -vfsoverlay \"";
+        fullArgs += vfsOverlayFile;
+        fullArgs += '"';
     }
 
     // Skip finalization?
@@ -2364,9 +2380,9 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     return true;
 }
 
-// WriteSourceFileToExtraInputs
+// WriteSourceFileToExtraInputsDir
 //------------------------------------------------------------------------------
-bool ObjectNode::WriteSourceFileToExtraInputs( Job * job, AString & inputsDirectory, AString & sourceFileName ) const
+bool ObjectNode::WriteSourceFileToExtraInputsDir( Job * job, AString & workingDirectory, AString & sourceFileName ) const
 {
     ASSERT( job->GetData() && job->GetDataSize() );
     ASSERT( job->IsLocal() == false ); // the source file is written only on the worker
@@ -2389,49 +2405,101 @@ bool ObjectNode::WriteSourceFileToExtraInputs( Job * job, AString & inputsDirect
         dataToWriteSize = c.GetResultSize();
     }
 
-    // Get the directory of the extra inputs
+    // Create the working directory in the extra inputs
     const ToolManifest * extraInputManifest = job->GetExtraInputManifest();
     ASSERT( extraInputManifest );
-    extraInputManifest->GetRemotePath( inputsDirectory );
-
-    // Get the relative path of the source file to the extra inputs directory
-    AStackString sourceFileRelativePath;
-    PathUtils::GetRelativePath( job->GetRemoteSourceRoot(), GetSourceFile()->GetName(), sourceFileRelativePath );
-    sourceFileName = inputsDirectory;
-    sourceFileName += sourceFileRelativePath;
-    if ( FileIO::EnsurePathExistsForFile( sourceFileName ) == false )
+    extraInputManifest->GetRemoteFilePath( extraInputManifest->GetMainExecutableRootPath(), workingDirectory );
+    if ( FileIO::EnsurePathExists( workingDirectory ) == false )
     {
-        job->Error( "Failed to create directory for input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, sourceFileName.Get(), GetName().Get() );
+        job->Error( "Failed to create working directory. Error: %s Dir: '%s' Target: '%s'", LAST_ERROR_STR, workingDirectory.Get(), GetName().Get() );
         job->OnSystemError();
         return false;
     }
 
-    FileIO::FileInfo info;
-    const bool alreadyPresent = FileIO::GetFileInfo( sourceFileName, info ) &&
-                                ( info.m_Size == dataToWriteSize );
-    if ( alreadyPresent == false ) // do not rewrite the file if another job has already put it there
+    // Write the source file to the working directory
+    extraInputManifest->GetRemoteFilePath( GetSourceFile()->GetName(), sourceFileName );
+    if ( WriteExtraInputFile( job, sourceFileName, dataToWrite, dataToWriteSize ) == false )
     {
-        // Another job can be writing this file right now, so wait for it
-        const uint32_t extendedRetryTimeMS = 15'000;
-
-        FileStream sourceFile;
-        if ( sourceFile.Open( sourceFileName.Get(), FileStream::WRITE_ONLY, extendedRetryTimeMS ) == false )
-        {
-            job->Error( "Failed to create input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, sourceFileName.Get(), GetName().Get() );
-            job->OnSystemError();
-            return false;
-        }
-        if ( sourceFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
-        {
-            job->Error( "Failed to write to input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, sourceFileName.Get(), GetName().Get() );
-            job->OnSystemError();
-            return false;
-        }
-        sourceFile.Close();
+        return false; // WriteExtraInputFile will have emitted an error
     }
 
     job->OwnData( nullptr, 0, false ); // free the buffer
 
+    return true;
+}
+
+// AddClientRoot
+//------------------------------------------------------------------------------
+static void AddClientRoot( const AString & path, Array<AString> & roots )
+{
+    AStackString root;
+    AStackString mirroredPath;
+    if ( ToolManifest::GetMirroredPath( path, root, mirroredPath ) == false )
+    {
+        return;
+    }
+    for ( const AString & existingRoot : roots )
+    {
+        if ( existingRoot.EqualsI( root ) )
+        {
+            return;
+        }
+    }
+    roots.EmplaceBack( root );
+}
+
+// WriteVFSOverlayForExtraInputs
+//------------------------------------------------------------------------------
+bool ObjectNode::WriteVFSOverlayForExtraInputs( Job * job, AString & overlayFileName ) const
+{
+    const ToolManifest * extraInputManifest = job->GetExtraInputManifest();
+    ASSERT( extraInputManifest );
+
+    // Every client root (drive) used by the job is remapped to its mirror in the extra inputs
+    Array<AString> roots;
+    AddClientRoot( extraInputManifest->GetMainExecutableRootPath(), roots );
+    AddClientRoot( GetSourceFile()->GetName(), roots );
+    for ( const ToolManifestFile & file : extraInputManifest->GetFiles() )
+    {
+        AddClientRoot( file.GetName(), roots );
+    }
+
+    AStackString<4096> json( "{\n  \"version\": 0,\n  \"use-external-names\": false,\n  \"roots\": [\n" );
+    for ( const AString & root : roots )
+    {
+        if ( &root != roots.Begin() )
+        {
+            json += ",\n";
+        }
+
+        AStackString remoteRoot;
+        extraInputManifest->GetRemoteFilePath( root, remoteRoot );
+        remoteRoot.TrimEnd( NATIVE_SLASH );
+
+        json += "    { \"type\": \"directory-remap\", \"name\": \"";
+        JSON::AppendEscaped( root.Get(), json );
+        json += "\", \"external-contents\": \"";
+        JSON::AppendEscaped( remoteRoot.Get(), json );
+        json += "\" }";
+    }
+    json += "\n  ]\n}\n";
+
+    // The overlay is shared by all jobs with the same roots
+    extraInputManifest->GetRemotePath( overlayFileName );
+    overlayFileName.AppendFormat( "vfs.%016" PRIx64 ".json", xxHash3::Calc64( json ) );
+    return WriteExtraInputFile( job, overlayFileName, json.Get(), json.GetLength() );
+}
+
+// WriteExtraInputFile
+//------------------------------------------------------------------------------
+bool ObjectNode::WriteExtraInputFile( Job * job, const AString & fileName, const void * data, size_t dataSize ) const
+{
+    if ( ToolManifest::WriteSharedFile( fileName, data, dataSize ) == false )
+    {
+        job->Error( "Failed to write input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, fileName.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
+    }
     return true;
 }
 
@@ -3217,7 +3285,8 @@ ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
                                     NodeProxy * srcFile,
                                     AString && compilerOptions,
                                     uint32_t flags,
-                                    uint64_t extraInputManifestId )
+                                    uint64_t extraInputManifestId,
+                                    bool useVFSOverlayForExtraInputs )
     : ObjectNode()
     , m_CompilerOptions( Move( compilerOptions ) )
 {
@@ -3225,6 +3294,7 @@ ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
     m_CompilerFlags.m_Flags = flags;
 
     m_ExtraInputManifestId = extraInputManifestId;
+    m_UseVFSOverlayForExtraInputs = useVFSOverlayForExtraInputs;
     m_StaticDependencies.SetCapacity( 2 );
     m_StaticDependencies.Add( nullptr );
     m_StaticDependencies.Add( srcFile );

@@ -237,13 +237,15 @@ protected:
         PASS_COMPILE,
         PASS_PREP_FOR_SIMPLE_DISTRIBUTION,
     };
-    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
+    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty(), const AString & vfsOverlayFile = AString::GetEmpty() ) const;
 
     BuildResult BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
-    bool WriteSourceFileToExtraInputs( Job * job, AString & inputsDirectory, AString & sourceFileName ) const;
+    bool WriteSourceFileToExtraInputsDir( Job * job, AString & workingDirectory, AString & sourceFileName ) const;
+    bool WriteVFSOverlayForExtraInputs( Job * job, AString & overlayFileName ) const;
+    bool WriteExtraInputFile( Job * job, const AString & fileName, const void * data, size_t dataSize ) const;
     BuildResult BuildFinalOutput( Job * job, const Args & fullArgs, const AString & remoteWorkingDir = AString::GetEmpty() ) const;
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
@@ -316,6 +318,7 @@ protected:
     // Not serialized
     Array<AString> m_Includes;
     uint64_t m_ExtraInputManifestId = 0;
+    bool m_UseVFSOverlayForExtraInputs = false;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests
@@ -331,7 +334,8 @@ public:
                       NodeProxy * srcFile,
                       AString && compilerOptions,
                       uint32_t flags,
-                      uint64_t extraInputManifestId );
+                      uint64_t extraInputManifestId,
+                      bool useVFSOverlayForExtraInputs );
     virtual ~ObjectNodeRemote() override;
 
 protected:
