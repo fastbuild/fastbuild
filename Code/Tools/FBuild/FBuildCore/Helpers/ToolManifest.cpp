@@ -72,6 +72,7 @@ ToolManifest::ToolManifest()
     : m_ToolId( 0 )
     , m_TimeStamp( 0 )
     , m_Synchronized( false )
+    , m_HoldsExtraInputs( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
 {
@@ -79,10 +80,11 @@ ToolManifest::ToolManifest()
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-ToolManifest::ToolManifest( uint64_t toolId )
+ToolManifest::ToolManifest( uint64_t toolId, bool holdsExtraInputs )
     : m_ToolId( toolId )
     , m_TimeStamp( 0 )
     , m_Synchronized( false )
+    , m_HoldsExtraInputs( holdsExtraInputs )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
 {
@@ -120,19 +122,19 @@ bool ToolManifestFile::DoBuild( bool skipHashing )
 
     if ( skipHashing )
     {
-        // Get the file's timestamp (a fast 'stat' call)
-        const uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_Name );
-
-        // File missing?
-        if ( lastWriteTime == 0 )
+        // Get the file's timestamp and size (a fast 'stat' call)
+        FileIO::FileInfo info;
+        if ( FileIO::GetFileInfo( m_Name, info ) == false )
         {
-            FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. File not found.\n", m_Name.Get() );
+            FLOG_ERROR( "Error: opening file '%s' in ToolManifest. File not found.\n", m_Name.Get() );
             return false;
         }
 
-        // We hash the NAME instead of the CONTENT.
-        m_Hash = xxHash3::Calc32( m_Name );
-        m_TimeStamp = lastWriteTime;
+        // The timestamp and size stand in for the content, which we don't want to read
+        const uint64_t identity[] = { xxHash3::Calc64( m_Name ), info.m_LastWriteTime, info.m_Size };
+        m_Hash = xxHash3::Calc32( identity, sizeof( identity ) );
+        m_TimeStamp = info.m_LastWriteTime;
+        m_UncompressedContentSize = (uint32_t)info.m_Size;
         return true; // We're done, skip the expensive file I/O below
     }
     // Do we already have a hash?
@@ -181,7 +183,7 @@ void ToolManifestFile::Migrate( const ToolManifestFile & oldFile )
     m_Hash = oldFile.m_Hash;
 }
 
-// Generate
+// Initialize
 //------------------------------------------------------------------------------
 void ToolManifest::Initialize( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
 {
@@ -197,13 +199,36 @@ void ToolManifest::Initialize( const AString & mainExecutableRoot, const Depende
     }
 }
 
-// Generate
+// Initialize
+//------------------------------------------------------------------------------
+void ToolManifest::Initialize( const AString & sourceRoot, const Array<AString> & extraInputFiles )
+{
+    m_MainExecutableRootPath = sourceRoot;
+    m_HoldsExtraInputs = true;
+
+    ASSERT( m_Files.IsEmpty() );
+    m_Files.SetCapacity( extraInputFiles.GetSize() );
+
+    for ( const AString & file : extraInputFiles )
+    {
+        m_Files.EmplaceBack( file, (uint64_t)0, (uint32_t)0, (uint32_t)0 );
+    }
+}
+
+// DoBuild
 //------------------------------------------------------------------------------
 bool ToolManifest::DoBuild( const Dependencies & dependencies, bool skipHashing )
 {
     ASSERT( m_Files.GetSize() == dependencies.GetSize() );
     (void)dependencies;
 
+    return DoBuild( skipHashing );
+}
+
+// DoBuild
+//------------------------------------------------------------------------------
+bool ToolManifest::DoBuild( bool skipHashing )
+{
     m_TimeStamp = 0;
 
     // Get timestamps and hashes
@@ -230,7 +255,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies, bool skipHashing 
 
         // file name & sub-path (relative to remote folder)
         AStackString relativePath;
-        GetRelativePath( m_MainExecutableRootPath, f.GetName(), relativePath );
+        GetFileSubPath( f.GetName(), relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
@@ -389,6 +414,14 @@ bool ToolManifest::DeserializeFromRemote( IOStream & ms )
         if ( f.GetFileSize() != m_Files[ i ].GetUncompressedContentSize() )
         {
             continue; // file is not complete
+        }
+        if ( m_HoldsExtraInputs )
+        {
+            // An input has no content hash, so the file size is all we have to check before this
+            // We do not lock the file either, so a later job can replace it
+            m_Files[ i ].SetSyncState( ToolManifestFile::SYNCHRONIZED );
+            numFilesAlreadySynchronized++;
+            continue; // file present and ok
         }
         UniquePtr<char, FreeDeletor> mem( (char *)ALLOC( (size_t)f.GetFileSize() ) );
         if ( f.Read( mem.Get(), (size_t)f.GetFileSize() ) != f.GetFileSize() )
@@ -592,6 +625,25 @@ const void * ToolManifestFile::GetFileData( size_t & outDataSize ) const
     return m_CompressedContent;
 }
 
+// ReleaseFileData
+//------------------------------------------------------------------------------
+const void * ToolManifest::ReleaseFileData( uint32_t fileId, size_t & dataSize ) const
+{
+    MutexHolder mh( m_Mutex );
+
+    return m_Files[ fileId ].ReleaseFileData( dataSize );
+}
+
+// ReleaseFileData (ToolManifestFile)
+//------------------------------------------------------------------------------
+const void * ToolManifestFile::ReleaseFileData( size_t & outDataSize ) const
+{
+    const void * data = GetFileData( outDataSize );
+    m_CompressedContent = nullptr;
+    m_CompressedContentSize = 0;
+    return data;
+}
+
 // ReceiveFileData
 //------------------------------------------------------------------------------
 bool ToolManifest::ReceiveFileData( uint32_t fileId,
@@ -638,39 +690,50 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     AStackString fileName;
     GetRemoteFilePath( fileId, fileName );
 
-    // prepare destination
-    AStackString pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
-    if ( !FileIO::EnsurePathExists( pathOnly ) )
+    if ( m_HoldsExtraInputs )
     {
-        return false; // FAILED
+        if ( WriteSharedFile( fileName, uncompressedData, uncompressedDataSize ) == false )
+        {
+            return false; // FAILED
+        }
     }
+    else
+    {
+        // prepare destination
+        AStackString pathOnly( fileName.Get(), fileName.FindLast( NATIVE_SLASH ) );
+        if ( !FileIO::EnsurePathExists( pathOnly ) )
+        {
+            return false; // FAILED
+        }
 
-    // write to disk
-    FileStream fs;
-    if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
-    {
-        return false; // FAILED
-    }
-    if ( fs.Write( uncompressedData, uncompressedDataSize ) != uncompressedDataSize )
-    {
-        return false; // FAILED
-    }
-    fs.Close();
+        // write to disk
+        FileStream fs;
+        if ( !fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
+        {
+            return false; // FAILED
+        }
+        if ( fs.Write( uncompressedData, uncompressedDataSize ) != uncompressedDataSize )
+        {
+            return false; // FAILED
+        }
+        fs.Close();
 
-    // mark executable
+        // mark executable
 #if defined( __LINUX__ ) || defined( __OSX__ )
-    FileIO::SetExecutable( fileName.Get() );
+        FileIO::SetExecutable( fileName.Get() );
 #endif
 
-    // open read-only
-    UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
-    if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
-    {
-        return false; // FAILED
+        // open read-only
+        UniquePtr<FileStream> fileStream( FNEW( FileStream ) );
+        if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
+        {
+            return false; // FAILED
+        }
+
+        f.SetFileLock( fileStream.ReleaseOwnership() ); // NOTE: Keep file open to prevent deletion
     }
 
     // This file is now synchronized
-    f.SetFileLock( fileStream.ReleaseOwnership() ); // NOTE: Keep file open to prevent deletion
     f.SetSyncState( ToolManifestFile::SYNCHRONIZED );
 
     // is completely synchronized?
@@ -686,6 +749,37 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId,
     // all files received
     m_Synchronized = true;
     return true; // file stored ok
+}
+
+// WriteSharedFile
+//------------------------------------------------------------------------------
+/*static*/ bool ToolManifest::WriteSharedFile( const AString & fileName, const void * data, size_t dataSize )
+{
+    if ( FileIO::EnsurePathExistsForFile( fileName ) == false )
+    {
+        return false;
+    }
+
+    // keep a copy another job has already stored
+    FileIO::FileInfo info;
+    if ( FileIO::GetFileInfo( fileName, info ) && ( info.m_Size == dataSize ) )
+    {
+        return true;
+    }
+
+    // another job can be writing this file right now
+    const uint32_t extendedRetryTimeMS = 15'000;
+    FileStream fs;
+    if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY, extendedRetryTimeMS ) == false )
+    {
+        return false;
+    }
+    if ( fs.Write( data, dataSize ) != dataSize )
+    {
+        return false;
+    }
+    fs.Close();
+    return true;
 }
 
 // GetRelativePath
@@ -727,14 +821,60 @@ void ToolManifest::TouchFiles() const
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) const
 {
+    GetRemoteFilePath( m_Files[ fileId ].GetName(), remotePath );
+}
+
+// GetRemoteFilePath
+//------------------------------------------------------------------------------
+void ToolManifest::GetRemoteFilePath( const AString & fileName, AString & remotePath ) const
+{
     // Get base directory
     GetRemotePath( remotePath );
     ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
 
     // Get relative path for file and append
     AStackString relativePath;
-    GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].GetName(), relativePath );
+    GetFileSubPath( fileName, relativePath );
     remotePath += relativePath;
+}
+
+// GetFileSubPath
+//------------------------------------------------------------------------------
+void ToolManifest::GetFileSubPath( const AString & fileName, AString & subPath ) const
+{
+    // Extra inputs may have no common root (for example files on different drives), so a
+    // mirrored absolute path is kept.
+    AStackString root;
+    if ( m_HoldsExtraInputs && GetMirroredPath( fileName, root, subPath ) )
+    {
+        return;
+    }
+    GetRelativePath( m_MainExecutableRootPath, fileName, subPath );
+}
+
+// GetMirroredPath
+//------------------------------------------------------------------------------
+/*static*/ bool ToolManifest::GetMirroredPath( const AString & path, AString & root, AString & mirroredPath )
+{
+#if defined( __WINDOWS__ )
+    // "C:\Dir\File" -> "C:\", "C\Dir\File"
+    if ( ( path.GetLength() < 3 ) || ( path[ 1 ] != ':' ) || ( path[ 2 ] != NATIVE_SLASH ) )
+    {
+        return false; // UNC paths are not mirrored
+    }
+    root.Assign( path.Get(), path.Get() + 3 );
+    mirroredPath.Assign( path.Get(), path.Get() + 1 );
+    mirroredPath += ( path.Get() + 2 );
+#else
+    // "/dir/file" -> "/", "dir/file"
+    if ( fileName.BeginsWith( NATIVE_SLASH ) == false )
+    {
+        return false;
+    }
+    root = NATIVE_SLASH_STR;
+    mirroredPath = ( fileName.Get() + 1 );
+#endif
+    return true;
 }
 
 // GetRemotePath
@@ -742,11 +882,17 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
 void ToolManifest::GetRemotePath( AString & path ) const
 {
     VERIFY( FBuild::GetTempDir( path ) );
+
+    // Extra inputs are keyed on the source root so that files common to several jobs
+    // are synchronized once into a shared directory
+    const char * name = m_HoldsExtraInputs ? "inputs" : "toolchain";
+    const uint64_t id = m_HoldsExtraInputs ? xxHash3::Calc64( m_MainExecutableRootPath ) : m_ToolId;
+
     AStackString subDir;
 #if defined( __WINDOWS__ )
-    subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
+    subDir.Format( ".fbuild.tmp\\worker\\%s.%016" PRIx64 "\\", name, id );
 #else
-    subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
+    subDir.Format( "_fbuild.tmp/worker/%s.%016" PRIx64 "/", name, id );
 #endif
     path += subDir;
 }
@@ -759,14 +905,14 @@ bool ToolManifestFile::LoadFile( void *& uncompressedContent, uint32_t & uncompr
     FileStream fs;
     if ( fs.Open( m_Name.Get(), FileStream::READ_ONLY ) == false )
     {
-        FLOG_ERROR( "Error: opening file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
+        FLOG_ERROR( "Error: opening file '%s' in ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
         return false;
     }
     uncompressedContentSize = (uint32_t)fs.GetFileSize();
     UniquePtr<void, FreeDeletor> mem( ALLOC( uncompressedContentSize ) );
     if ( fs.Read( mem.Get(), uncompressedContentSize ) != uncompressedContentSize )
     {
-        FLOG_ERROR( "Error: reading file '%s' in Compiler ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
+        FLOG_ERROR( "Error: reading file '%s' in ToolManifest. Error: %s\n", m_Name.Get(), LAST_ERROR_STR );
         return false;
     }
 

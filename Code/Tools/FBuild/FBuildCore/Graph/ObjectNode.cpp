@@ -31,6 +31,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/BuildProfiler.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JSON.h"
 #include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
@@ -477,6 +478,15 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
     if ( canDistribute && belowMemoryLimit )
     {
+        // extra input files are synchronized to the worker via a manifest
+        if ( HasExtraInputFiles() )
+        {
+            if ( m_OwnerObjectList->BuildExtraInputManifest() == false )
+            {
+                return BuildResult::eFailed; // BuildExtraInputManifest will have emitted an error
+            }
+        }
+
         // compress job data
         Compressor c;
         c.Compress( job->GetData(), job->GetDataSize(), FBuild::Get().GetOptions().m_DistributionCompressionLevel );
@@ -577,9 +587,23 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     Args fullArgs;
     AStackString tmpDirectoryName;
     AStackString tmpFileName;
+    AStackString vfsOverlayFileName;
+    const bool useExtraInputs = ( job->IsLocal() == false ) && ( m_ExtraInputManifestId != 0 );
     if ( usePreProcessedOutput )
     {
-        if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
+        // write the source file next to the extra inputs
+        if ( useExtraInputs )
+        {
+            if ( WriteSourceFileToExtraInputsDir( job, tmpDirectoryName, tmpFileName ) == false )
+            {
+                return BuildResult::eFailed; // WriteSourceFileToExtraInputsDir will have emitted an error
+            }
+            if ( m_UseVFSOverlayForExtraInputs && ( WriteVFSOverlayForExtraInputs( job, vfsOverlayFileName ) == false ) )
+            {
+                return BuildResult::eFailed; // WriteVFSOverlayForExtraInputs will have emitted an error
+            }
+        }
+        else if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
         {
             return BuildResult::eFailed; // WriteTmpFile will have emitted an error
         }
@@ -587,7 +611,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool showIncludes( false );
         const bool useSourceMapping( true );
         const bool finalize( true );
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, useSourceMapping, finalize, tmpFileName, vfsOverlayFileName ) )
         {
             return BuildResult::eFailed; // BuildArgs will have emitted an error
         }
@@ -627,18 +651,21 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     }
 #endif
 
-    const BuildResult result = BuildFinalOutput( job, fullArgs );
+    const BuildResult result = BuildFinalOutput( job, fullArgs, useExtraInputs ? tmpDirectoryName : AString::GetEmpty() );
 
-    // cleanup temp file
-    if ( tmpFileName.IsEmpty() == false )
+    if ( useExtraInputs == false ) // the directory of extra inputs is shared with other jobs, no cleanup
     {
-        FileIO::FileDelete( tmpFileName.Get() );
-    }
+        // cleanup temp file
+        if ( tmpFileName.IsEmpty() == false )
+        {
+            FileIO::FileDelete( tmpFileName.Get() );
+        }
 
-    // cleanup temp directory
-    if ( tmpDirectoryName.IsEmpty() == false )
-    {
-        FileIO::DirectoryDelete( tmpDirectoryName );
+        // cleanup temp directory
+        if ( tmpDirectoryName.IsEmpty() == false )
+        {
+            FileIO::DirectoryDelete( tmpDirectoryName );
+        }
     }
 
     if ( result != BuildResult::eOk )
@@ -881,6 +908,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     AString sourceFile;
     uint32_t flags = 0;
     AString compilerArgs;
+    uint64_t extraInputManifestId = 0;
+    bool useVFSOverlayForExtraInputs = false;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
@@ -888,10 +917,16 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         return nullptr;
     }
+    if ( ( flags & CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES ) &&
+         ( ( stream.Read( extraInputManifestId ) == false ) ||
+           ( stream.Read( useVFSOverlayForExtraInputs ) == false ) ) )
+    {
+        return nullptr;
+    }
 
     NodeProxy * srcFile = FNEW( NodeProxy( Move( sourceFile ) ) );
 
-    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags ) );
+    return FNEW( ObjectNodeRemote( Move( name ), srcFile, Move( compilerArgs ), flags, extraInputManifestId, useVFSOverlayForExtraInputs ) );
 }
 
 // DetermineFlags
@@ -1157,6 +1192,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
     }
 
+    // Simple distribution mode can be cached (used by DTLTO)
+    if ( compilerNode->SimpleDistributionMode() && isCacheableCompiler )
+    {
+        flags.Set( CompilerFlags::FLAG_CAN_BE_CACHED );
+    }
+
     return flags;
 }
 
@@ -1216,7 +1257,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // Save minimal information for the remote worker
     stream.Write( m_Name );
     stream.Write( GetSourceFile()->GetName() );
-    stream.Write( m_CompilerFlags.m_Flags );
+
+    uint32_t flags = m_CompilerFlags.m_Flags;
+    if ( HasExtraInputFiles() )
+    {
+        flags |= CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES;
+    }
+    stream.Write( flags );
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
@@ -1251,6 +1298,12 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     driver->AddAdditionalArgs_PreparePreprocessedForRemote( fullArgs );
 
     stream.Write( fullArgs.GetRawArgs() );
+
+    if ( flags & CompilerFlags::FLAG_HAS_EXTRA_INPUT_FILES )
+    {
+        stream.Write( GetExtraInputManifest()->GetToolId() );
+        stream.Write( m_OwnerObjectList->GetUseVFSOverlayForExtraInputs() );
+    }
 }
 
 // GetCompiler
@@ -1355,9 +1408,15 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
-    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey
-                                                           : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
-    ASSERT( preprocessedSourceKey );
+    uint64_t sourceKey = m_LightCacheKey ? m_LightCacheKey
+                                         : xxHash3::Calc64Big( job->GetData(), job->GetDataSize() );
+    ASSERT( sourceKey );
+
+    // DTLTO cache key inputs
+    if ( GetCacheKeyInputFilesHash( sourceKey, sourceKey ) == false )
+    {
+        return job->GetCacheName();
+    }
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
@@ -1377,16 +1436,58 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     }
 
     AStackString cacheName;
-    ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
+    ICache::GetCacheId( sourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName( cacheName );
 
     return job->GetCacheName();
+}
+
+// GetCacheKeyInputFilesHash
+//------------------------------------------------------------------------------
+bool ObjectNode::GetCacheKeyInputFilesHash( uint64_t primaryInputHash, uint64_t & outHash ) const
+{
+    if ( ( m_OwnerObjectList == nullptr ) || m_OwnerObjectList->GetCacheKeyInputFiles().IsEmpty() )
+    {
+        outHash = primaryInputHash;
+        return true;
+    }
+
+    xxHash3Accumulator accumulator;
+    accumulator.AddData( &primaryInputHash, sizeof( primaryInputHash ) );
+
+    // Hash contents of each additional input
+    for ( const AString & inputFile : m_OwnerObjectList->GetCacheKeyInputFiles() )
+    {
+        FileStream fs;
+        if ( fs.Open( inputFile.Get(), FileStream::READ_ONLY ) == false )
+        {
+            FLOG_ERROR( "Error: opening file '%s' for cache key\n", inputFile.Get() );
+            return false;
+        }
+        const uint64_t contentSize = fs.GetFileSize();
+        UniquePtr<void, FreeDeletor> mem( ALLOC( contentSize ) );
+        if ( fs.Read( mem.Get(), contentSize ) != contentSize )
+        {
+            FLOG_ERROR( "Error: reading file '%s' for cache key\n", inputFile.Get() );
+            return false;
+        }
+        accumulator.AddData( &contentSize, sizeof( contentSize ) );
+        accumulator.AddDataBig( mem.Get(), contentSize );
+    }
+    outHash = accumulator.Finalize64();
+    return true;
 }
 
 // GetCommandLineKey
 //------------------------------------------------------------------------------
 uint32_t ObjectNode::GetCommandLineKey( Job * job ) const
 {
+    // DTLTO args embed the linker pid, so a stable substitute is used
+    if ( ( m_OwnerObjectList != nullptr ) && ( m_OwnerObjectList->GetCacheKeyCompilerOptions().IsEmpty() == false ) )
+    {
+        return xxHash::Calc32( m_OwnerObjectList->GetCacheKeyCompilerOptions() );
+    }
+
     Args args;
     const bool useDeoptimization = false;
     const bool showIncludes = false;
@@ -1786,7 +1887,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 
 // BuildArgs
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile ) const
+bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile, const AString & vfsOverlayFile ) const
 {
     PROFILE_FUNCTION;
 
@@ -1868,6 +1969,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     if ( showIncludes )
     {
         fullArgs += " /showIncludes"; // we'll extract dependency information from this
+    }
+
+    if ( vfsOverlayFile.IsEmpty() == false )
+    {
+        fullArgs += " -vfsoverlay \"";
+        fullArgs += vfsOverlayFile;
+        fullArgs += '"';
     }
 
     // Skip finalization?
@@ -1984,6 +2092,21 @@ bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job
     job->OwnData( mem.ReleaseOwnership(), contentSize );
 
     return true;
+}
+
+// HasExtraInputFiles
+//------------------------------------------------------------------------------
+bool ObjectNode::HasExtraInputFiles() const
+{
+    return ( m_OwnerObjectList != nullptr ) &&
+           ( m_OwnerObjectList->GetExtraInputFiles().IsEmpty() == false );
+}
+
+// GetExtraInputManifest
+//------------------------------------------------------------------------------
+const ToolManifest * ObjectNode::GetExtraInputManifest() const
+{
+    return HasExtraInputFiles() ? &m_OwnerObjectList->GetExtraInputManifest() : nullptr;
 }
 
 // TransferPreprocessedData
@@ -2257,9 +2380,132 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     return true;
 }
 
+// WriteSourceFileToExtraInputsDir
+//------------------------------------------------------------------------------
+bool ObjectNode::WriteSourceFileToExtraInputsDir( Job * job, AString & workingDirectory, AString & sourceFileName ) const
+{
+    ASSERT( job->GetData() && job->GetDataSize() );
+    ASSERT( job->IsLocal() == false ); // the source file is written only on the worker
+
+    void const * dataToWrite = job->GetData();
+    size_t dataToWriteSize = job->GetDataSize();
+
+    // Handle compressed data
+    Compressor c;
+    if ( job->IsDataCompressed() )
+    {
+        if ( c.Decompress( dataToWrite ) == false )
+        {
+            // Decompression failure would indicate a bug
+            job->Error( "Decompression failed. Target: '%s'", GetName().Get() );
+            job->OnSystemError();
+            return false;
+        }
+        dataToWrite = c.GetResult();
+        dataToWriteSize = c.GetResultSize();
+    }
+
+    // Create the working directory in the extra inputs
+    const ToolManifest * extraInputManifest = job->GetExtraInputManifest();
+    ASSERT( extraInputManifest );
+    extraInputManifest->GetRemoteFilePath( extraInputManifest->GetMainExecutableRootPath(), workingDirectory );
+    if ( FileIO::EnsurePathExists( workingDirectory ) == false )
+    {
+        job->Error( "Failed to create working directory. Error: %s Dir: '%s' Target: '%s'", LAST_ERROR_STR, workingDirectory.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
+    }
+
+    // Write the source file to the working directory
+    extraInputManifest->GetRemoteFilePath( GetSourceFile()->GetName(), sourceFileName );
+    if ( WriteExtraInputFile( job, sourceFileName, dataToWrite, dataToWriteSize ) == false )
+    {
+        return false; // WriteExtraInputFile will have emitted an error
+    }
+
+    job->OwnData( nullptr, 0, false ); // free the buffer
+
+    return true;
+}
+
+// AddClientRoot
+//------------------------------------------------------------------------------
+static void AddClientRoot( const AString & path, Array<AString> & roots )
+{
+    AStackString root;
+    AStackString mirroredPath;
+    if ( ToolManifest::GetMirroredPath( path, root, mirroredPath ) == false )
+    {
+        return;
+    }
+    for ( const AString & existingRoot : roots )
+    {
+        if ( existingRoot.EqualsI( root ) )
+        {
+            return;
+        }
+    }
+    roots.EmplaceBack( root );
+}
+
+// WriteVFSOverlayForExtraInputs
+//------------------------------------------------------------------------------
+bool ObjectNode::WriteVFSOverlayForExtraInputs( Job * job, AString & overlayFileName ) const
+{
+    const ToolManifest * extraInputManifest = job->GetExtraInputManifest();
+    ASSERT( extraInputManifest );
+
+    // Every client root (drive) used by the job is remapped to its mirror in the extra inputs
+    Array<AString> roots;
+    AddClientRoot( extraInputManifest->GetMainExecutableRootPath(), roots );
+    AddClientRoot( GetSourceFile()->GetName(), roots );
+    for ( const ToolManifestFile & file : extraInputManifest->GetFiles() )
+    {
+        AddClientRoot( file.GetName(), roots );
+    }
+
+    AStackString<4096> json( "{\n  \"version\": 0,\n  \"use-external-names\": false,\n  \"roots\": [\n" );
+    for ( const AString & root : roots )
+    {
+        if ( &root != roots.Begin() )
+        {
+            json += ",\n";
+        }
+
+        AStackString remoteRoot;
+        extraInputManifest->GetRemoteFilePath( root, remoteRoot );
+        remoteRoot.TrimEnd( NATIVE_SLASH );
+
+        json += "    { \"type\": \"directory-remap\", \"name\": \"";
+        JSON::AppendEscaped( root.Get(), json );
+        json += "\", \"external-contents\": \"";
+        JSON::AppendEscaped( remoteRoot.Get(), json );
+        json += "\" }";
+    }
+    json += "\n  ]\n}\n";
+
+    // The overlay is shared by all jobs with the same roots
+    extraInputManifest->GetRemotePath( overlayFileName );
+    overlayFileName.AppendFormat( "vfs.%016" PRIx64 ".json", xxHash3::Calc64( json ) );
+    return WriteExtraInputFile( job, overlayFileName, json.Get(), json.GetLength() );
+}
+
+// WriteExtraInputFile
+//------------------------------------------------------------------------------
+bool ObjectNode::WriteExtraInputFile( Job * job, const AString & fileName, const void * data, size_t dataSize ) const
+{
+    if ( ToolManifest::WriteSharedFile( fileName, data, dataSize ) == false )
+    {
+        job->Error( "Failed to write input file. Error: %s File: '%s' Target: '%s'", LAST_ERROR_STR, fileName.Get(), GetName().Get() );
+        job->OnSystemError();
+        return false;
+    }
+    return true;
+}
+
 // BuildFinalOutput
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
+Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AString & remoteWorkingDir ) const
 {
     // Use the remotely synchronized compiler if building remotely
     AStackString compiler;
@@ -2272,7 +2518,14 @@ Node::BuildResult ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs
     {
         ASSERT( job->GetToolManifest() );
         job->GetToolManifest()->GetRemoteFilePath( 0, compiler );
-        job->GetToolManifest()->GetRemotePath( workingDir );
+        if ( remoteWorkingDir.IsEmpty() == false )
+        {
+            workingDir = remoteWorkingDir;
+        }
+        else
+        {
+            job->GetToolManifest()->GetRemotePath( workingDir );
+        }
     }
 
     // spawn the process
@@ -3031,13 +3284,17 @@ void ObjectNode::CreateDriver( ObjectNode::CompilerFlags flags,
 ObjectNodeRemote::ObjectNodeRemote( AString && objectName,
                                     NodeProxy * srcFile,
                                     AString && compilerOptions,
-                                    uint32_t flags )
+                                    uint32_t flags,
+                                    uint64_t extraInputManifestId,
+                                    bool useVFSOverlayForExtraInputs )
     : ObjectNode()
     , m_CompilerOptions( Move( compilerOptions ) )
 {
     SetName( Move( objectName ) );
     m_CompilerFlags.m_Flags = flags;
 
+    m_ExtraInputManifestId = extraInputManifestId;
+    m_UseVFSOverlayForExtraInputs = useVFSOverlayForExtraInputs;
     m_StaticDependencies.SetCapacity( 2 );
     m_StaticDependencies.Add( nullptr );
     m_StaticDependencies.Add( srcFile );

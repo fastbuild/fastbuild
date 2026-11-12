@@ -24,6 +24,7 @@ class NodeGraph;
 class NodeProxy;
 class ObjectListNode;
 class ObjectNode;
+class ToolManifest;
 enum class ArgsResponseFileMode : uint32_t;
 
 // Defines
@@ -107,6 +108,7 @@ public:
             FLAG_DYNAMIC_DEOPT = 0x8000000,
             FLAG_NOSTDINC = 0x10000000,
             FLAG_NOSTDINCPP = 0x20000000,
+            FLAG_HAS_EXTRA_INPUT_FILES = 0x40000000,
         };
 
         void Set( Flag flag ) { m_Flags |= flag; }
@@ -148,6 +150,9 @@ public:
     bool IsWarningsAsErrorsClangGCC() const { return m_CompilerFlags.IsWarningsAsErrorsClangGCC(); }
     bool IsUsingGcovCoverage() const { return m_CompilerFlags.IsUsingGcovCoverage(); }
     bool IsUsingDynamicDeopt() const { return m_CompilerFlags.IsUsingDynamicDeopt(); }
+    bool HasExtraInputFiles() const;
+    const ToolManifest * GetExtraInputManifest() const;
+    uint64_t GetExtraInputManifestId() const { return m_ExtraInputManifestId; }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
@@ -210,6 +215,7 @@ protected:
     bool ProcessIncludesWithPreProcessor( Job * job );
 
     const AString & GetCacheName( Job * job ) const;
+    bool GetCacheKeyInputFilesHash( uint64_t primaryInputHash, uint64_t & outHash ) const;
     uint32_t GetCommandLineKey( Job * job ) const;
     bool RetrieveFromCache( Job * job );
     void WriteToCache_FromDisk( Job * job );
@@ -231,13 +237,16 @@ protected:
         PASS_COMPILE,
         PASS_PREP_FOR_SIMPLE_DISTRIBUTION,
     };
-    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
+    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool useSourceMapping, bool finalize, const AString & overrideSrcFile = AString::GetEmpty(), const AString & vfsOverlayFile = AString::GetEmpty() ) const;
 
     BuildResult BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
-    BuildResult BuildFinalOutput( Job * job, const Args & fullArgs ) const;
+    bool WriteSourceFileToExtraInputsDir( Job * job, AString & workingDirectory, AString & sourceFileName ) const;
+    bool WriteVFSOverlayForExtraInputs( Job * job, AString & overlayFileName ) const;
+    bool WriteExtraInputFile( Job * job, const AString & fileName, const void * data, size_t dataSize ) const;
+    BuildResult BuildFinalOutput( Job * job, const Args & fullArgs, const AString & remoteWorkingDir = AString::GetEmpty() ) const;
 
     static void HandleSystemFailures( Job * job, int result, const AString & stdOut, const AString & stdErr );
     bool ShouldUseDeoptimization() const;
@@ -308,6 +317,8 @@ protected:
 
     // Not serialized
     Array<AString> m_Includes;
+    uint64_t m_ExtraInputManifestId = 0;
+    bool m_UseVFSOverlayForExtraInputs = false;
 
 #if defined( ENABLE_FAKE_SYSTEM_FAILURE )
     // Fake system failure for tests
@@ -322,7 +333,9 @@ public:
     ObjectNodeRemote( AString && objectName,
                       NodeProxy * srcFile,
                       AString && compilerOptions,
-                      uint32_t flags );
+                      uint32_t flags,
+                      uint64_t extraInputManifestId,
+                      bool useVFSOverlayForExtraInputs );
     virtual ~ObjectNodeRemote() override;
 
 protected:

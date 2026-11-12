@@ -478,6 +478,13 @@ Job * JobQueue::GetDistributableJobToProcess( bool remote, uint8_t workerMinorPr
                 continue;
             }
 
+            // Extra input files (DTLTO) require minor protocol 6 or later
+            if ( on->HasExtraInputFiles() &&
+                 ( workerMinorProtocolVersion < 6 ) )
+            {
+                continue;
+            }
+
             job = potentialJob;
             m_DistributableJobs_Available.EraseIndex( static_cast<size_t>( i ) );
             break;

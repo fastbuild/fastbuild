@@ -1,0 +1,52 @@
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+// Fake compiler run on the worker to verify inputs
+//------------------------------------------------------------------------------
+ObjectList( "FakeCompiler-Lib" )
+{
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/FakeCompiler.cpp"
+    .CompilerOutputPath = "$Out$/Test/Distributed/ExtraInputs/"
+    #if __WINDOWS__
+        .CompilerOptions    + ' -D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe fopen
+    #endif
+    .AllowDistribution  = false // build the compiler locally
+}
+
+Executable( "FakeCompiler-Exe" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
+    #endif
+    .LinkerOutput       = "$Out$/Test/Distributed/ExtraInputs/FakeCompiler.exe"
+    .Libraries          = { "FakeCompiler-Lib" }
+}
+
+Compiler( "FakeCompiler" )
+{
+    .Executable             = "FakeCompiler-Exe"
+    .CompilerFamily         = "custom"
+    .SimpleDistributionMode = true
+}
+
+// Distribution with extra input file
+//------------------------------------------------------------------------------
+ObjectList( "ExtraInputs" )
+{
+    .Compiler                   = "FakeCompiler"
+    .CompilerOptions            = '"%1" "%2" "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/extra.txt"'
+    .CompilerInputFiles         =
+    {
+        "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/input1.txt"
+        "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/input2.txt"
+    }
+    .CompilerOutputPath         = "$Out$/Test/Distributed/ExtraInputs/"
+    .CompilerOutputExtension    = ".out"
+    .ExtraInputFiles            = { "Tools/FBuild/FBuildTest/Data/TestDistributed/ExtraInputs/extra.txt" }
+}

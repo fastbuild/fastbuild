@@ -227,14 +227,7 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
     {
         // Store a pointer to the SettingsNode as defined by the BFF, or create a
         // default instance if needed.
-        if ( m_Settings == nullptr )
-        {
-            // Create a default
-            const AStackString settingsNodeName( "$$Settings$$" );
-            SettingsNode * settingsNode = CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() );
-            settingsNode->Initialize( *this, &BFFToken::GetBuiltInToken(), nullptr );
-            ASSERT( m_Settings ); // SettingsNode registers itself
-        }
+        CreateDefaultSettingsNode();
 
         // Parser will populate m_UsedFiles
         const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
@@ -831,6 +824,19 @@ void NodeGraph::SetSettings( const SettingsNode & settings )
 {
     ASSERT( m_Settings == nullptr ); // Should only be called once
     m_Settings = &settings;
+}
+
+// CreateDefaultSettingsNode
+//------------------------------------------------------------------------------
+void NodeGraph::CreateDefaultSettingsNode()
+{
+    if ( m_Settings == nullptr )
+    {
+        const AStackString<> settingsNodeName( "$$Settings$$" );
+        SettingsNode * settingsNode = CreateNode<SettingsNode>( settingsNodeName, &BFFToken::GetBuiltInToken() );
+        settingsNode->Initialize( *this, &BFFToken::GetBuiltInToken(), nullptr );
+        ASSERT( m_Settings ); // SettingsNode registers itself
+    }
 }
 
 // RegisterNode

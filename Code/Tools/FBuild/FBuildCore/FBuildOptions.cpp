@@ -55,6 +55,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     }
 
     bool progressOptionSpecified = false;
+    bool dtltoMode = false;
 
     // Parse options
     for ( int32_t i = 1; i < argc; ++i ) // start from 1 to skip exe name
@@ -259,6 +260,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_AllowDistributed = true;
                 m_DistVerbose = true;
                 m_ShowBuildReason = true;
+                continue;
+            }
+            else if ( thisArg == "-dtlto" )
+            {
+                dtltoMode = true;
                 continue;
             }
             else if ( thisArg == "-dot" )
@@ -503,6 +509,33 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
     }
 
+    if ( dtltoMode )
+    {
+        if ( m_Targets.IsEmpty() )
+        {
+            OUTPUT( "FBuild: Error: Missing DTLTO JSON file\n" );
+            OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+            return OPTIONS_ERROR;
+        }
+
+        if ( m_Targets.GetSize() != 1 )
+        {
+            OUTPUT( "FBuild: Error: '-dtlto' accepts exactly one DTLTO JSON file as the build target\n" );
+            OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+            return OPTIONS_ERROR;
+        }
+
+        if ( m_Targets[ 0 ].EndsWithI( ".json" ) == false )
+        {
+            OUTPUT( "FBuild: Error: '-dtlto' requires a DTLTO JSON file, got '%s'\n", m_Targets[ 0 ].Get() );
+            OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+            return OPTIONS_ERROR;
+        }
+
+        m_DTLTOFile = m_Targets[ 0 ];
+        m_Targets.SetSize( 0 );
+    }
+
     if ( progressOptionSpecified == false )
     {
         // By default show progress bar only if stdout goes to the terminal
@@ -671,6 +704,9 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "                   - >=  1 : more compression, with 12 being the highest\n"
             " -dot[full]        Emit known dependency tree info for specified targets to an\n"
             "                   fbuild.gv file in DOT format.\n"
+            " -dtlto            Build backend jobs from an LLVM DTLTO JSON file.\n"
+            "                   The sole target is interpreted as the DTLTO JSON path; regular\n"
+            "                   are not supported.\n"
             " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote      Force distributable jobs to only be built remotely.\n"
             " -help             Show this help.\n"
