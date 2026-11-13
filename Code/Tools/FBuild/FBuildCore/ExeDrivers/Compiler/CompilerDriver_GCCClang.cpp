@@ -38,7 +38,7 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
         return true;
     }
 
-    // Remove static analyzer from clang preprocessor
+    // Remove static analyzer and timing trace from clang preprocessor
     if ( m_IsClang )
     {
         if ( StripToken( "--analyze", token ) ||
@@ -46,6 +46,11 @@ CompilerDriver_GCCClang::~CompilerDriver_GCCClang() = default;
              StripTokenWithArg( "-analyzer-output", token, index ) ||
              StripTokenWithArg( "-analyzer-config", token, index ) ||
              StripTokenWithArg( "-analyzer-checker", token, index ) )
+        {
+            return true;
+        }
+
+        if ( StripToken( "-ftime-trace", token ) )
         {
             return true;
         }
